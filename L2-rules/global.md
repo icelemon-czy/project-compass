@@ -85,38 +85,21 @@
 - ❌ [如: 不要 `catch(e) {}` 吞掉错误，至少要 log]
 - ❌ [填写]
 
-## 新建文件模板
+## 版本控制规范
 
-<!-- 创建新文件时的标准结构，让 AI 生成的代码风格一致 -->
+<!-- commit 格式、分支命名等 -->
 
-### 新建 Service
-```
-[填写标准模板代码，如:]
+- Commit 格式：[如: Conventional Commits — `feat(auth): add refresh token`]
+- 分支命名：[如: `feat/xxx` / `fix/xxx` / `refactor/xxx`]
 
-// src/services/[name].service.ts
-import { Injectable } from '...'
+## 测试规范
 
-@Injectable()
-export class [Name]Service {
-  constructor(private readonly repo: [Name]Repository) {}
+- 框架：[如: Jest / pytest / go test]
+- 文件位置：[如: 同目录 `*.test.ts` / 单独 `tests/` 目录]
+- 命名：[如: `should_xxx_when_yyy` / `test_xxx`]
+- 运行命令：[如: `pnpm test` / `pytest -v`]
 
-  async findById(id: string): Promise<[Name]> { ... }
-}
-```
-
-### 新建测试
-```
-[填写标准模板代码，如:]
-
-// tests/[name].test.ts
-describe('[Name]Service', () => {
-  let service: [Name]Service
-  
-  beforeEach(() => { ... })
-  
-  it('should ...', async () => { ... })
-})  
-```
+> 💡 新建文件的代码模板在 `templates.md` 中（创建新文件时加载）。
 
 ## 版本控制
 

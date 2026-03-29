@@ -25,12 +25,16 @@ AI 的上下文窗口是有限的。对于任何有一定规模的代码库，�
 ```
 .ai/
 ├── L1-codebase-map/          ← 代码导航层（稳定，低频更新）
-│   ├── overview.md           ← 项目导航首页（功能→代码映射 + 数据流 + 雷区）
+│   ├── overview.md           ← 轻量索引（< 60 行，功能索引 + 雷区 + 构建命令）
 │   ├── module-map.md         ← 模块合约与耦合地图（公开 API + 变更联动）
-│   └── key-files.md          ← 任务食谱与变更影响索引
+│   ├── key-files.md          ← 通用任务食谱与调查起点
+│   └── features/             ← 按功能拆分的详细上下文（渐进式披露）
+│       ├── _feature-template.md ← 功能文档模板
+│       └── [feature-name].md ← 每个功能的完整上下文（数据流+文件+联动+陷阱）
 │
 ├── L2-rules/                 ← 规则层（稳定，按领域分片）
 │   ├── global.md             ← 全局规则（具体可执行规则 + 反模式清单）
+│   ├── templates.md          ← 新建文件的代码模板（创建新文件时加载）
 │   ├── _module-template.md   ← 模块规则模板（合约 + 陷阱 + 边界）
 │   └── [module-name].md      ← 按项目实际模块创建
 │
@@ -62,14 +66,16 @@ AI 的上下文窗口是有限的。对于任何有一定规模的代码库，�
 ## 加载策略
 
 ### 每次对话必加载（Prompt 前置）
-- `L1-codebase-map/overview.md` — 项目导航首页（功能→代码映射）
+- `L1-codebase-map/overview.md` — 轻量索引（< 60 行，功能目录 + 雷区）
 - `L4-session/active-session.md` — 当前会话状态（含下一步动作）
 - `L2-rules/global.md` — 全局规则（含反模式清单）
 
-### 按任务按需加载
-- `L1-codebase-map/key-files.md` — 做常见开发任务时（加端点、加表、修 bug）
+### 收到任务后按需加载（渐进式披露）
+- `L1-codebase-map/features/[功能名].md` — **从 overview.md 索引表匹配到功能后加载**
+- `L1-codebase-map/key-files.md` — 做通用开发任务时（加端点、加表、修 bug）
 - `L1-codebase-map/module-map.md` — 跨模块修改时（查变更联动表）
 - `L2-rules/[module-name].md` — 处理特定模块任务时（查合约和陷阱）
+- `L2-rules/templates.md` — 创建新文件时（查标准代码模板）
 - `L3-tasks/current-plan.md` — 当前活跃计划
 
 ### 偶尔参考
@@ -80,10 +86,12 @@ AI 的上下文窗口是有限的。对于任何有一定规模的代码库，�
 
 | 文档 | ✅ 该写 | ❌ 不该写（AI 自己能推导） |
 |------|---------|--------------------------|
-| overview.md | 功能→文件映射、数据流路径、雷区、构建命令 | 目录结构、技术栈列表、"某模块负责某功能" |
+| overview.md | **功能索引表**（名称+指针）、雷区、构建命令 | 数据流详情、涉及文件列表（放到 features/*.md） |
 | module-map.md | 公开 API 清单、变更联动表、依赖禁止规则 | 模块职责描述、代码行数统计 |
-| key-files.md | 任务食谱（改哪些文件+顺序）、调查起点、变更影响 | 文件列表（`tree` 的搬运） |
-| global.md | 具体可执行规则、反模式清单、错误处理模式代码 | "架构模式: Clean Architecture"（太抽象） |
+| key-files.md | 通用任务食谱、调查起点、全局变更影响 | 功能相关的食谱（放到 features/*.md） |
+| features/*.md | 单个功能的完整上下文：数据流、文件清单、变更联动、陷阱、食谱 | 跨功能的通用信息 |
+| global.md | 具体可执行规则、反模式清单、错误处理模式 | "架构模式: Clean Architecture"（太抽象） |
+| templates.md | 新建文件的代码模板（Service、Test 等） | 应从实际代码中提取，不是编造 |
 | 模块规则 | 对外合约（函数签名）、已知陷阱、测试策略 | 模块职责（从文件名就能猜到） |
 | current-plan.md | 文件级步骤 + 验证命令 + 风险标注 | "重构某模块"（太模糊） |
 | active-session.md | 下一步具体动作、测试状态、涉及文件状态 | "正在做某功能"（太模糊） |

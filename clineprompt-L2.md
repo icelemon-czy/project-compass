@@ -17,6 +17,7 @@
 ## 背景
 我需要为本项目构建 AI 上下文文档中的 **L2 编码规则层**。模板在：
 - `.ai/L2-rules/global.md` — 全局规则（命名、错误处理、反模式等）
+- `.ai/L2-rules/templates.md` — 新建文件的代码模板
 - `.ai/L2-rules/_module-template.md` — 模块规则模板（复制为 `[模块名].md`）
 
 L1 导航文档已经完成，在 `.ai/L1-codebase-map/` 下。
@@ -103,8 +104,8 @@ grep -A 2 '"error"\|"warn"' .eslintrc* 2>/dev/null | head -30
 grep -rn "eslint-disable\|noqa\|noinspection\|@SuppressWarnings" --include='*.ts' --include='*.py' --include='*.java' | head -20
 ```
 
-#### 4f: 新建文件模板
-找到 3+ 个同类型的文件（如 service、controller、test），提取它们的公共结构作为模板：
+#### 4f: 新建文件模板（→ templates.md）
+找到 3+ 个同类型的文件（如 service、controller、test），提取它们的公共结构作为模板，**写入 `templates.md`（不是 global.md）**：
 ```bash
 # 对比多个 service 文件的开头结构
 head -30 src/services/*.ts src/**/service.ts 2>/dev/null
@@ -135,6 +136,7 @@ git branch -a 2>/dev/null | head -20
 - 只写从代码中实际观察到的规范，不要假设或编造
 - 能从 lint 配置自动验证的规则，标注验证方式
 - 不确定的地方标 `[待人工确认：观察到 xxx，但不确定是否是有意为之]`
+- 新建文件模板写入 `templates.md`，不要放在 global.md
 
 ### Phase 5: 为每个模块生成规则文件（→ L2-rules/[module].md）
 
