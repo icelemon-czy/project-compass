@@ -1,119 +1,58 @@
-# Cline 构建 L1 + L2 项目上下文 — Prompt 模板
+# Cline 构建 L2 编码规则 — Prompt 模板
 
 > 将以下 prompt 复制到 Cline 对话中使用。
-> 使用前替换 `[项目配置文件]`、`[项目目录]` 和 `[入口文件]` 为实际路径。
+> 使用前替换 `[项目目录]` 和 `[模块名]` 为实际值。
 >
-> **核心理念**: 不要让 AI 做 `tree` 搬运工。让它提取**关系、模式和陷阱** — 这些才是人/AI 从代码中不容易快速看出来的东西。
+> **前置条件**: 已用 `clineprompt-L1.md` 完成 L1 文档生成（Phase 1-3）。
+> 如果在同一对话中继续，Phase 1-2 的分析数据可直接复用。
+> 如果在新对话中开始，需要先快速重新收集信息（见下方 Phase 0）。
 
 ---
 
 ## Prompt
 
 ```markdown
-# 任务：构建项目导航文档 + 编码规则
+# 任务：构建项目编码规则（L2）
 
 ## 背景
-我需要为本项目构建 AI 上下文文档。模板在：
-- `.ai/L1-codebase-map/` — 代码导航（功能映射、数据流、食谱）
-- `.ai/L2-rules/` — 编码规则（全局规则 + 模块规则）
+我需要为本项目构建 AI 上下文文档中的 **L2 编码规则层**。模板在：
+- `.ai/L2-rules/global.md` — 全局规则（命名、错误处理、反模式等）
+- `.ai/L2-rules/_module-template.md` — 模块规则模板（复制为 `[模块名].md`）
 
-这些文档的目标不是"描述代码库长什么样"，而是"帮 AI 快速定位该看哪些代码，并按正确方式编码"。
+L1 导航文档已经完成，在 `.ai/L1-codebase-map/` 下。
 
 ## 核心原则
-- ❌ 不要写 AI 能从 tree/grep 推导出来的信息（目录结构、技术栈、模块职责）
-- ✅ 要写 AI 从代码推导不出来的信息（功能→文件映射、数据流路径、变更联动、陷阱）
-- ❌ 不要写 "auth 模块负责认证" 这种废话
-- ✅ 要写 "用户登录从 routes/auth.ts → controller → service → token.ts，改 User model 要同步改 JWTPayload"
-- ✅ L2 规则要从代码中的实际模式提取，不要编造项目没在用的规范
+- ✅ L2 规则要从代码中的**实际模式**提取，不要编造项目没在用的规范
+- ❌ 不要写 "使用 Repository 模式"（除非代码里真的在用）
+- ✅ 每条规则给出 ✅ 正确写法和 ❌ 错误写法的具体代码示例
+- ✅ 不确定的地方标 `[待人工确认]`，不要猜测
 
 ## 你的工作步骤
 
-### Phase 1: 快速收集原始信息（只用命令，不要逐文件阅读）
+### Phase 0（仅新对话需要）: 快速重建上下文
+
+> 如果在 L1 同一对话中继续，跳过此步骤，直接进入 Phase 4。
 
 ```bash
-# 目录结构
+# 快速获取项目结构
 tree -L 3 -I 'node_modules|.git|dist|__pycache__|venv|.venv|build|target'
 
-# 项目配置
-cat [项目配置文件]
+# 读取已完成的 L1 文档（了解模块划分和数据流）
+cat [项目目录]/.ai/L1-codebase-map/overview.md
+cat [项目目录]/.ai/L1-codebase-map/module-map.md
 
-# 入口文件
-cat [入口文件]
-
-# README（如果有）
-cat README.md
-
-# Lint / 格式化配置（如果有）
-cat .eslintrc* tsconfig.json .prettierrc* pyproject.toml setup.cfg .golangci.yml 2>/dev/null
-
-# 构建/测试命令来源
-cat Makefile 2>/dev/null; cat package.json 2>/dev/null | grep -A 30 '"scripts"'
-
-# 找出所有 import/依赖关系
+# 重新收集 import 关系（L2 需要用
 grep -rn "import\|from\|require" --include='*.ts' --include='*.py' --include='*.java' --include='*.go' | head -100
 
-# 找出潜在陷阱
-grep -rn "TODO\|FIXME\|HACK\|WARN\|DEPRECATED\|LEGACY" --include='*.ts' --include='*.py' --include='*.java' --include='*.go' | head -50
+# Lint / 格式化配置
+cat .eslintrc* tsconfig.json .prettierrc* pyproject.toml setup.cfg .golangci.yml 2>/dev/null
 
-# 找出模块公开 API（export / __all__ / public）
+# export / 公开 API
 grep -rn "^export\|module\.exports\|__all__" --include='*.ts' --include='*.py' --include='*.js' | head -80
 
-# 测试文件分布
-find . -name "*.test.*" -o -name "*_test.*" -o -name "test_*" | head -30
-
-# 最近的 commit 模式（用于推断版本控制规范）
-git log --oneline -20 2>/dev/null
-
-# 分支命名模式
-git branch -a 2>/dev/null | head -20
+# TODO/FIXME/HACK
+grep -rn "TODO\|FIXME\|HACK\|WARN\|DEPRECATED\|LEGACY" --include='*.ts' --include='*.py' --include='*.java' --include='*.go' | head -50
 ```
-
-### Phase 2: 深入分析 — 发现关系（用于 L1）
-
-#### 2a: 追踪 2-3 个核心数据流
-挑选项目中最常见的 2-3 个操作（如 "用户登录"、"创建订单"、"发送通知"）。
-对每个操作，从入口文件开始，追踪请求经过的每个文件路径，形成完整链条：
-
-```
-POST /api/auth/login
-  → src/routes/auth.ts (路由匹配)
-  → src/auth/controller.ts#login (参数校验)
-  → src/auth/service.ts#authenticate (查用户+验密码)
-  → src/auth/token.ts#generatePair (生成 token)
-  → 响应
-```
-
-#### 2b: 识别重复的开发模式（任务食谱）
-在项目中找到 3-5 个相似的已有实现（如 3 个不同的 API 端点、3 个不同的 model）。
-对比它们，提取出"添加新功能的标准步骤"：
-- 要创建/修改哪些文件？
-- 什么顺序？
-- 哪个已有实现最适合作为参考模板？
-
-#### 2c: 发现变更联动
-分析 import 关系，找出非显而易见的耦合：
-- 改了文件 A，哪些看似无关的文件 B 也会受影响？
-- 有没有"改了 model 要手动同步改 types"这种隐式联动？
-- 有没有自动生成的代码，改了源文件要重新生成？
-
-#### 2d: 标记雷区
-- 哪些文件/目录是自动生成的，不应手动编辑？
-- 哪些文件有 TODO/FIXME/HACK 注释，说明有已知问题？
-- 有没有 legacy 代码在迁移中？
-
-### Phase 3: 填写 L1 模板
-
-按顺序读取模板 → 用 Phase 1-2 的分析结果填写 → 写入对应位置：
-
-1. **overview.md** → 保存到 [项目目录]/.ai/L1-codebase-map/overview.md
-   - 重点：功能→代码映射表、核心数据流、雷区清单
-   - 控制在 100 行以内
-
-2. **module-map.md** → 同上
-   - 重点：模块公开 API、变更联动表、依赖禁止规则
-   
-3. **key-files.md** → 同上
-   - 重点：常见任务食谱、变更影响索引、调查起点
 
 ### Phase 4: 提取全局规则（→ L2-rules/global.md）
 
@@ -135,7 +74,7 @@ grep -rn "^class \|^export class \|^def \|^func \|^function " --include='*.ts' -
 根据统计结果判断：文件名是 kebab-case 还是 camelCase？类名是 PascalCase？函数名是什么风格？
 
 #### 4c: 依赖方向规则
-从 Phase 2 的 import 分析中提取：
+从 import 分析中提取：
 - 哪些目录之间存在 import 关系？哪些不存在？
 - 推断出允许/禁止的依赖方向
 - 从 ESLint 的 `import/no-restricted-paths` 或类似规则验证
@@ -199,7 +138,9 @@ git branch -a 2>/dev/null | head -20
 
 ### Phase 5: 为每个模块生成规则文件（→ L2-rules/[module].md）
 
-对 Phase 2 中识别出的每个主要模块，复制 `.ai/L2-rules/_module-template.md`，重命名为模块名，填写以下内容：
+对 L1 module-map.md 中识别出的每个主要模块，复制 `.ai/L2-rules/_module-template.md`，重命名为模块名，填写以下内容：
+
+> 💡 如果项目较大（模块 > 5 个），可以分批处理：本次对话处理 2-3 个模块，剩余的开新对话。
 
 #### 对每个模块执行：
 
@@ -212,7 +153,7 @@ grep -rn "^export" src/[模块名]/ --include='*.ts' | head -30
 grep -rn "^def \|^class " src/[模块名]/ --include='*.py' | head -30
 ```
 列出所有 export 的函数/类，标注：
-- ✅ STABLE — 被 2+ 个外部模块 import（从 Phase 1 的 import 分析中可以看出）
+- ✅ STABLE — 被 2+ 个外部模块 import（从 import 分析中可以看出）
 - 🔧 INTERNAL — 只在模块内部调用
 
 **5b: 模块边界**
@@ -263,16 +204,15 @@ grep -rn "NODE_ENV\|RAILS_ENV\|DEBUG\|PRODUCTION\|STAGING" src/[模块名]/ | he
   标注：`[待人工确认：当前代码中 auth 没有 import payment，是否应该禁止？]`
 
 **填写模块规则时的规则**：
-- 只为 Phase 2 中识别出的主要模块生成规则文件（通常 3-8 个），不要为每个子目录都生成
+- 只为主要模块生成规则文件（通常 3-8 个），不要为每个子目录都生成
 - 公开 API 清单只列被外部实际调用的函数，不要把所有 export 都列出来
 - 模块边界表基于实际的 import 关系，不要推测
 
-### 约束（适用于 L1 + L2 所有文档）
-- 每个文档控制在合理长度（overview < 100 行，global.md 合理即可）
+### 约束
+- 每个文档控制在合理长度
 - 不确定的地方写 `[待确认：xxx]`，不要编造
 - 如果某处关系复杂看不清，标注 `[需要深入分析：xxx]`
-- **L1 检验标准**：每一行都问"AI 从代码中能推导出来吗？"如果能，删掉。
-- **L2 检验标准**：每条规则都问"这是从代码实际观察到的吗？"如果不是，删掉。
+- **检验标准**：每条规则都问"这是从代码实际观察到的吗？"如果不是，删掉
 ```
 
 ---
@@ -283,17 +223,6 @@ grep -rn "NODE_ENV\|RAILS_ENV\|DEBUG\|PRODUCTION\|STAGING" src/[模块名]/ | he
 
 填完后用以下标准审查每一行内容：
 
-**L1 文档（导航层）**:
-
-| 检查项 | 通过标准 | 不通过的例子 |
-|--------|----------|-------------|
-| 是否可推导？ | AI 不能从 tree + grep 快速推导出来 | ❌ "auth 模块在 src/auth/ 目录下" |
-| 是否面向任务？ | 收到 task 时能直接用来定位文件 | ❌ "项目代码约 5 万行" |
-| 是否具体？ | 包含具体的文件路径和函数名 | ❌ "改了 model 要更新相关文件" |
-| 是否可验证？ | AI 能照做并检查结果 | ❌ "遵循 Clean Architecture" |
-
-**L2 文档（规则层）**:
-
 | 检查项 | 通过标准 | 不通过的例子 |
 |--------|----------|-------------|
 | 是否来自代码？ | 规则基于实际代码中观察到的模式 | ❌ "使用 Repository 模式"（但代码里没有） |
@@ -301,34 +230,38 @@ grep -rn "NODE_ENV\|RAILS_ENV\|DEBUG\|PRODUCTION\|STAGING" src/[模块名]/ | he
 | 有正反例？ | 有具体的✅正确和❌错误示例 | ❌ "命名用 camelCase"（没有示例） |
 | 人工标记完整？ | 不确定的字段都已标 `[待人工确认]` | ❌ 猜测模块状态为 stable（但没有标记） |
 
-### Sub-agent 的正确用法
+### Sub-agent 使用指南
 
-主 Agent（Cline）做 80% 的分析，Sub-agent 只在需要深入时用：
+主 Agent（Cline）做 80% 的分析工作，Sub-agent 只在需要深入时使用：
 
 ```
 主 Agent（Cline）
-├── Phase 1：自己执行命令，收集原始信息
-├── Phase 2a：自己追踪 2-3 个核心数据流
-├── 【可选 Sub-agent】：追踪一个复杂的数据流
-│     "请从 [入口文件] 开始，追踪 [这个操作] 经过的每个文件，列出完整路径链"
-├── Phase 2b-2d：自己识别模式、联动、雷区
-├── Phase 3：填写 L1 模板
-├── Phase 4：自己从 lint/代码中提取全局规则
-├── 【可选 Sub-agent】：深入分析一个复杂模块的公开 API
-│     "请分析 src/[模块]/ 的所有 export，列出函数签名 + 被谁调用"
-├── Phase 5：为每个主要模块生成规则文件
+├── Phase 4a-4c：自己从配置文件和 import 分析中提取规则
+├── Phase 4d-4e：自己从代码中搜索错误处理和反模式
+├── Phase 4f-4h：自己提取模板、版本控制、测试规范
+├── 填写 global.md
+├── Phase 5：逐个处理每个主要模块
+│     ⚠️ 如果某个模块特别大（50+ 个 export）或内部结构复杂：
+│     └── 【Sub-agent】"请分析 src/[模块]/ 的所有 export，列出函数签名 + 被谁调用"
+│     ⚠️ 如果需要深入理解一个模块的内部依赖关系：
+│     └── 【Sub-agent】"请画出 src/[模块]/ 内部各文件的 import 关系图"
 └── 最终：汇总所有 [待人工确认] 标记，提醒用户审核
 ```
 
+**何时用 Sub-agent**:
+- 某个模块 export 数量多（50+），需要分析每个函数的调用者
+- 模块内部文件关系复杂，需要单独理清
+
+**不要用 Sub-agent**:
+- 执行 Phase 0/4 的 grep/cat 命令（主 Agent 直接跑）
+- 填写模板文件（主 Agent 自己填）
+
 ### 工作量预期
 
-| 阶段 | 输出 | 预估时间 |
-|------|------|----------|
-| Phase 1-3 (L1) | overview.md + module-map.md + key-files.md | Cline 单次对话 |
-| Phase 4 (L2 全局) | global.md | 同一对话继续 |
-| Phase 5 (L2 模块) | 3-8 个 [module].md | 同一对话继续，或拆成第二次对话 |
-
-> 💡 如果项目很大（模块 > 5 个），建议 Phase 5 拆成独立对话，每次处理 2-3 个模块。
+| 阶段 | 输出 | 建议 |
+|------|------|------|
+| Phase 4 (全局规则) | global.md | 紧接 L1 之后，同一对话完成 |
+| Phase 5 (模块规则) | 3-8 个 [module].md | 模块 ≤ 5 个：同对话完成；> 5 个：拆成多次对话，每次 2-3 个模块 |
 
 ### 人工审核清单
 
@@ -340,17 +273,11 @@ Cline 完成后，你需要审核所有 `[待人工确认]` 标记。常见需�
 - **反模式的 why** — Cline 从 lint 规则提取了禁止项，你可能需要补充原因
 - **新建文件模板** — Cline 从现有代码提取了模式，确认这是你想要的标准
 
-### 从旧版模板迁移
+### 从旧版模板迁移（L2 部分）
 
 如果项目已有旧版文档（描述性内容），可以这样迁移：
 
-**L1 文档**:
-1. 保留：构建/运行命令、领域术语表
-2. 删除：目录结构描述、模块职责描述、代码规模统计
-3. 新增：功能→代码映射表、数据流追踪、雷区清单、变更联动表
-
-**L2 文档**:
-1. 保留：已有的具体规则（如果是从实际代码中来的）
-2. 删除：抽象声明（如 "架构模式: Clean Architecture"）
-3. 新增：反模式清单、新建文件模板、模块陷阱、变更联动原因
-4. 补充：所有规则加上正确/错误示例
+1. **保留**：已有的具体规则（如果是从实际代码中来的）
+2. **删除**：抽象声明（如 "架构模式: Clean Architecture"）
+3. **新增**：反模式清单、新建文件模板、模块陷阱、变更联动原因
+4. **补充**：所有规则加上正确/错误示例

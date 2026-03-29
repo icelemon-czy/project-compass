@@ -43,6 +43,8 @@ AI 的上下文窗口是有限的。对于任何有一定规模的代码库，�
 │   └── active-session.md     ← 当前会话状态（含测试状态 + 下一步动作）
 │
 ├── prompt-template.md        ← AI 提示词组装模板
+├── clineprompt-L1.md         ← Cline 自动生成 L1 导航文档的 Prompt
+├── clineprompt-L2.md         ← Cline 自动生成 L2 编码规则的 Prompt
 └── README.md                 ← 本文件
 ```
 
@@ -51,7 +53,7 @@ AI 的上下文窗口是有限的。对于任何有一定规模的代码库，�
 1. 将本模板复制到你的项目根目录，重命名为 `.ai/`
 2. 填写 `.ai/L1-codebase-map/overview.md` — **最重要的一步**
    - 重点填写：功能→代码映射表、核心数据流、雷区清单
-   - 或使用 `clineprompt.md` 中的 prompt 让 AI 辅助填写
+   - 或使用 `clineprompt-L1.md` 中的 prompt 让 Cline 辅助填写
 3. 填写 `.ai/L2-rules/global.md` — 写下具体的编码规则和反模式
 4. 复制 `.ai/L2-rules/_module-template.md`，按项目模块创建对应的规则文件
 5. 在项目根目录创建入口文件（`CLAUDE.md` / `.cursorrules`），指向 `.ai/` 下的文档
