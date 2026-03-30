@@ -43,9 +43,10 @@ AI 的上下文窗口是有限的。对于任何有一定规模的代码库，�
 │   └── [module-name].md      ← 按项目实际模块创建
 │
 ├── L3-tasks/                 ← 任务层（中频变化）
-│   ├── current-plan.md       ← 当前计划（具体到文件 + 验证命令 + 风险标注）
-│   ├── decision-log.md       ← 技术决策记录（ADR）
-│   └── backlog.md            ← 待办事项池
+│   ├── board.md              ← 任务看板（所有任务状态索引）
+│   ├── _task-template.md     ← 任务模板（复制来创建新任务）
+│   ├── TASK-xxx.md           ← 各任务详情（输入→计划→测试用例）
+│   └── decision-log.md       ← 技术决策记录（ADR）
 │
 ├── L4-session/               ← 会话层（高频变化，每次对话维护）
 │   └── active-session.md     ← 当前会话状态（含测试状态 + 下一步动作）
@@ -55,6 +56,50 @@ AI 的上下文窗口是有限的。对于任何有一定规模的代码库，�
 ├── clineprompt-L2.md         ← Cline 自动生成 L2 编码规则的 Prompt
 └── README.md                 ← 本文件
 ```
+
+## L1 与 L2 的区别
+
+> **一句话：L1 = 地图（在哪儿、怎么走），L2 = 规矩（怎么写、什么能做什么不能做）**
+
+用一个比喻来说：
+- **L1** = 城市地图 → "医院在这，学校在那，从家到医院走这条路"
+- **L2** = 交通规则 → "靠右行驶，红灯停绿灯行，限速 60"
+
+### 具体对比
+
+| 问题 | L1 回答 | L2 回答 |
+|------|---------|---------|
+| "登录功能代码在哪？" | ✅ `src/auth/` 目录，入口在 `routes/auth.ts` | — |
+| "改了 User 表会影响什么？" | ✅ 要同步改 JWTPayload 类型 | — |
+| "请求的完整数据流是什么？" | ✅ route → controller → service → repo → 响应 | — |
+| "命名应该用什么风格？" | — | ✅ 文件 kebab-case，函数 camelCase |
+| "新建一个 Service 文件该长啥样？" | — | ✅ 有标准代码模板 |
+| "错误处理该怎么做？" | — | ✅ Service 层 throw AppError，Controller 不 try-catch |
+| "这个模块的 API 哪些能改？" | — | ✅ `authenticate()` 是 STABLE，`validatePassword()` 是 INTERNAL |
+| "这个功能有什么坑？" | ✅ 异步回调有竞态条件 | — |
+
+### 文件对应
+
+```
+L1 features/user-auth/              L2 rules/
+├── README.md  → 数据流 + 变更影响      ├── global.md     → 全局编码规范
+├── entry.md   → 端点在哪、参数结构      ├── templates.md  → 新建文件的代码模板
+├── logic.md   → 业务规则、状态流转      └── auth.md       → auth 模块的合约 + 编码约束
+└── data.md    → 表结构、查询、迁移
+     ↑                                      ↑
+     地图：代码在哪、数据怎么流                规矩：代码怎么写、合约是什么
+```
+
+### 当信息同时跟两边有关时
+
+| 信息类型 | 放哪 | 判断依据 |
+|----------|------|----------|
+| "登录时 token 刷新有竞态条件" | L1 | 跟该功能的数据流相关 |
+| "`authenticate()` 是稳定 API，不能改签名" | L2 | 跟模块合约/编码约束相关 |
+| "改了 User model 要同步改 DTO" | L1 | 是变更影响（改 A 要改 B） |
+| "所有数据库操作必须使用事务" | L2 | 是编码规则（怎么写） |
+| "支付回调是异步的" | L1 | 是数据流特性 |
+| "新认证方式必须实现 AuthStrategy 接口" | L2 | 是编码约束（必须遵循的模式） |
 
 ## 快速开始
 
@@ -80,11 +125,12 @@ AI 的上下文窗口是有限的。对于任何有一定规模的代码库，�
 - `L1-codebase-map/module-map.md` — 跨模块修改时（查变更联动表）
 - `L2-rules/[module-name].md` — 处理特定模块任务时（查合约和陷阱）
 - `L2-rules/templates.md` — 创建新文件时（查标准代码模板）
-- `L3-tasks/current-plan.md` — 当前活跃计划
+- `L3-tasks/board.md` — 查看任务全局状态
+- `L3-tasks/TASK-xxx.md` — 当前进行中的任务详情
 
 ### 偶尔参考
 - `L3-tasks/decision-log.md` — 遇到"为什么这样做"的问题时
-- `L3-tasks/backlog.md` — 规划下一步时
+- `L3-tasks/board.md` — 规划下一步时（查看 open 任务）
 
 ## 每个文档该写什么（填写指南）
 
@@ -96,8 +142,9 @@ AI 的上下文窗口是有限的。对于任何有一定规模的代码库，�
 | features/[name]/ | 单个功能的完整上下文，按层拆分：README（概览+数据流）、controller/service/data（各层细节） | 跨功能的通用信息 |
 | global.md | 具体可执行规则、反模式清单、错误处理模式 | "架构模式: Clean Architecture"（太抽象） |
 | templates.md | 新建文件的代码模板（Service、Test 等） | 应从实际代码中提取，不是编造 |
-| 模块规则 | 对外合约（函数签名）、已知陷阱、测试策略 | 模块职责（从文件名就能猜到） |
-| current-plan.md | 文件级步骤 + 验证命令 + 风险标注 | "重构某模块"（太模糊） |
+| 模块规则 | 对外合约（函数签名+稳定性）、模块内编码约束、边界规则、测试策略 | 数据流、文件列表、变更影响（放 L1） |
+| board.md | 任务状态索引（ID + 标题 + 状态） | 任务详情（放在 TASK-xxx.md） |
+| TASK-xxx.md | 任务输入 + AI 计划 + 测试用例 + 执行步骤 | "重构某模块"（太模糊） |
 | active-session.md | 下一步具体动作、测试状态、涉及文件状态 | "正在做某功能"（太模糊） |
 
 ## 维护节奏
@@ -131,7 +178,8 @@ AI 的上下文窗口是有限的。对于任何有一定规模的代码库，�
 - .ai/L1-codebase-map/key-files.md — 常见任务食谱
 - .ai/L1-codebase-map/module-map.md — 跨模块变更联动
 - .ai/L2-rules/[模块名].md — 模块合约与陷阱
-- .ai/L3-tasks/current-plan.md — 当前计划
+- .ai/L3-tasks/board.md — 任务看板
+- .ai/L3-tasks/TASK-xxx.md — 当前任务详情
 ```
 
 ### 方式二：手动粘贴
