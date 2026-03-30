@@ -29,8 +29,12 @@ AI 的上下文窗口是有限的。对于任何有一定规模的代码库，�
 │   ├── module-map.md         ← 模块合约与耦合地图（公开 API + 变更联动）
 │   ├── key-files.md          ← 通用任务食谱与调查起点
 │   └── features/             ← 按功能拆分的详细上下文（渐进式披露）
-│       ├── _feature-template.md ← 功能文档模板
-│       └── [feature-name].md ← 每个功能的完整上下文（数据流+文件+联动+陷阱）
+│       ├── _feature-template/   ← 功能文档模板文件夹（复制来创建新功能）
+│       │   ├── README.md        ← 功能概览：数据流、变更影响、已知陷阱
+│       │   ├── entry.md         ← 入口层：路由/Handler/CLI/事件监听
+│       │   ├── logic.md         ← 逻辑层：Service/UseCase/业务规则
+│       │   └── data.md          ← 数据层：Model/Repository/迁移
+│       └── [feature-name]/      ← 每个功能一个文件夹（按层拆分上下文）
 │
 ├── L2-rules/                 ← 规则层（稳定，按领域分片）
 │   ├── global.md             ← 全局规则（具体可执行规则 + 反模式清单）
@@ -71,7 +75,7 @@ AI 的上下文窗口是有限的。对于任何有一定规模的代码库，�
 - `L2-rules/global.md` — 全局规则（含反模式清单）
 
 ### 收到任务后按需加载（渐进式披露）
-- `L1-codebase-map/features/[功能名].md` — **从 overview.md 索引表匹配到功能后加载**
+- `L1-codebase-map/features/[功能名]/README.md` — **从 overview.md 索引表匹配到功能后加载，按需深入各层文件**
 - `L1-codebase-map/key-files.md` — 做通用开发任务时（加端点、加表、修 bug）
 - `L1-codebase-map/module-map.md` — 跨模块修改时（查变更联动表）
 - `L2-rules/[module-name].md` — 处理特定模块任务时（查合约和陷阱）
@@ -86,10 +90,10 @@ AI 的上下文窗口是有限的。对于任何有一定规模的代码库，�
 
 | 文档 | ✅ 该写 | ❌ 不该写（AI 自己能推导） |
 |------|---------|--------------------------|
-| overview.md | **功能索引表**（名称+指针）、雷区、构建命令 | 数据流详情、涉及文件列表（放到 features/*.md） |
+| overview.md | **功能索引表**（名称+指针）、雷区、构建命令 | 数据流详情、涉及文件列表（放到 features/[name]/ 下） |
 | module-map.md | 公开 API 清单、变更联动表、依赖禁止规则 | 模块职责描述、代码行数统计 |
-| key-files.md | 通用任务食谱、调查起点、全局变更影响 | 功能相关的食谱（放到 features/*.md） |
-| features/*.md | 单个功能的完整上下文：数据流、文件清单、变更联动、陷阱、食谱 | 跨功能的通用信息 |
+| key-files.md | 通用任务食谱、调查起点、全局变更影响 | 功能相关的食谱（放到 features/[name]/ 下） |
+| features/[name]/ | 单个功能的完整上下文，按层拆分：README（概览+数据流）、controller/service/data（各层细节） | 跨功能的通用信息 |
 | global.md | 具体可执行规则、反模式清单、错误处理模式 | "架构模式: Clean Architecture"（太抽象） |
 | templates.md | 新建文件的代码模板（Service、Test 等） | 应从实际代码中提取，不是编造 |
 | 模块规则 | 对外合约（函数签名）、已知陷阱、测试策略 | 模块职责（从文件名就能猜到） |

@@ -5,7 +5,7 @@
 >
 > **核心理念**: 渐进式披露 — overview.md 只做轻量索引，详情拆到 `features/` 子目录按功能独立加载。
 >
-> **本文件范围**: 生成 L1 代码导航文档（overview.md + module-map.md + key-files.md + features/*.md）
+> **本文件范围**: 生成 L1 代码导航文档（overview.md + module-map.md + key-files.md + features/[name]/）
 > **L2 编码规则**: 完成 L1 后，使用 `clineprompt-L2.md` 在同一对话或新对话中继续
 
 ---
@@ -25,9 +25,13 @@
 ├── module-map.md            ← 模块合约与耦合，跨模块修改时加载
 ├── key-files.md             ← 通用任务食谱，做常见任务时加载
 └── features/                ← 按功能拆分的详细上下文
-    ├── _feature-template.md ← 模板
-    ├── user-auth.md         ← 功能 1 的完整上下文
-    ├── order-management.md  ← 功能 2
+    ├── _feature-template/   ← 模板文件夹（复制来创建新功能）
+    │   ├── README.md        ← 功能概览：数据流、变更影响、已知陷阱
+    │   ├── entry.md         ← 入口层：路由/Handler/CLI/事件监听
+    │   ├── logic.md         ← 逻辑层：Service/UseCase/业务规则
+    │   └── data.md          ← 数据层：Model/Repository/迁移
+    ├── user-auth/           ← 功能 1 的完整上下文
+    ├── order-management/    ← 功能 2
     └── ...
 ```
 
@@ -130,12 +134,13 @@ POST /api/auth/login
 
 ### Phase 4: 为每个功能生成独立文件（核心步骤）
 
-对 Phase 2a 识别的每个功能，复制 `.ai/L1-codebase-map/features/_feature-template.md`，填写：
-- 涉及的文件表（按调用链顺序）
-- 完整数据流（从 Phase 2b）
-- 变更影响（从 Phase 2c）
-- 已知陷阱
-- 常见修改的步骤（针对该功能的食谱）
+对 Phase 2a 识别的每个功能，复制 `.ai/L1-codebase-map/features/_feature-template/` 文件夹，按层填写：
+- `README.md` — 功能概览：完整数据流、变更影响、已知陷阱
+- `entry.md` — 入口层：路由/Handler/CLI/事件监听、参数校验、响应格式
+- `logic.md` — 逻辑层：Service/UseCase/业务规则、状态机、服务依赖
+- `data.md` — 数据层：Model/Repository/模型定义、关键查询、迁移
+
+如果某层逻辑简单，可以省略对应文件。
 
 **每个功能文件自包含 — AI 只读这一个文件就够做该功能的任务。**
 
@@ -182,7 +187,7 @@ POST /api/auth/login
 ├── Phase 3：自己填写 overview.md（轻量索引）
 ├── Phase 4：汇总 Sub-agent 结果 → 填写每个 feature 文件
 │     ⚠️ 如果没用 Sub-agent，也可以在这步分配：
-│     └── 【Sub-agent】"请用 _feature-template.md 模板，填写 [功能名] 的完整上下文文件"
+│     └── 【Sub-agent】“请用 _feature-template/ 文件夹模板，填写 [功能名] 的完整上下文文件夹”
 └── Phase 5：自己填写 module-map.md + key-files.md
 ```
 
@@ -198,5 +203,5 @@ L1 文档生成后，继续用 `clineprompt-L2.md` 生成 L2 编码规则。
 
 1. **保留**：构建命令、领域术语
 2. **删除**：overview 里的详细数据流和文件列表
-3. **拆分**：原来 overview 里的数据流 → 移到对应的 `features/*.md`
+3. **拆分**：原来 overview 里的数据流 → 移到对应的 `features/[name]/` 文件夹
 4. **新增**：功能索引表、feature 独立文件

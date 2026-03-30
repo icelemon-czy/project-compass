@@ -33,7 +33,8 @@
 {{需要创建新文件时，粘贴 L2-rules/templates.md}}
 
 ### 功能详细上下文（从 overview 索引表匹配后加载）
-{{粘贴 L1-codebase-map/features/[功能名].md — 收到任务后查索引表定位}}
+{{粘贴 L1-codebase-map/features/[功能名]/README.md — 收到任务后先查索引表定位}}
+{{按需粘贴对应层文件：entry.md / logic.md / data.md}}
 
 ### 模块合约与耦合地图
 {{跨模块修改时，粘贴 L1-codebase-map/module-map.md}}
@@ -47,9 +48,9 @@
 
 1. 你正在帮我继续上面"当前会话状态"中记录的工作
 2. 开始前先确认你理解了当前进度和下一步
-3. 修改代码前先查 overview.md 的「功能索引」→ 加载对应的 features/*.md 获取详细上下文
+3. 修改代码前先查 overview.md 的「功能索引」→ 加载对应的 features/[name]/README.md → 按需深入各层文件
 4. 修改跨模块代码前先查 module-map.md 的「变更联动表」避免遗漏联动
-5. 做通用任务时先查 key-files.md 的「任务食谱」；做功能相关任务查 features/*.md 的食谱
+5. 做通用任务时先查 key-files.md 的「任务食谱」；做功能相关任务查 features/[name]/ 的对应层文件
 6. 遵守全局规则和模块特定规则中的所有约束，特别是「反模式清单」
 7. 注意 overview.md 的「雷区清单」，不要碰标记的文件/配置
 8. 每次对话结束前，帮我更新 active-session.md（包括测试状态和下一步动作）
@@ -63,7 +64,8 @@
 | 文档 | 预估 Token | 加载时机 |
 |------|-----------|----------|
 | overview.md | ~200-300 | 每次必加载（轻量索引） |
-| features/*.md | ~400-600 each | 匹配到功能后加载 |
+| features/[name]/README.md | ~200-300 | 匹配到功能后先加载概览 |
+| features/[name]/层文件 | ~300-500 each | 按需加载涉及的层 |
 | global.md | ~400-600 | 每次必加载（规则精简后） |
 | templates.md | ~300-500 | 创建新文件时 |
 | active-session.md | ~300-500 | 每次必加载 |

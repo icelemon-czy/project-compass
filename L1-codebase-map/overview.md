@@ -1,7 +1,7 @@
 # 项目导航首页
 
 > ⚠️ AI 每次对话**必读**。保持极精简（< 60 行）。
-> 这是**索引**，不是详情。详情在 `features/` 子目录下按功能拆分。
+> 这是**索引**，不是详情。详情在 `features/` 子目录下按功能拆分，每个功能一个文件夹。
 
 ## 项目身份
 
@@ -25,12 +25,12 @@
 
 | 功能 | 一句话描述 | 详情 | 入口文件 |
 |------|-----------|------|----------|
-| [如: 用户认证] | JWT 登录/注册/token 刷新 | → `features/user-auth.md` | `src/auth/controller.ts` |
-| [如: 订单处理] | 创建/取消/支付，触发通知 | → `features/order-management.md` | `src/orders/service.ts` |
-| [如: 通知系统] | 异步队列推送邮件/短信 | → `features/notification.md` | `src/notifications/dispatcher.ts` |
-| [填写] | [填写] | → `features/[name].md` | [填写] |
+| [如: 用户认证] | JWT 登录/注册/token 刷新 | → `features/user-auth/` | `src/auth/controller.ts` |
+| [如: 订单处理] | 创建/取消/支付，触发通知 | → `features/order-management/` | `src/orders/service.ts` |
+| [如: 通知系统] | 异步队列推送邮件/短信 | → `features/notification/` | `src/notifications/dispatcher.ts` |
+| [填写] | [填写] | → `features/[name]/` | [填写] |
 
-> 💡 **加载规则**：收到任务 → 在此表匹配功能 → 加载对应 `features/*.md` → 开始工作
+> 💡 **加载规则**：收到任务 → 在此表匹配功能 → 先读对应 `features/[name]/README.md` → 按需深入各层文件 → 开始工作
 
 ## 领域术语
 
