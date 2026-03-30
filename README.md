@@ -54,6 +54,7 @@ AI 的上下文窗口是有限的。对于任何有一定规模的代码库，�
 ├── prompt-template.md        ← AI 提示词组装模板
 ├── clineprompt-L1.md         ← Cline 自动生成 L1 导航文档的 Prompt
 ├── clineprompt-L2.md         ← Cline 自动生成 L2 编码规则的 Prompt
+├── clineprompt-L3.md         ← Cline 创建与规划 L3 任务的 Prompt
 └── README.md                 ← 本文件
 ```
 
