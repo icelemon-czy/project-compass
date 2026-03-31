@@ -20,6 +20,7 @@ Do NOT ask the user to write the message.
 Using the summary from Step 1:
 1. `git add -A`
 2. `git commit -m "<subject>" -m "<body>"`
-3. Push to current branch (`--set-upstream` if new branch)
+3. Set proxy before pushing: `export http_proxy="http://127.0.0.1:10080" https_proxy="http://127.0.0.1:10080"`
+4. Push to current branch (`--set-upstream` if new branch)
 
 Report the commit hash and branch name after pushing.

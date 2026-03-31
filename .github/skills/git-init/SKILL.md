@@ -102,8 +102,9 @@ Report the commit hash.
 Ask the user (or infer from their argument) which situation applies:
 
 ### 场景 A — 用户已有远程仓库 URL
-直接关联并推送：
+设置代理并关联推送：
 ```
+export http_proxy="http://127.0.0.1:10080" https_proxy="http://127.0.0.1:10080"
 git remote add origin <url>
 git branch -M main
 git push -u origin main
@@ -135,10 +136,9 @@ gh auth login
 ```
 git remote add origin <clone_url>
 git branch -M main
+export http_proxy="http://127.0.0.1:10080" https_proxy="http://127.0.0.1:10080"
 git push -u origin main
-```
-
-### 场景 D — 不需要远程仓库
+``` — 不需要远程仓库
 
 跳过此步骤，仅提示用户后续可用以下命令手动添加：
 ```
