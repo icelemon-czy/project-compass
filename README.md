@@ -55,6 +55,11 @@ AI 的上下文窗口是有限的。对于任何有一定规模的代码库，�
 ├── clineprompt-L1.md         ← Cline 自动生成 L1 导航文档的 Prompt
 ├── clineprompt-L2.md         ← Cline 自动生成 L2 编码规则的 Prompt
 ├── clineprompt-L3.md         ← Cline 创建与规划 L3 任务的 Prompt
+├── entrypoints/              ← AI 工具入口文件模板
+│   ├── clinerules.md         ← Cline 入口模板（→ .clinerules）
+│   ├── claude.md             ← Claude Code 入口模板（→ CLAUDE.md）
+│   ├── cursorrules.md        ← Cursor 入口模板（→ .cursorrules）
+│   └── copilot-instructions.md ← GitHub Copilot 入口模板
 ├── roadmap/                  ← 路线图与调研
 │   ├── requirements-integration-research.md ← 需求衔接方案调研
 │   └── multi-agent-collaboration-research.md ← 多 Agent 并行协作调研
@@ -136,6 +141,64 @@ L1 features/user-auth/              L2 rules/
 - `L3-tasks/decision-log.md` — 遇到"为什么这样做"的问题时
 - `L3-tasks/board.md` — 规划下一步时（查看 open 任务）
 
+## 实际工作流程（模式 B：AI 自主导航）
+
+> 推荐用法：在项目根目录放一个入口文件，AI 每次对话自动读取 `.ai/` 下的文档，全程自主导航。
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  Step 0（一次性配置）                                      │
+│  复制 entrypoints/ 下对应模板 → 项目根目录入口文件          │
+│  （.clinerules / CLAUDE.md / .cursorrules 等）            │
+└─────────────────────────────────────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────┐
+│  Step 1-2（每次对话自动）                                  │
+│  AI 读取入口文件 → 自动加载：                               │
+│    • overview.md      — 项目功能索引                       │
+│    • global.md        — 全局编码规则                       │
+│    • active-session.md — 上次进度 + 下一步                  │
+└─────────────────────────────────────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────┐
+│  Step 3  用户给出任务                                      │
+│  "修复用户登录的 token 刷新 bug"                            │
+└─────────────────────────────────────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────┐
+│  Step 4  AI 按索引定位功能                                  │
+│  overview.md 功能索引 → 匹配"用户认证"                      │
+│  → 读取 features/user-auth/README.md                     │
+│  → 按需深入 entry.md / logic.md / data.md                 │
+└─────────────────────────────────────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────┐
+│  Step 5  AI 读取模块规则                                   │
+│  → 读取 L2-rules/auth.md（合约 + 编码约束 + 陷阱）          │
+└─────────────────────────────────────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────┐
+│  Step 6  AI 管理任务                                       │
+│  → 查 board.md 看现有任务 / 创建新 TASK-xxx.md              │
+│  → 写执行计划 + 验收问题 → 等人类确认                        │
+└─────────────────────────────────────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────┐
+│  Step 7  AI 执行编码                                       │
+│  遵守 global.md + 模块规则，参考 templates.md               │
+│  跨模块修改前查 module-map.md 变更联动表                      │
+└─────────────────────────────────────────────────────────┘
+                            ↓
+┌─────────────────────────────────────────────────────────┐
+│  Step 8  AI 更新会话状态                                    │
+│  → 更新 active-session.md                                 │
+│    • 完成了什么、涉及哪些文件                                │
+│    • 测试结果、下一步具体动作                                │
+└─────────────────────────────────────────────────────────┘
+```
+
+**关键点：** 人只需要做 Step 0（一次）+ Step 3（给任务），其余全部由 AI 自主完成。
+
 ## 每个文档该写什么（填写指南）
 
 | 文档 | ✅ 该写 | ❌ 不该写（AI 自己能推导） |
@@ -163,31 +226,22 @@ L1 features/user-auth/              L2 rules/
 
 ## 集成方式
 
-### 方式一：Project Instructions（推荐）
-在项目根目录创建 AI 工具的入口文件，指向 `.ai/` 下的文档：
-- GitHub Copilot → `.github/copilot-instructions.md`
-- Cursor → `.cursorrules`
-- Claude → `CLAUDE.md`
-- Cline → `.clinerules`
-- 其他 → 参考对应工具的文档
+### 方式一：入口文件（推荐 — AI 自主导航）
 
-入口文件示例：
-```markdown
-请阅读以下文件（按顺序）：
-1. .ai/L1-codebase-map/overview.md — 项目导航（功能→代码映射）
-2. .ai/L2-rules/global.md — 编码规则与反模式
-3. .ai/L4-session/active-session.md — 当前进度与下一步
+从 `entrypoints/` 目录复制对应模板到项目根目录：
 
-按需加载：
-- .ai/L1-codebase-map/key-files.md — 常见任务食谱
-- .ai/L1-codebase-map/module-map.md — 跨模块变更联动
-- .ai/L2-rules/[模块名].md — 模块合约与陷阱
-- .ai/L3-tasks/board.md — 任务看板
-- .ai/L3-tasks/TASK-xxx.md — 当前任务详情
-```
+| AI 工具 | 模板文件 | 放置位置 |
+|---------|----------|----------|
+| Cline | `entrypoints/clinerules.md` | 项目根目录 `.clinerules` |
+| Claude Code | `entrypoints/claude.md` | 项目根目录 `CLAUDE.md` |
+| Cursor | `entrypoints/cursorrules.md` | 项目根目录 `.cursorrules`（或 `.cursor/rules/`）|
+| GitHub Copilot | `entrypoints/copilot-instructions.md` | `.github/copilot-instructions.md` |
 
-### 方式二：手动粘贴
-每次对话开始时，按加载策略粘贴相关文档内容。
+入口文件包含完整的导航指令，AI 会自动读取 `.ai/` 下的文档并按需导航。
+详见上方「实际工作流程（模式 B）」。
+
+### 方式二：手动粘贴（模式 A）
+每次对话开始时，使用 `prompt-template.md` 按加载策略粘贴相关文档内容。
 
 ### 方式三：自动化脚本
 编写脚本根据当前 git diff / 修改文件，自动组装需要加载的上下文。
