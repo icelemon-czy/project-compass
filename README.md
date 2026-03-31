@@ -55,8 +55,9 @@ AI 的上下文窗口是有限的。对于任何有一定规模的代码库，�
 ├── clineprompt-L1.md         ← Cline 自动生成 L1 导航文档的 Prompt
 ├── clineprompt-L2.md         ← Cline 自动生成 L2 编码规则的 Prompt
 ├── clineprompt-L3.md         ← Cline 创建与规划 L3 任务的 Prompt
-├── research/                 ← 调研报告
-│   └── ecosystem-comparison.md ← AI 上下文管理生态对比
+├── roadmap/                  ← 路线图与调研
+│   ├── requirements-integration-research.md ← 需求衔接方案调研
+│   └── multi-agent-collaboration-research.md ← 多 Agent 并行协作调研
 └── README.md                 ← 本文件
 ```
 
