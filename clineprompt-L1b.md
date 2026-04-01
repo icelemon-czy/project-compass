@@ -21,15 +21,15 @@ cat .ai/L1-codebase-map/_handoff.md
 
 ---
 
-### Phase 4: 为每个功能强制派发 Feature Sub-agent（核心步骤）
+### Phase 4: 使用 subagents 并行分析每个功能（核心步骤）
 
-> ⚠️ 对 `_handoff.md` 功能清单里的**每个功能**，逐一派发一个独立的 Feature Sub-agent。
+> ☸️ 使用 subagents 为 `_handoff.md` 功能清单里的**每个功能**派发一个独立的 subagent。
 > 主 agent 不直接分析任何功能的代码。
 
 ---
 
 ````
-你是一个代码分析 sub-agent，专门负责分析「[功能名]」这一个功能。
+你是一个代码分析 subagent，专门负责分析「[功能名]」这一个功能。
 规模：[small / medium / large]（small → README.md 一个文件即可；large → 需要完整分层）
 
 ## 项目背景
@@ -88,7 +88,7 @@ cat .ai/L1-codebase-map/_handoff.md
 
 ---
 
-所有 Feature Sub-agent 完成后，主 agent 继续 Phase 5。
+所有 subagents 完成后，主 agent 继续 Phase 5。
 
 ### Phase 5: 填写 module-map.md + key-files.md
 
@@ -123,11 +123,11 @@ cat .ai/L1-codebase-map/_handoff.md
 ```
 主 Agent（Cline）—— 本对话
 ├── 读取 _handoff.md（功能清单 + 跨功能模式 + overview 全文）
-├── Phase 4：为功能清单里的每个功能，逐一派发 Feature Sub-agent（强制，不可选）
-│     ├── 【Feature Sub-agent: user-auth】  → 独立 context，自主分析，自主决定层次结构
-│     ├── 【Feature Sub-agent: order-mgmt】 → 独立 context，自主分析，自主决定层次结构
-│     └── 【Feature Sub-agent: ...】
-└── Phase 5：所有 sub-agent 完成后，填写 module-map.md + key-files.md
+├── Phase 4：使用 subagents 为每个功能派发独立分析任务（强制，不可选）
+│     ├── 【subagent: user-auth】  → 独立 context，自主分析，自主决定层次结构
+│     ├── 【subagent: order-mgmt】 → 独立 context，自主分析，自主决定层次结构
+│     └── 【subagent: ...】
+└── Phase 5：所有 subagents 完成后，填写 module-map.md + key-files.md
 ```
 
 ### 完成后

@@ -232,9 +232,9 @@ grep -rn "NODE_ENV\|RAILS_ENV\|DEBUG\|PRODUCTION\|STAGING" src/[模块名]/ | he
 | 有正反例？ | 有具体的✅正确和❌错误示例 | ❌ "命名用 camelCase"（没有示例） |
 | 人工标记完整？ | 不确定的字段都已标 `[待人工确认]` | ❌ 猜测模块状态为 stable（但没有标记） |
 
-### Sub-agent 使用指南
+### Subagents 使用指南
 
-主 Agent（Cline）做 80% 的分析工作，Sub-agent 只在需要深入时使用：
+主 Agent（Cline）做 80% 的分析工作，subagents 只在需要深入时使用：
 
 ```
 主 Agent（Cline）
@@ -244,17 +244,17 @@ grep -rn "NODE_ENV\|RAILS_ENV\|DEBUG\|PRODUCTION\|STAGING" src/[模块名]/ | he
 ├── 填写 global.md
 ├── Phase 5：逐个处理每个主要模块
 │     ⚠️ 如果某个模块特别大（50+ 个 export）或内部结构复杂：
-│     └── 【Sub-agent】"请分析 src/[模块]/ 的所有 export，列出函数签名 + 被谁调用"
-│     ⚠️ 如果需要深入理解一个模块的内部依赖关系：
-│     └── 【Sub-agent】"请画出 src/[模块]/ 内部各文件的 import 关系图"
+│     └── 【subagent】“请分析 src/[模块]/ 的所有 export，列出函数签名 + 被谁调用”
+│     ☸️ 如果需要深入理解一个模块的内部依赖关系：
+│     └── 【subagent】“请画出 src/[模块]/ 内部各文件的 import 关系图”
 └── 最终：汇总所有 [待人工确认] 标记，提醒用户审核
 ```
 
-**何时用 Sub-agent**:
+**何时用 subagents**:
 - 某个模块 export 数量多（50+），需要分析每个函数的调用者
 - 模块内部文件关系复杂，需要单独理清
 
-**不要用 Sub-agent**:
+**不要用 subagents**:
 - 执行 Phase 0/4 的 grep/cat 命令（主 Agent 直接跑）
 - 填写模板文件（主 Agent 自己填）
 
