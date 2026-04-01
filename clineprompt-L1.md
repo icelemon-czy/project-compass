@@ -1,12 +1,16 @@
-# Cline 构建 L1 代码导航文档 — Prompt 模板
+# Cline 构建 L1 代码导航文档 — 索引
 
-> 将以下 prompt 复制到 Cline 对话中使用。
-> 使用前替换 `[项目配置文件]`、`[项目目录]` 和 `[入口文件]` 为实际路径。
+> ⚠️ **本文件已拆分为两个阶段文件**，请直接使用对应文件：
 >
-> **核心理念**: 渐进式披露 — overview.md 只做轻量索引，详情拆到 `features/` 子目录按功能独立加载。
+> | 文件 | 阶段 | 对话 | 产出 |
+> |------|------|------|------|
+> | `clineprompt-L1a.md` | Phase 1-3（发现阶段） | 第 1 个对话 | overview.md + `_handoff.md` |
+> | `clineprompt-L1b.md` | Phase 4-5（深入分析阶段） | 第 2 个对话（新开） | features/ + module-map.md + key-files.md |
 >
-> **本文件范围**: 生成 L1 代码导航文档（overview.md + module-map.md + key-files.md + features/[name]/）
-> **L2 编码规则**: 完成 L1 后，使用 `clineprompt-L2.md` 在同一对话或新对话中继续
+> **拆分原因**：Phase 1 的命令输出会消耗大量 context，Phase 4 的 sub-agent 派发需要全新的注意力。
+> 通过 `_handoff.md` 作为对话间的交接摘要（类似 `/compact`），保证信息不丢失。
+>
+> **L2 编码规则**: 完成 L1 后，使用 `clineprompt-L2.md` 继续。
 
 ---
 
