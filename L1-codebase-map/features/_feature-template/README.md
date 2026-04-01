@@ -3,15 +3,18 @@
 > 本文件夹包含「[功能名称]」的完整上下文，按层拆分。
 > **加载时机**：当任务涉及此功能时，从 overview.md 的功能索引跳转到这里。
 >
-> 📂 **本文件夹结构**：
-> - `README.md` — 功能概览、数据流、变更影响（**先读这个**）
-> - `entry.md` — 入口层（路由/Controller/Handler/CLI/事件监听等）
-> - `logic.md` — 逻辑层（Service/UseCase/Domain/业务规则等）
-> - `data.md` — 数据层（Model/Repository/DAO/迁移等）
+> ⚠️ **本文件夹是内容格式参考，不是结构蓝图。**
+> 文件数量和文件名由该功能的实际层次决定（由 Feature Sub-agent 在 Step 1 层次发现中确定），
+> 不要机械复制 entry.md / logic.md / data.md 三层结构。
 >
-> 💡 不是每个功能都需要三个层文件。按实际架构增减：
-> - 某层逻辑简单 → 省略对应文件
-> - 有额外层 → 自行添加对应 .md（如 gateway.md、queue.md、cache.md）
+> 📂 **本文件夹结构示例**（实际结构因项目而异）：
+> - `README.md` — 功能概览、数据流、变更影响（**先读这个**）
+> - `[层名].md` — 用项目真实概念命名，如 handler.md / service.md / repo.md / proto.md / queue.md 等
+>
+> 💡 层次划分原则：
+> - 用项目里真实存在的概念命名层，禁止直接沿用 entry / logic / data 通用词
+> - 某层逻辑简单 → 省略或合并
+> - 有项目特有的层 → 自行添加（如 gateway.md、cache.md、worker.md）
 
 ## 数据流
 
