@@ -74,9 +74,10 @@ cat .ai/L1-codebase-map/_handoff.md
 
 ### Step 3 — 创建文件夹和文件
 
-根据规模和 Step 1 的层次清单：
-- **small**：只创建 `README.md`，包含数据流、变更影响表、已知陷阱
-- **medium / large**：创建 `README.md` + 每一层一个 `.md` 文件（**文件名 = Step 1 中确定的层名**）
+根据 Step 1 的层次清单，创建 `README.md` + 每一层一个 `.md` 文件（**文件名 = Step 1 中确定的层名**）。
+
+- `README.md` — 功能概览、数据流、变更影响表、已知陷阱
+- `[层名].md` — 每层一个文件，详细记录该层的职责、关键文件、API、陷阱
 
 内容格式参考 `.ai/L1-codebase-map/features/_feature-template/` 里各文件的 section 结构，但文件名和文件数量完全由 Step 1 决定。
 

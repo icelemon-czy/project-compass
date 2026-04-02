@@ -24,7 +24,7 @@
 
 1. **查索引** — 在 overview.md 的功能索引表中匹配任务涉及的功能
 2. **读功能文档** — 读取 `.ai/L1-codebase-map/features/[功能名]/README.md`
-   - 按需深入：`entry.md`（入口层）/ `logic.md`（逻辑层）/ `data.md`（数据层）
+   - 按需深入：各层 `.md` 文件（文件名反映实际架构层，如 handler.md / service.md / repo.md）
 3. **读模块规则** — 读取 `.ai/L2-rules/[模块名].md`（编码约束 + 合约）
 4. **做通用任务时** — 查 `.ai/L1-codebase-map/key-files.md`（任务食谱）
 5. **跨模块修改时** — 查 `.ai/L1-codebase-map/module-map.md`（变更联动表）
@@ -44,6 +44,10 @@
 - 涉及文件的状态
 - 测试运行结果
 - 下一步具体动作
+
+同步 `.ai/L3-tasks/board.md` 任务状态：
+- 任务进展有变化 → 更新 board.md 状态和测试列
+- 代码完成 + 测试全部通过 → 状态改为 ✅ review，将任务文件移入 `L3-tasks/review/`
 
 ## 关键约束
 
