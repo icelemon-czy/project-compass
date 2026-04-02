@@ -72,10 +72,25 @@ cat .ai/L1-codebase-map/_handoff.md
 - 改了文件 A，哪些看似无关的文件 B 也要改？
 - 有 TODO/FIXME/HACK 的坑？
 
-### Step 3 — 创建文件夹和文件
+### Step 3 — 输出文档内容（不要创建文件）
 
-根据 Step 1 的层次清单，创建 `README.md` + 每一层一个 `.md` 文件（**文件名 = Step 1 中确定的层名**）。
+> ⚠️ **不要自己创建文件**。将以下内容作为你的输出结果返回，由主 agent 负责写入文件。
 
+根据 Step 1 的层次清单，输出以下内容：
+
+**输出格式**：对每个要创建的文件，用以下格式包裹：
+
+```
+=== FILE: .ai/L1-codebase-map/features/[功能名]/README.md ===
+[文件完整内容]
+=== END FILE ===
+
+=== FILE: .ai/L1-codebase-map/features/[功能名]/[层名].md ===
+[文件完整内容]
+=== END FILE ===
+```
+
+需要输出的文件：
 - `README.md` — 功能概览、数据流、变更影响表、已知陷阱
 - `[层名].md` — 每层一个文件，详细记录该层的职责、关键文件、API、陷阱
 
@@ -89,7 +104,16 @@ cat .ai/L1-codebase-map/_handoff.md
 
 ---
 
-所有 subagents 完成后，主 agent 继续 Phase 5。
+所有 subagents 完成后，主 agent 继续 Phase 4b。
+
+### Phase 4b: 主 agent 写入文件
+
+> subagents 只负责分析和输出文本，主 agent 负责创建文件。
+
+对每个 subagent 返回的结果：
+1. 解析 `=== FILE: ... ===` 和 `=== END FILE ===` 之间的内容
+2. 创建对应的文件夹和文件
+3. 快速检查：每个功能至少有 README.md + 分层文件
 
 ### Phase 5: 填写 module-map.md + key-files.md
 
