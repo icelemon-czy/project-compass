@@ -103,7 +103,7 @@ README.md 中的「分层导航」表格式：
 | service.md | 改业务逻辑 / 加新规则时 | 核心规则、状态机 |
 ```
 
-内容格式参考 `.ai/L1-codebase-map/features/_feature-template/` 里各文件的 section 结构，但文件名和文件数量完全由 Step 1 决定。
+内容格式参考 `.ai/L1-codebase-map/features/_feature-template/README.md` 中的 section 结构和「层文件格式参考」部分，但文件名和文件数量完全由 Step 1 决定。
 
 ## 约束
 - 每个文件自包含

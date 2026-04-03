@@ -24,11 +24,8 @@
 ├── module-map.md            ← 模块合约与耦合，跨模块修改时加载
 ├── key-files.md             ← 通用任务食谱，做常见任务时加载
 └── features/                ← 按功能拆分的详细上下文
-    ├── _feature-template/   ← 模板文件夹（复制来创建新功能）
-    │   ├── README.md        ← 功能概览：数据流、变更影响、已知陷阱
-    │   ├── entry.md         ← 入口层：路由/Handler/CLI/事件监听
-    │   ├── logic.md         ← 逻辑层：Service/UseCase/业务规则
-    │   └── data.md          ← 数据层：Model/Repository/迁移
+    ├── _feature-template/   ← 内容格式参考（不要机械复制文件名）
+    │   └── README.md        ← 功能概览 + 分层导航 + 层文件格式参考
     ├── user-auth/           ← 功能 1 的完整上下文
     ├── order-management/    ← 功能 2
     └── ...
