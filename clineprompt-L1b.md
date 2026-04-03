@@ -17,7 +17,7 @@
 cat .ai/L1-codebase-map/_handoff.md
 ```
 
-读取后，你将获得：功能清单、跨功能通用模式、补充上下文（如有）、overview.md 全文。这是本对话的全部背景。
+读取后，你将获得：功能清单、基础设施层（如有）、跨功能通用模式、补充上下文（如有）、overview.md 全文。这是本对话的全部背景。
 
 ---
 
@@ -91,8 +91,17 @@ cat .ai/L1-codebase-map/_handoff.md
 ```
 
 需要输出的文件：
-- `README.md` — 功能概览、数据流、变更影响表、已知陷阱
+- `README.md` — **必须包含「分层导航」表**（每行对应一个层文件，写明加载时机和内容摘要），然后是数据流、变更影响表、已知陷阱
 - `[层名].md` — 每层一个文件，详细记录该层的职责、关键文件、API、陷阱
+
+README.md 中的「分层导航」表格式：
+```markdown
+## 分层导航
+| 层文件 | 加载时机 | 包含内容摘要 |
+|--------|---------|-------------|
+| handler.md | 改 API 入口 / 加新端点时 | 路由注册、请求处理 |
+| service.md | 改业务逻辑 / 加新规则时 | 核心规则、状态机 |
+```
 
 内容格式参考 `.ai/L1-codebase-map/features/_feature-template/` 里各文件的 section 结构，但文件名和文件数量完全由 Step 1 决定。
 
@@ -113,7 +122,20 @@ cat .ai/L1-codebase-map/_handoff.md
 对每个 subagent 返回的结果：
 1. 解析 `=== FILE: ... ===` 和 `=== END FILE ===` 之间的内容
 2. 创建对应的文件夹和文件
-3. 快速检查：每个功能至少有 README.md + 分层文件
+3. 快速检查：每个功能至少有 README.md + 分层文件，README 中包含分层导航表
+
+### Phase 4c: 填写基础设施文档（如有）
+
+> 如果 `_handoff.md` 中「基础设施层」为「无」，跳过本步。
+
+根据 `_handoff.md` 中的基础设施组件表，填写 `.ai/L1-codebase-map/features/_infrastructure/`：
+
+1. 读取 `_infrastructure/README.md` 模板
+2. 对每个基础设施组件，用 `cat` 阅读其代表文件
+3. 填写 README.md 的分层导航表、架构全景、变更影响表
+4. 为每个组件创建对应的 `.md` 文件（如 framework.md、config.md、plugin-host.md、utils.md）
+
+> 注：基础设施由主 agent 直接分析，不需要派发 subagent（它们是跨功能的，subagent 的独立 context 不适合）。
 
 ### Phase 5: 填写 module-map.md + key-files.md
 
@@ -139,6 +161,7 @@ cat .ai/L1-codebase-map/_handoff.md
 | 检查项 | 通过标准 | 不通过的例子 |
 |--------|----------|-------------|
 | feature 文件是否自包含？ | 只读这一个文件就够做该功能的任务 | ❌ 还要去 overview 查数据流 |
+| README 是否有分层导航表？ | 每行对应一个层文件，写明加载时机 | ❌ README 没有导航表，AI 不知道该加载哪个分层文件 |
 | 是否可推导？ | AI 不能从 tree + grep 快速推导出来 | ❌ "auth 模块在 src/auth/ 目录下" |
 | 是否面向任务？ | 有具体的文件路径和步骤 | ❌ "改了 model 要更新相关文件" |
 | feature 文件名是否反映实际架构？ | 文件名来自项目真实概念 | ❌ 所有功能都是 entry.md / logic.md / data.md |

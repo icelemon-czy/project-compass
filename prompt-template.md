@@ -60,7 +60,7 @@
 
 ### 功能详细上下文（从 overview 索引表匹配后加载）
 {{粘贴 L1-codebase-map/features/[功能名]/README.md — 收到任务后先查索引表定位}}
-{{按需粘贴对应层文件：entry.md / logic.md / data.md}}
+{{根据 README 中的分层导航表，按需粘贴对应层文件}}
 
 ### 模块合约与耦合地图
 {{跨模块修改时，粘贴 L1-codebase-map/module-map.md}}
