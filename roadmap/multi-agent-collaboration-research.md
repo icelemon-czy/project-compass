@@ -351,12 +351,160 @@ L4-session/
 └── teammate-2-session.md   ← Teammate 2 进度
 ```
 
-**方案 C — 不改 Compass，靠 Git 隔离**：
+**方案 C — Git Worktree 隔离（推荐起步方案）**：
 - 每个 agent 在自己的 worktree/分支工作
 - 各自有独立的 `.ai/L4-session/active-session.md`
 - 合并时只合并代码，L4 状态各自维护
 
 > ⚠️ 这些都是**可能的方向**，不是立即要做的。当前 Project Compass 的单 agent 设计对大多数使用场景已经足够。
+
+### Git Worktree 工作原理
+
+Git Worktree 允许一个仓库同时拥有多个工作目录，每个目录在不同的分支上独立工作：
+
+```
+my-project/                          ← 主 worktree
+├── .git/                            ← 唯一的 Git 对象数据库
+│   ├── objects/                     ← 所有 commit、blob、tree（共享）
+│   ├── refs/                        ← 分支引用（共享）
+│   └── worktrees/                   ← 每个 linked worktree 的元数据
+│       ├── agent-1/
+│       │   ├── HEAD                 ← agent-1 的 HEAD（独立）
+│       │   ├── index                ← agent-1 的暂存区（独立）
+│       │   └── gitdir               ← 指回 linked worktree 的路径
+│       └── agent-2/
+│           └── ...
+├── .ai/                             ← Project Compass 文档
+├── src/
+└── ...
+
+../agent-1-workspace/                ← linked worktree 1（独立文件系统）
+├── .git                             ← 不是目录，是文件！内容: "gitdir: /path/.git/worktrees/agent-1"
+├── .ai/                             ← 独立副本（关键设计点）
+├── src/
+└── ...
+
+../agent-2-workspace/                ← linked worktree 2
+├── .git
+├── .ai/
+├── src/
+└── ...
+```
+
+**共享 vs 独立**：
+
+| 内容 | 共享/独立 | 说明 |
+|------|----------|------|
+| Git 对象（commits, blobs） | 共享 | 不复制，节省 50%+ 磁盘 |
+| 分支引用（refs/heads） | 共享 | 所有 worktree 看到相同的分支列表 |
+| Git 配置（.git/config） | 共享 | 可通过 `extensions.worktreeConfig` 启用独立配置 |
+| HEAD | **独立** | 每个 worktree 可以在不同分支上 |
+| Index（暂存区） | **独立** | 各自的 `git add` 互不影响 |
+| 工作目录文件 | **独立** | 完全隔离的文件系统，编译/运行不冲突 |
+
+**常用命令**：
+
+```bash
+# 创建 worktree（秒级，不复制 .git/objects）
+git worktree add ../agent-1 -b task/TASK-001-login-fix
+
+# 列出所有 worktree
+git worktree list
+
+# 完成后删除
+git worktree remove ../agent-1
+
+# 清理残留元数据
+git worktree prune
+```
+
+### `.ai/` 四层在多 Worktree 下的行为分析
+
+每个 worktree 会得到 `.ai/` 的**独立文件副本**。四层的性质各不相同：
+
+| 层 | 性质 | 多 worktree 时 | 冲突风险 |
+|----|------|---------------|---------|
+| **L1 代码导航** | 稳定，跟代码结构绑定 | 跟随各自分支，**自然正确** — 分支改了代码结构，L1 也应对应更新 | 低 |
+| **L2 规则** | 稳定，全局统一 | 跟随各自分支，所有分支共享同一套编码规则，**自然正确** | 极低 |
+| **L3 任务** | 中频变化 | ⚠️ board.md 是多 agent 都要读写的 — **冲突高发区** | **高** |
+| **L4 会话** | 高频变化，每个 agent 独立 | ⚠️ active-session.md 每个 agent 需要自己的，**不能共享** | **高**（如果共享） |
+
+**核心洞察**：L1 和 L2 天然适配 worktree（跟代码绑定，各自分支各自对）。真正需要设计的是 **L3（任务分配）和 L4（会话状态）在多 agent 间如何协调**。
+
+### 方案 C-Enhanced：Worktree + Compass 集成方案
+
+```
+主 worktree（人类 + Lead Agent）
+├── .ai/
+│   ├── L1, L2               ← 跟代码绑定，自然正确
+│   ├── L3-tasks/
+│   │   └── board.md          ← 唯一的任务看板（只在主 worktree 维护）
+│   └── L4-session/
+│       └── active-session.md ← Lead 的会话状态
+
+agent-1-workspace/（git worktree add ../agent-1 -b task/TASK-001）
+├── .ai/
+│   ├── L1, L2               ← 跟随分支
+│   ├── L3-tasks/
+│   │   └── board.md          ← 只读参考（不在这里改，避免合并冲突）
+│   └── L4-session/
+│       └── active-session.md ← Agent 1 独立维护自己的会话状态
+
+agent-2-workspace/（git worktree add ../agent-2 -b task/TASK-002）
+├── .ai/
+│   ├── L1, L2
+│   ├── L3-tasks/
+│   │   └── board.md          ← 只读参考
+│   └── L4-session/
+│       └── active-session.md ← Agent 2 独立维护
+```
+
+**规则**：
+1. **board.md** — 只在主 worktree 更新，各 agent worktree 中的 board.md 是创建分支时的快照（只读参考）
+2. **active-session.md** — 每个 worktree 各自维护，合并时**不合并** L4（各自的进度互不相干）
+3. **L1/L2** — 如果 agent 的修改涉及架构变更，在自己的分支中更新对应的 L1 文档，合并时自然带入
+4. **任务状态传达** — 通过 git commit message 或 PR description，而非直接改 board.md
+
+### 落地步骤（如果要做）
+
+**第一步：board.md 加 assignee + branch 列**
+
+```markdown
+| ID | 任务 | 状态 | 分配给 | 分支 |
+|----|------|------|--------|------|
+| TASK-001 | 修复登录 bug | 🔄 进行中 | agent-1 | task/TASK-001 |
+| TASK-002 | 添加导出功能 | 🔄 进行中 | agent-2 | task/TASK-002 |
+| TASK-003 | 重构通知模块 | ⏳ 待认领 | — | — |
+```
+
+**第二步：entrypoints 加多 agent 指令段**
+
+在入口文件模板（clinerules / claude.md 等）中添加：
+
+```markdown
+## 多 Agent 模式（worktree）
+
+如果你在一个 linked worktree 中工作（可通过 `git worktree list` 确认）：
+- L4-session/active-session.md → 只维护你自己的进度
+- L3-tasks/board.md → 只读参考，不要修改
+- 任务状态变更通过 git commit message 传达（如 "[TASK-001] 完成登录修复"）
+- 完成后 push 到你的分支，由 Lead 或人类在主 worktree 合并
+- 合并时只合并代码和 L1/L2 变更，L4 session 不合并
+```
+
+**第三步：合并时的 `.ai/` 处理**
+
+```bash
+# 合并 agent-1 的分支时，忽略 L4 session 文件的冲突
+git merge task/TASK-001
+# 如果 L4 冲突 → 直接用主 worktree 的版本
+git checkout --ours .ai/L4-session/active-session.md
+```
+
+或在 `.gitattributes` 中配置永远用 ours 策略：
+```
+.ai/L4-session/active-session.md merge=ours
+```
 
 ---
 
