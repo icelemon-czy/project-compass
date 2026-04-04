@@ -18,23 +18,40 @@ AI 的上下文窗口是有限的。对于任何有一定规模的代码库，�
 - **只写 AI 推导不出来的东西** — 目录结构、技术栈、模块职责这些 AI 能 `tree` + `grep` 推导，不值得写
 - **面向任务的索引** — 文档的目标是帮 AI 定位"该看哪些代码"，而不是描述"代码长什么样"
 - **关系 > 描述** — 文件间的耦合关系、变更联动比文件列表有用 100 倍
+- **渐进式披露** — AI 每次只加载当前任务所需的最小上下文，而非一次性塞满窗口
 - **可验证 > 抽象** — "Domain 层禁止 import Infrastructure 层"比"采用 Clean Architecture"有用
+
+### L1 导航模型
+
+AI 每次对话**只读 `overview.md`**（< 60 行），然后根据任务类型选择路径：
+
+```
+收到任务
+ ├─ 匹配到具体功能 → features/[功能名]/README.md → 按需深入层文件
+ ├─ 做常见开发任务 → key-files.md（通用任务食谱）
+ ├─ 修改涉及多个模块 → module-map.md（变更联动表）
+ └─ 改底层基础设施 → features/_infrastructure/README.md
+```
+
+路径可组合 — 例如跨功能修改会同时加载 feature README + module-map。
+每个目标文件都有**双向链接**（来源 / 相关文件），防止 AI 迷路。
 
 ## 四层架构
 
 ```
 .ai/
 ├── L1-codebase-map/          ← 代码导航层（稳定，低频更新）
-│   ├── overview.md           ← 轻量索引（< 60 行，功能索引 + 雷区 + 构建命令）
-│   ├── module-map.md         ← 模块合约与耦合地图（公开 API + 变更联动）
-│   ├── key-files.md          ← 通用任务食谱与调查起点
+│   ├── overview.md           ← 唯一入口（< 60 行，功能索引 + 按需加载导航决策树）
+│   ├── module-map.md         ← 模块合约与耦合地图（跨模块修改时加载）
+│   ├── key-files.md          ← 通用任务食谱与调查起点（常见开发任务时加载）
 │   └── features/             ← 按功能拆分的详细上下文（渐进式披露）
-│       ├── _feature-template/   ← 功能文档模板文件夹（复制来创建新功能）
-│       │   ├── README.md        ← 功能概览：数据流、变更影响、已知陷阱
-│       │   ├── entry.md         ← 入口层：路由/Handler/CLI/事件监听
-│       │   ├── logic.md         ← 逻辑层：Service/UseCase/业务规则
-│       │   └── data.md          ← 数据层：Model/Repository/迁移
-│       └── [feature-name]/      ← 每个功能一个文件夹（按层拆分上下文）
+│       ├── _feature-template/   ← 功能文档模板（单文件，复制来创建新功能）
+│       │   └── README.md        ← 概览 + 分层导航 + 数据流 + 层文件格式参考
+│       ├── _infrastructure/     ← 基础设施文档模板（框架/中间件/通用工具）
+│       │   └── README.md        ← 分层导航 + 架构全景 + 变更影响
+│       └── [feature-name]/      ← 每个功能一个文件夹
+│           ├── README.md        ← 功能概览（必读）
+│           └── [层名].md        ← 层文件（按项目概念动态命名，按需加载）
 │
 ├── L2-rules/                 ← 规则层（稳定，按领域分片）
 │   ├── global.md             ← 全局规则（具体可执行规则 + 反模式清单）
@@ -46,15 +63,23 @@ AI 的上下文窗口是有限的。对于任何有一定规模的代码库，�
 │   ├── board.md              ← 任务看板（所有任务状态索引）
 │   ├── _task-template.md     ← 任务模板（复制来创建新任务）
 │   ├── TASK-xxx.md           ← 各任务详情（输入→计划→测试用例）
-│   └── decision-log.md       ← 技术决策记录（ADR）
+│   ├── decision-log.md       ← 技术决策记录（ADR）
+│   └── review/               ← 人工审核区（AI 产出先放这，人工确认后合入）
 │
 ├── L4-session/               ← 会话层（高频变化，每次对话维护）
 │   └── active-session.md     ← 当前会话状态（含测试状态 + 下一步动作）
 │
-├── prompt-template.md        ← AI 提示词组装模板
-├── clineprompt-L1.md         ← Cline 自动生成 L1 导航文档的 Prompt
-├── clineprompt-L2.md         ← Cline 自动生成 L2 编码规则的 Prompt
-├── clineprompt-L3.md         ← Cline 创建与规划 L3 任务的 Prompt
+├── builders/                  ← 自动生成文档的 Prompt 集合（按工具分目录）
+│   ├── cline/               ← Cline 专用（subagent 只读，输出文本由主 agent 写入文件）
+│   │   ├── prompt-L1a.md     ← 生成 L1 文档 Phase 1-3（扫描 + overview）
+│   │   ├── prompt-L1b.md     ← 生成 L1 文档 Phase 4-5（subagents 深入分析）
+│   │   ├── prompt-L2.md      ← 生成 L2 编码规则
+│   │   └── prompt-L3.md      ← 创建与规划 L3 任务
+│   └── claude/              ← Claude Code 专用（subagent 可读写，直接创建文件）
+│       ├── prompt-L1a.md
+│       ├── prompt-L1b.md
+│       ├── prompt-L2.md
+│       └── prompt-L3.md
 ├── entrypoints/              ← AI 工具入口文件模板
 │   ├── clinerules.md         ← Cline 入口模板（→ .clinerules）
 │   ├── claude.md             ← Claude Code 入口模板（→ CLAUDE.md）
@@ -91,13 +116,15 @@ AI 的上下文窗口是有限的。对于任何有一定规模的代码库，�
 
 ```
 L1 features/user-auth/              L2 rules/
-├── README.md  → 数据流 + 变更影响      ├── global.md     → 全局编码规范
-├── entry.md   → 端点在哪、参数结构      ├── templates.md  → 新建文件的代码模板
-├── logic.md   → 业务规则、状态流转      └── auth.md       → auth 模块的合约 + 编码约束
-└── data.md    → 表结构、查询、迁移
+├── README.md    → 数据流 + 变更影响     ├── global.md     → 全局编码规范
+├── routes.md    → 端点在哪、参数结构     ├── templates.md  → 新建文件的代码模板
+├── services.md  → 业务规则、状态流转     └── auth.md       → auth 模块的合约 + 编码约束
+└── models.md    → 表结构、查询、迁移
      ↑                                      ↑
      地图：代码在哪、数据怎么流                规矩：代码怎么写、合约是什么
 ```
+
+> 注：层文件名（如 routes.md、services.md）不是固定的，由 subagent 根据实际代码结构动态命名。
 
 ### 当信息同时跟两边有关时
 
@@ -115,7 +142,7 @@ L1 features/user-auth/              L2 rules/
 1. 将本模板复制到你的项目根目录，重命名为 `.ai/`
 2. 填写 `.ai/L1-codebase-map/overview.md` — **最重要的一步**
    - 重点填写：功能→代码映射表、核心数据流、雷区清单
-   - 或使用 `clineprompt-L1.md` 中的 prompt 让 Cline 辅助填写
+   - 或使用 `builders/cline/prompt-L1a.md`（Cline）或 `builders/claude/prompt-L1a.md`（Claude Code）中的 prompt 让 AI 辅助填写
 3. 填写 `.ai/L2-rules/global.md` — 写下具体的编码规则和反模式
 4. 复制 `.ai/L2-rules/_module-template.md`，按项目模块创建对应的规则文件
 5. 在项目根目录创建入口文件（`CLAUDE.md` / `.cursorrules`），指向 `.ai/` 下的文档
@@ -239,9 +266,3 @@ L1 features/user-auth/              L2 rules/
 
 入口文件包含完整的导航指令，AI 会自动读取 `.ai/` 下的文档并按需导航。
 详见上方「实际工作流程（模式 B）」。
-
-### 方式二：手动粘贴（模式 A）
-每次对话开始时，使用 `prompt-template.md` 按加载策略粘贴相关文档内容。
-
-### 方式三：自动化脚本
-编写脚本根据当前 git diff / 修改文件，自动组装需要加载的上下文。

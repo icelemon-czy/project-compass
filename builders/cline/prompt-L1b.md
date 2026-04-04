@@ -1,6 +1,6 @@
 # Cline 构建 L1 代码导航文档 — Phase 4-5（深入分析阶段）
 
-> **前置条件**：已完成 `clineprompt-L1a.md`，且 `.ai/L1-codebase-map/_handoff.md` 已存在。
+> **前置条件**：已完成 `prompt-L1a.md`，且 `.ai/L1-codebase-map/_handoff.md` 已存在。
 > **本文件产出**：features/[name]/ 完整文档 + module-map.md + key-files.md
 
 ---
@@ -113,16 +113,10 @@ README.md 中的「分层导航」表格式：
 
 ---
 
-所有 subagents 完成后，主 agent 继续 Phase 4b。
+所有 subagents 完成后，主 agent 继续 Phase 4c（如有）。
 
-### Phase 4b: 主 agent 写入文件
-
-> subagents 只负责分析和输出文本，主 agent 负责创建文件。
-
-对每个 subagent 返回的结果：
-1. 解析 `=== FILE: ... ===` 和 `=== END FILE ===` 之间的内容
-2. 创建对应的文件夹和文件
-3. 快速检查：每个功能至少有 README.md + 分层文件，README 中包含分层导航表
+> ❗ 每个 subagent 返回结果后，主 agent 立即解析 `=== FILE ===` 块并创建对应文件。
+> 快速检查：每个功能至少有 README.md + 分层文件，README 中包含分层导航表。
 
 ### Phase 4c: 填写基础设施文档（如有）
 
@@ -172,13 +166,15 @@ README.md 中的「分层导航」表格式：
 主 Agent（Cline）—— 本对话
 ├── 读取 _handoff.md（功能清单 + 跨功能模式 + overview 全文）
 ├── Phase 4：使用 subagents 为每个功能派发独立分析任务（强制，不可选）
-│     ├── 【subagent: user-auth】  → 独立 context，自主分析，自主决定层次结构
-│     ├── 【subagent: order-mgmt】 → 独立 context，自主分析，自主决定层次结构
+│     ├── 【subagent: user-auth】  → 独立 context，自主分析，输出文档文本
+│     ├── 【subagent: order-mgmt】 → 独立 context，自主分析，输出文档文本
 │     └── 【subagent: ...】
+├── 每个 subagent 返回后 → 主 agent 立即写入文件
+├── Phase 4c：填写基础设施文档（主 agent 直接分析，如有）
 └── Phase 5：所有 subagents 完成后，填写 module-map.md + key-files.md
 ```
 
 ### 完成后
 
-L1 文档生成后，继续用 `clineprompt-L2.md` 生成 L2 编码规则。
+L1 文档生成后，继续用 `prompt-L2.md` 生成 L2 编码规则。
 建议在同一对话中继续（Phase 4-5 的信息可复用），或上下文满了就开新对话。

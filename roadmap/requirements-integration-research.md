@@ -171,7 +171,7 @@ Slack 对话发现问题 → @Linear 创建 issue → @Cursor 处理
 | **会话续传（L4）** | ✅ 独有 | ❌ | ❌ | ❌ | ⚠️ agent memory |
 | **归档** | ❌ 只删除 | ✅ 有 archive | ❌ | ❌ | ✅ issue 关闭 |
 | **工具兼容** | ⚠️ 手动适配 | ✅ 20+ 工具 | ✅ 20+ 工具 | ❌ Cursor only | ❌ GitHub only |
-| **自动化生成** | ✅ clineprompt | ✅ CLI 命令 | ❌ | ❌ | ❌ |
+| **自动化生成** | ✅ builders/cline/ | ✅ CLI 命令 | ❌ | ❌ | ❌ |
 | **Issue 集成** | ❌ | ❌ | ❌ | ⚠️ GitHub | ✅ 多源 |
 
 ---
@@ -210,7 +210,7 @@ Project Compass 在以下方面是**独有的或领先的**：
 
 **问题**: 需求来自 GitHub Issues / Linear / 脑子里，但没有"从 issue 创建 TASK"的标准流程。
 
-**方案**: 在 clineprompt-L3.md 中增加"从 Issue 创建任务"的变体 prompt，让 AI 读取 issue 内容自动填充 TASK 文件。
+**方案**: 在 builders/cline/prompt-L3.md 中增加“从 Issue 创建任务”的变体 prompt，让 AI 读取 issue 内容自动填充 TASK 文件。
 
 ### 优先级 4：归档工作流
 
