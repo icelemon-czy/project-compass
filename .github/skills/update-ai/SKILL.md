@@ -52,7 +52,7 @@ git log --oneline -30
 git diff --name-status HEAD~30 -- . ':!.ai'
 
 # Current project structure
-tree -L 3 -I 'node_modules|.git|dist|__pycache__|venv|.venv|build|target|.ai'
+find . -maxdepth 3 -not -path '*/node_modules/*' -not -path '*/.git/*' -not -path '*/dist/*' -not -path '*/__pycache__/*' -not -path '*/venv/*' -not -path '*/.venv/*' -not -path '*/build/*' -not -path '*/target/*' -not -path '*/.ai/*' | head -120 | sort
 
 # New directories that might be new features
 # Compare with features listed in overview.md

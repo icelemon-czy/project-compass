@@ -1,11 +1,11 @@
 # Cline 构建 L1 代码导航文档 — Phase 1-3（发现阶段）
 
-> **使用顺序**：先用本文件，完成后用 `prompt-L1b.md` 继续。
+> **使用顺序**：先用本文件，完成后用 `clineprompt-L1b.md` 继续。
 > 使用前替换 `[项目配置文件]`、`[项目目录]` 和 `[入口文件]` 为实际路径。
 > **可选**：替换 `[补充上下文文件路径]` 为一个 `.md` 文件路径，模型会在 Phase 1 开始前读取它。
 >
 > **本文件产出**：overview.md + 功能清单 + `_handoff.md`（交接摘要）
-> **下一步**：开新对话，使用 `prompt-L1b.md` 完成 Phase 4-5
+> **下一步**：开新对话，使用 `clineprompt-L1b.md` 完成 Phase 4-5
 
 ---
 
@@ -164,7 +164,7 @@ git branch -a 2>/dev/null | head -20
 ```markdown
 # L1 构建交接摘要
 
-> 由 prompt-L1a.md 对话自动生成，供 prompt-L1b.md 对话读取。
+> 由 clineprompt-L1a.md 对话自动生成，供 clineprompt-L1b.md 对话读取。
 
 ## 功能清单
 
@@ -190,7 +190,7 @@ git branch -a 2>/dev/null | head -20
 ```
 
 写完后，提示用户：
-**"Phase 1-3 完成。请开新对话，使用 `prompt-L1b.md`，并告知模型读取 `.ai/L1-codebase-map/_handoff.md`。"**
+**"Phase 1-3 完成。请开新对话，使用 `clineprompt-L1b.md`，并告知模型读取 `.ai/L1-codebase-map/_handoff.md`。"**
 
 ## 约束
 - overview.md < 60 行，只做索引
@@ -212,4 +212,4 @@ git branch -a 2>/dev/null | head -20
 
 ### 完成后
 
-写完 `_handoff.md` 后，**开新对话**使用 `prompt-L1b.md` 继续 Phase 4-5。
+写完 `_handoff.md` 后，**开新对话**使用 `clineprompt-L1b.md` 继续 Phase 4-5。

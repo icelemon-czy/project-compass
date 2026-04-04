@@ -59,8 +59,8 @@ cat [补充上下文文件路径]
 ### Phase 1: 快速收集原始信息（只用命令，不要逐文件阅读）
 
 ```bash
-# 目录结构
-tree -L 3 -I 'node_modules|.git|dist|__pycache__|venv|.venv|build|target'
+# 目录结构（3 层深度，排除常见生成目录）
+find . -maxdepth 3 -not -path '*/node_modules/*' -not -path '*/.git/*' -not -path '*/dist/*' -not -path '*/__pycache__/*' -not -path '*/venv/*' -not -path '*/.venv/*' -not -path '*/build/*' -not -path '*/target/*' | head -120 | sort
 
 # 项目配置
 cat [项目配置文件]

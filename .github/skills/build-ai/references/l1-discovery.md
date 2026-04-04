@@ -15,8 +15,8 @@ Scan the project, identify features, and write the overview index.
 > 只用命令收集，不要逐文件阅读。自动检测项目类型。
 
 ```bash
-# 目录结构
-tree -L 3 -I 'node_modules|.git|dist|__pycache__|venv|.venv|build|target'
+# 目录结构（3 层深度，排除常见生成目录）
+find . -maxdepth 3 -not -path '*/node_modules/*' -not -path '*/.git/*' -not -path '*/dist/*' -not -path '*/__pycache__/*' -not -path '*/venv/*' -not -path '*/.venv/*' -not -path '*/build/*' -not -path '*/target/*' | head -120 | sort
 
 # 项目配置（自动检测）
 cat package.json pyproject.toml go.mod pom.xml build.gradle Cargo.toml 2>/dev/null

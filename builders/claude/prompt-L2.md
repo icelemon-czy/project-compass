@@ -35,8 +35,8 @@ L1 导航文档已经完成，在 `.ai/L1-codebase-map/` 下。
 > 如果在 L1 同一对话中继续，跳过此步骤，直接进入 Phase 4。
 
 ```bash
-# 快速获取项目结构
-tree -L 3 -I 'node_modules|.git|dist|__pycache__|venv|.venv|build|target'
+# 快速获取项目结构（3 层深度）
+find . -maxdepth 3 -not -path '*/node_modules/*' -not -path '*/.git/*' -not -path '*/dist/*' -not -path '*/__pycache__/*' -not -path '*/venv/*' -not -path '*/.venv/*' -not -path '*/build/*' -not -path '*/target/*' | head -120 | sort
 
 # 读取已完成的 L1 文档（了解模块划分和数据流）
 cat [项目目录]/.ai/L1-codebase-map/overview.md
