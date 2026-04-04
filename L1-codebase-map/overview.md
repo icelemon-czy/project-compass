@@ -29,7 +29,7 @@
 | [如: 订单处理] | 创建/取消/支付，触发通知 | → `features/order-management/` | `src/orders/service.ts` |
 | [如: 通知系统] | 异步队列推送邮件/短信 | → `features/notification/` | `src/notifications/dispatcher.ts` |
 | [填写] | [填写] | → `features/[name]/` | [填写] |
-| — 基础设施 | 框架基类、配置系统、插件机制、通用工具 | → `features/_infrastructure/` | — |
+| — 基础设施 | 框架基类、配置系统、插件机制、通用工具 | → `infrastructure/` | — |
 
 ## 按需加载导航
 
@@ -40,7 +40,7 @@
  ├─ 匹配到具体功能 → features/[功能名]/README.md → 按需深入层文件
  ├─ 做常见开发任务（加端点/加表/修 bug） → key-files.md（任务食谱 + 调查起点）
  ├─ 修改涉及多个模块 → module-map.md（模块合约 + 依赖规则 + 变更联动）
- └─ 改底层基础设施 → features/_infrastructure/README.md
+ └─ 改底层基础设施 → infrastructure/README.md
 ```
 
 > 💡 多条路径可叠加：如"跨模块加新端点"先查 key-files.md 拿食谱，再查 module-map.md 确认联动。

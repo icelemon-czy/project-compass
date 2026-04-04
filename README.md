@@ -30,7 +30,7 @@ AI 每次对话**只读 `overview.md`**（< 60 行），然后根据任务类型
  ├─ 匹配到具体功能 → features/[功能名]/README.md → 按需深入层文件
  ├─ 做常见开发任务 → key-files.md（通用任务食谱）
  ├─ 修改涉及多个模块 → module-map.md（变更联动表）
- └─ 改底层基础设施 → features/_infrastructure/README.md
+ └─ 改底层基础设施 → infrastructure/README.md
 ```
 
 路径可组合 — 例如跨功能修改会同时加载 feature README + module-map。
@@ -44,11 +44,11 @@ AI 每次对话**只读 `overview.md`**（< 60 行），然后根据任务类型
 │   ├── overview.md           ← 唯一入口（< 60 行，功能索引 + 按需加载导航决策树）
 │   ├── module-map.md         ← 模块合约与耦合地图（跨模块修改时加载）
 │   ├── key-files.md          ← 通用任务食谱与调查起点（常见开发任务时加载）
+│   ├── infrastructure/       ← 基础设施文档（框架/中间件/通用工具，与 features 平级）
+│   │   └── README.md         ← 分层导航 + 架构全景 + 变更影响
 │   └── features/             ← 按功能拆分的详细上下文（渐进式披露）
 │       ├── _feature-template/   ← 功能文档模板（单文件，复制来创建新功能）
 │       │   └── README.md        ← 概览 + 分层导航 + 数据流 + 层文件格式参考
-│       ├── _infrastructure/     ← 基础设施文档模板（框架/中间件/通用工具）
-│       │   └── README.md        ← 分层导航 + 架构全景 + 变更影响
 │       └── [feature-name]/      ← 每个功能一个文件夹
 │           ├── README.md        ← 功能概览（必读）
 │           └── [层名].md        ← 层文件（按项目概念动态命名，按需加载）
