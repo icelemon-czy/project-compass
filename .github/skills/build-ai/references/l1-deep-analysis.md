@@ -134,7 +134,7 @@ This provides: 功能清单、基础设施层、跨功能通用模式、补充�
 
 #### Step 3 — 创建文档文件
 
-在 `.ai/L1-codebase-map/infrastructure/` 下创建：
+在 `.ai/L1-codebase-map/infrastructure/` 下创建以下文件（不要修改项目模板文件）：
 
 **README.md**（必须包含）：
 
