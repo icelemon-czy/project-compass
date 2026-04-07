@@ -150,8 +150,6 @@ README.md 中的「分层导航」表格式：
 - **module-map.md** — 模块公开 API、依赖规则、跨功能的变更联动
 - **key-files.md** — 通用任务食谱（不属于单一功能的）、调查起点
 
-完成后删除 `.ai/L1-codebase-map/_handoff.md`（临时交接文件，不需要保留）。
-
 ## 约束
 - 每个 feature 文件自包含，可独立加载
 - 不确定的地方写 `[待确认：xxx]`
