@@ -63,7 +63,7 @@ Identify:
 - **Deleted features**: documented features whose code no longer exists
 - **Changed features**: significant modifications to documented features
 - **New patterns**: coding patterns that differ from `global.md`
-- **Infrastructure changes**: framework/config/plugin changes
+- **Infrastructure changes**: framework/config/plugin/build-system/testing changes
 
 ### Step 3: Plan Updates
 

@@ -29,7 +29,7 @@
 | [如: 订单处理] | 创建/取消/支付，触发通知 | → `features/order-management/` | `src/orders/service.ts` |
 | [如: 通知系统] | 异步队列推送邮件/短信 | → `features/notification/` | `src/notifications/dispatcher.ts` |
 | [填写] | [填写] | → `features/[name]/` | [填写] |
-| — 基础设施 | 框架基类、配置系统、插件机制、通用工具 | → `infrastructure/` | — |
+| — 基础设施 | 框架基类、配置系统、插件机制、构建流程、测试基础设施等 | → `infrastructure/` | — |
 
 ## 按需加载导航
 

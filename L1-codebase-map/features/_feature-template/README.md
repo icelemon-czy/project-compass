@@ -15,6 +15,7 @@
 > - 用项目里真实存在的概念命名层，禁止直接沿用 entry / logic / data 通用词
 > - 某层逻辑简单 → 省略或合并
 > - 有项目特有的层 → 自行添加（如 gateway.md、cache.md、worker.md）
+> - **Feature-specific 的 helper/util** → 作为本功能的一个层文件（如 token-helper.md），不放 infrastructure/
 
 ## 分层导航
 

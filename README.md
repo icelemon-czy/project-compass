@@ -47,7 +47,11 @@ Every target file has **bidirectional links** (source / related files) to preven
 │   ├── module-map.md         ← Module contracts & coupling map (loaded for cross-module changes)
 │   ├── key-files.md          ← Common task recipes & investigation starting points
 │   ├── infrastructure/       ← Infrastructure docs (framework/middleware/utilities, peer to features)
-│   │   └── README.md         ← Layered navigation + architecture overview + change impact
+│   │   ├── _infrastructure-template/ ← Infrastructure component doc template
+│   │   │   └── README.md         ← Component overview + layer nav + format reference
+│   │   └── [component-name]/     ← One folder per infrastructure component
+│   │       ├── README.md         ← Component overview (must read)
+│   │       └── [layer].md        ← Layer files (loaded on demand)
 │   └── features/             ← Per-feature detailed context (progressive disclosure)
 │       ├── _feature-template/   ← Feature doc template (copy to create new feature)
 │       │   └── README.md        ← Overview + layered nav + data flow + layer file format reference

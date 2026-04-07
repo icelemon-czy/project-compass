@@ -46,8 +46,12 @@ AI 每次对话**只读 `overview.md`**（< 60 行），然后根据任务类型
 │   ├── overview.md           ← 唯一入口（< 60 行，功能索引 + 按需加载导航决策树）
 │   ├── module-map.md         ← 模块合约与耦合地图（跨模块修改时加载）
 │   ├── key-files.md          ← 通用任务食谱与调查起点（常见开发任务时加载）
-│   ├── infrastructure/       ← 基础设施文档（框架/中间件/通用工具，与 features 平级）
-│   │   └── README.md         ← 分层导航 + 架构全景 + 变更影响
+│   ├── infrastructure/       ← 基础设施文档（框架/中间件/构建流程/测试基础设施，与 features 平级）
+│   │   ├── _infrastructure-template/ ← 基础设施组件文档模板
+│   │   │   └── README.md        ← 组件概览 + 分层导航 + 格式参考
+│   │   └── [component-name]/    ← 每个基础设施组件一个文件夹
+│   │       ├── README.md        ← 组件概览（必读）
+│   │       └── [层名].md        ← 层文件（按需加载）
 │   └── features/             ← 按功能拆分的详细上下文（渐进式披露）
 │       ├── _feature-template/   ← 功能文档模板（单文件，复制来创建新功能）
 │       │   └── README.md        ← 概览 + 分层导航 + 数据流 + 层文件格式参考

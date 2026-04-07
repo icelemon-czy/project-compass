@@ -14,7 +14,8 @@ Create the `.ai/` directory structure in the target project.
 │   │   └── _feature-template/
 │   │       └── README.md        ← Scaffold creates (format reference)
 │   └── infrastructure/
-│       └── README.md            ← Phase 4c creates (if applicable)
+│       └── _infrastructure-template/
+│           └── README.md        ← Scaffold creates (format reference)
 ├── L2-rules/
 │   ├── global.md                ← Phase 6 creates
 │   ├── templates.md             ← Phase 6 creates
@@ -60,6 +61,42 @@ Create each file below with the specified content. Files marked "Phase X creates
 <!-- 写出核心操作的完整链路 -->
 
 ### [操作 2]
+
+## 变更影响
+
+| 当你改了… | 必须同步改… | 原因 |
+|-----------|-------------|------|
+| [填写] | [填写] | [填写] |
+
+## 已知陷阱
+
+- ⚠️ [填写]
+```
+
+---
+
+### `.ai/L1-codebase-map/infrastructure/_infrastructure-template/README.md`
+
+```markdown
+# 基础设施层
+
+> 本文件夹文档化跨功能的底层架构和基础设施（项目级共享基础设施）。
+> **加载时机**：当任务涉及框架基类、配置系统、插件机制、构建流程、测试基础设施等时加载。
+>
+> 📂 **本文件夹结构**（按实际项目调整）：
+> - `_infrastructure-template/` — 内容格式参考（不要机械复制）
+> - `[组件名]/` — 每个基础设施组件一个文件夹
+
+## 组件索引
+
+| 组件 | 加载时机 | 包含内容摘要 |
+|------|---------|-------------|
+| [如: framework/] | [如: 继承基类 / 用 DI 容器] | [如: 基类体系、DI 注册] |
+| [如: config/] | [如: 加新配置项 / 改配置加载] | [如: 配置文件结构、加载顺序] |
+
+## 架构全景
+
+<!-- 基础设施各组件之间的关系 -->
 
 ## 变更影响
 

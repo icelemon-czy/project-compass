@@ -120,7 +120,7 @@ This provides: 功能清单、基础设施层、跨功能通用模式、补充�
 | 组件名（项目词汇） | 代表文件 | 职责一句话 |
 |------------------|---------|------------|
 
-**命名规则**：用项目真实概念（framework / config / plugin-host / logger），禁止抽象通用词。
+**命名规则**：用项目真实概念（framework / config / plugin-host / logger / build-system / testing），禁止抽象通用词。
 
 > ⚠️ 未执行 cat、未阅读实际代码前，不得进入 Step 2。
 
@@ -136,8 +136,10 @@ This provides: 功能清单、基础设施层、跨功能通用模式、补充�
 
 1. 读取模板：`cat .ai/L1-codebase-map/infrastructure/_infrastructure-template/README.md`
 2. 参照模板格式，在 `.ai/L1-codebase-map/infrastructure/` 下创建实际文件：
-   - `README.md` — 按模板的 section 结构（分层导航、架构全景、变更影响、已知陷阱），填入 Step 1-2 的分析结果
-   - `[组件名].md` — 按模板底部「组件文件格式参考」的格式，每个组件一个文件（文件名 = Step 1 组件名）
+   - 先更新 `README.md` — 填入组件索引表、架构全景、变更影响、已知陷阱
+   - 为每个组件创建子文件夹 `[组件名]/`：
+     - `README.md` — 组件概览 + 分层导航 + 关键文件 + 核心机制 + 对外接口
+     - `[层名].md` — 如果组件内部有多层结构，按层拆分（简单组件只需 README.md 即可）
 
 ## Phase 5: module-map.md + key-files.md
 
