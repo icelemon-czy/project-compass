@@ -234,10 +234,10 @@ grep -rn "NODE_ENV\|RAILS_ENV\|DEBUG\|PRODUCTION\|STAGING" src/[模块名]/ | he
 
 ### Subagents 使用指南
 
-主 Agent（Cline）做 80% 的分析工作，subagents 只在需要深入时使用：
+主 Agent（Claude Code）做 80% 的分析工作，subagents 只在需要深入时使用：
 
 ```
-主 Agent（Cline）
+主 Agent（Claude Code）
 ├── Phase 4a-4c：自己从配置文件和 import 分析中提取规则
 ├── Phase 4d-4e：自己从代码中搜索错误处理和反模式
 ├── Phase 4f-4h：自己提取模板、版本控制、测试规范

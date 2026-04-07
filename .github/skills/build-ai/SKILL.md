@@ -76,4 +76,3 @@ Run through this checklist:
 - [ ] `global.md` rules are extracted from actual code patterns, not invented
 - [ ] Every line passes: "Can AI derive this from code?" If yes → delete it
 - [ ] Entrypoint file created and points to correct `.ai/` paths
-- [ ] Clean up: delete `_handoff.md` (temporary file)
