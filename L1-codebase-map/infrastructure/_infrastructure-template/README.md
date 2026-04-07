@@ -9,9 +9,9 @@
 >   - `README.md` — 组件概览 + 导航（**先读这个**）
 >   - `[层名].md` — 按组件实际层次拆分，按需加载
 >
-> 💡 **Infrastructure 的范畴**：不仅包括框架基类、配置系统等底层架构，
-> 也包括 CI/CD 构建流程、测试框架/helpers、代码生成工具等**跨 feature 共享的项目级基础设施**。
-> Feature-specific 的 helper 不放这里，放在对应 feature 文件夹下作为一个层文件。
+> 💡 **Infrastructure 的范畴**：被 ≥2 个 feature 共享的底层机制，
+> 如框架基类、配置系统、CI/CD 构建流程、测试框架/helpers、代码生成工具等。
+> 只服务于单个 feature 的 helper 不放这里，放在对应 feature 文件夹下作为一个层文件。
 
 ## 组件索引
 
