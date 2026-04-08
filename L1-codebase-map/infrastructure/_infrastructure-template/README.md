@@ -56,6 +56,15 @@
 | [如: 插件接口] | [如: 所有 implements IPlugin 的插件] | [如: 接口变更导致插件不兼容] |
 | [如: Logger API] | [如: 全局所有 Logger 调用点] | [如: API 变更导致日志丢失] |
 
+## 使用者（哪些 Feature 依赖本组件）
+
+<!-- 列出依赖本基础设施组件的功能，便于评估变更影响面 -->
+
+| Feature | 使用的接口 | 说明 |
+|---------|-----------|------|
+| [如: user-auth] | [如: requireAuth() 中间件] | [如: 所有需要鉴权的端点] |
+| [如: order-management] | [如: BaseService 基类] | [如: OrderService 继承 BaseService] |
+
 ## 已知陷阱
 
 - ⚠️ [填写]
