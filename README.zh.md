@@ -77,13 +77,13 @@ AI 每次对话**只读 `overview.md`**（< 60 行），然后根据任务类型
 │
 ├── builders/                  ← 自动生成文档的 Prompt 集合（按工具分目录）
 │   ├── cline/               ← Cline 专用（subagent 只读，输出文本由主 agent 写入文件）
-│   │   ├── prompt-L1a.md     ← 生成 L1 文档 Phase 1-3（扫描 + overview）
-│   │   ├── prompt-L1b.md     ← 生成 L1 文档 Phase 4-5（subagents 深入分析）
+│   │   ├── prompt-L1a.md     ← 生成 L1 文档 Phase 1-3（扫描 + overview；基础设施优先：2a 基础设施 → 2b 功能 → 2c 通用模式）
+│   │   ├── prompt-L1b.md     ← 生成 L1 文档 Phase 4-5（4a 基础设施文档 → 4b subagent 功能深入分析）
 │   │   ├── prompt-L2.md      ← 生成 L2 编码规则
 │   │   └── prompt-L3.md      ← 创建与规划 L3 任务
 │   └── claude/              ← Claude Code 专用（subagent 可读写，直接创建文件）
-│       ├── prompt-L1a.md
-│       ├── prompt-L1b.md
+│       ├── prompt-L1a.md     ← 生成 L1 文档 Phase 1-3（扫描 + overview；基础设施优先：2a 基础设施 → 2b 功能 → 2c 通用模式）
+│       ├── prompt-L1b.md     ← 生成 L1 文档 Phase 4-5（4a 基础设施文档 → 4b subagent 功能深入分析）
 │       ├── prompt-L2.md
 │       └── prompt-L3.md
 ├── entrypoints/              ← AI 工具入口文件模板
@@ -149,6 +149,7 @@ L1 features/user-auth/              L2 rules/
 2. 填写 `.ai/L1-codebase-map/overview.md` — **最重要的一步**
    - 重点填写：功能→代码映射表、核心数据流、雷区清单
    - 或使用 `builders/cline/prompt-L1a.md`（Cline）或 `builders/claude/prompt-L1a.md`（Claude Code）中的 prompt 让 AI 辅助填写
+   - Builder prompt 遵循**基础设施优先**顺序：先识别基础设施（Phase 2a）→ 再识别功能（Phase 2b）→ 最后通用模式（Phase 2c）；然后先生成基础设施文档（Phase 4a）再派发功能分析（Phase 4b）
 3. 填写 `.ai/L2-rules/global.md` — 写下具体的编码规则和反模式
 4. 复制 `.ai/L2-rules/_module-template.md`，按项目模块创建对应的规则文件
 5. 在项目根目录创建入口文件（`CLAUDE.md` / `.cursorrules`），指向 `.ai/` 下的文档
@@ -236,10 +237,10 @@ L1 features/user-auth/              L2 rules/
 
 | 文档 | ✅ 该写 | ❌ 不该写（AI 自己能推导） |
 |------|---------|--------------------------|
-| overview.md | **功能索引表**（名称+指针）、雷区、构建命令 | 数据流详情、涉及文件列表（放到 features/[name]/ 下） |
-| module-map.md | 公开 API 清单、变更联动表、依赖禁止规则 | 模块职责描述、代码行数统计 |
+| overview.md | **功能索引表**（名称+指针）、**依赖关系概览**（功能→基础设施方向）、雷区、构建命令 | 数据流详情、涉及文件列表（放到 features/[name]/ 下） |
+| module-map.md | **依赖拓扑**（ASCII 全局分层依赖图）、公开 API 清单、变更联动表、依赖禁止规则 | 模块职责描述、代码行数统计 |
 | key-files.md | 通用任务食谱、调查起点、全局变更影响 | 功能相关的食谱（放到 features/[name]/ 下） |
-| features/[name]/ | 单个功能的完整上下文，按层拆分：README（概览+数据流）、controller/service/data（各层细节） | 跨功能的通用信息 |
+| features/[name]/ | 单个功能的完整上下文，按层拆分：README（概览+数据流+**依赖的基础设施**）、controller/service/data（各层细节） | 跨功能的通用信息 |
 | global.md | 具体可执行规则、反模式清单、错误处理模式 | "架构模式: Clean Architecture"（太抽象） |
 | templates.md | 新建文件的代码模板（Service、Test 等） | 应从实际代码中提取，不是编造 |
 | 模块规则 | 对外合约（函数签名+稳定性）、模块内编码约束、边界规则、测试策略 | 数据流、文件列表、变更影响（放 L1） |

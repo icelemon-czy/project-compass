@@ -77,13 +77,13 @@ Every target file has **bidirectional links** (source / related files) to preven
 │
 ├── builders/                  ← Auto-generation prompt collection (organized by tool)
 │   ├── cline/               ← Cline-specific (subagent read-only, outputs text for main agent to write)
-│   │   ├── prompt-L1a.md     ← Generate L1 docs Phase 1-3 (scan + overview)
-│   │   ├── prompt-L1b.md     ← Generate L1 docs Phase 4-5 (subagent deep analysis)
+│   │   ├── prompt-L1a.md     ← Generate L1 docs Phase 1-3 (scan + overview; infra-first discovery: 2a infra → 2b features → 2c patterns)
+│   │   ├── prompt-L1b.md     ← Generate L1 docs Phase 4-5 (4a: infra docs → 4b: subagent feature analysis)
 │   │   ├── prompt-L2.md      ← Generate L2 coding rules
 │   │   └── prompt-L3.md      ← Create & plan L3 tasks
 │   └── claude/              ← Claude Code-specific (subagent has read+write, creates files directly)
-│       ├── prompt-L1a.md
-│       ├── prompt-L1b.md
+│       ├── prompt-L1a.md     ← Generate L1 docs Phase 1-3 (scan + overview; infra-first discovery: 2a infra → 2b features → 2c patterns)
+│       ├── prompt-L1b.md     ← Generate L1 docs Phase 4-5 (4a: infra docs → 4b: subagent feature analysis)
 │       ├── prompt-L2.md
 │       └── prompt-L3.md
 ├── entrypoints/              ← AI tool entry point templates
@@ -146,6 +146,7 @@ L1 features/user-auth/              L2 rules/
 2. Fill in `.ai/L1-codebase-map/overview.md` — **the most important step**
    - Focus on: feature → code mapping table, core data flows, danger zone list
    - Or use `builders/cline/prompt-L1a.md` (Cline) or `builders/claude/prompt-L1a.md` (Claude Code) to let AI assist
+   - The builder prompts follow **infrastructure-first order**: identify infra (Phase 2a) → features (Phase 2b) → patterns (Phase 2c), then document infra (Phase 4a) before running feature subagents (Phase 4b)
 3. Fill in `.ai/L2-rules/global.md` — Write concrete coding rules and anti-patterns
 4. Copy `.ai/L2-rules/_module-template.md`, create rule files for each project module
 5. Create an entry point file in project root (`CLAUDE.md` / `.cursorrules`), pointing to `.ai/` docs
@@ -233,10 +234,10 @@ L1 features/user-auth/              L2 rules/
 
 | Document | ✅ Should write | ❌ Don't write (AI can infer) |
 |----------|----------------|------------------------------|
-| overview.md | **Feature index table** (name + pointer), danger zones, build commands | Data flow details, file listings (goes in features/[name]/) |
-| module-map.md | Public API list, change propagation table, dependency prohibition rules | Module responsibility descriptions, LOC stats |
+| overview.md | **Feature index table** (name + pointer), **dependency overview** (feature → infrastructure direction), danger zones, build commands | Data flow details, file listings (goes in features/[name]/) |
+| module-map.md | **Dependency topology** (ASCII global layer diagram), public API list, change propagation table, dependency prohibition rules | Module responsibility descriptions, LOC stats |
 | key-files.md | Common task recipes, investigation starting points, global change impacts | Feature-specific recipes (goes in features/[name]/) |
-| features/[name]/ | Complete context for one feature, split by layer: README (overview + data flow), controller/service/data (layer details) | Cross-feature generic info |
+| features/[name]/ | Complete context for one feature, split by layer: README (overview + data flow + **infrastructure dependencies**), controller/service/data (layer details) | Cross-feature generic info |
 | global.md | Concrete executable rules, anti-pattern checklist, error handling patterns | "Architecture pattern: Clean Architecture" (too abstract) |
 | templates.md | Code templates for new files (Service, Test, etc.) | Should be extracted from actual code, not fabricated |
 | Module rules | Public contracts (function signatures + stability), internal coding constraints, boundary rules, test strategy | Data flows, file lists, change impact (goes in L1) |
