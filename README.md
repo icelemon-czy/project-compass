@@ -80,7 +80,12 @@ Every target file has **bidirectional links** (source / related files) to preven
 │   │   ├── prompt-L1a.md     ← Generate L1 docs Phase 1-3 (scan + overview; infra-first discovery: 2a infra → 2b features → 2c patterns)
 │   │   ├── prompt-L1b.md     ← Generate L1 docs Phase 4-5 (4a: infra docs → 4b: subagent feature analysis)
 │   │   ├── prompt-L2.md      ← Generate L2 coding rules
-│   │   └── prompt-L3.md      ← Create & plan L3 tasks
+│   │   ├── prompt-L3.md      ← Create & plan L3 tasks
+│   │   └── single-agent/     ← Single-agent variant: no subagents, pause for human review after each item
+│   │       ├── prompt-L1a.md
+│   │       ├── prompt-L1b.md ← Core difference: main agent analyzes each feature/infra one at a time
+│   │       ├── prompt-L2.md  ← Pauses for review after each module
+│   │       └── prompt-L3.md
 │   └── claude/              ← Claude Code-specific (subagent has read+write, creates files directly)
 │       ├── prompt-L1a.md     ← Generate L1 docs Phase 1-3 (scan + overview; infra-first discovery: 2a infra → 2b features → 2c patterns)
 │       ├── prompt-L1b.md     ← Generate L1 docs Phase 4-5 (4a: infra docs → 4b: subagent feature analysis)

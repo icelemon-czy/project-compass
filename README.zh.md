@@ -80,7 +80,12 @@ AI 每次对话**只读 `overview.md`**（< 60 行），然后根据任务类型
 │   │   ├── prompt-L1a.md     ← 生成 L1 文档 Phase 1-3（扫描 + overview；基础设施优先：2a 基础设施 → 2b 功能 → 2c 通用模式）
 │   │   ├── prompt-L1b.md     ← 生成 L1 文档 Phase 4-5（4a 基础设施文档 → 4b subagent 功能深入分析）
 │   │   ├── prompt-L2.md      ← 生成 L2 编码规则
-│   │   └── prompt-L3.md      ← 创建与规划 L3 任务
+│   │   ├── prompt-L3.md      ← 创建与规划 L3 任务
+│   │   └── single-agent/     ← 单 Agent 变体：不使用 subagent，每个功能/组件完成后暂停等人工审核
+│   │       ├── prompt-L1a.md
+│   │       ├── prompt-L1b.md ← 核心差异：主 agent 逐个分析功能和基础设施，每个暂停审核
+│   │       ├── prompt-L2.md  ← 逐模块暂停审核
+│   │       └── prompt-L3.md
 │   └── claude/              ← Claude Code 专用（subagent 可读写，直接创建文件）
 │       ├── prompt-L1a.md     ← 生成 L1 文档 Phase 1-3（扫描 + overview；基础设施优先：2a 基础设施 → 2b 功能 → 2c 通用模式）
 │       ├── prompt-L1b.md     ← 生成 L1 文档 Phase 4-5（4a 基础设施文档 → 4b subagent 功能深入分析）
