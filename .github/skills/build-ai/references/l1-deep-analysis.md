@@ -9,9 +9,49 @@ Read the handoff file:
 cat .ai/L1-codebase-map/_handoff.md
 ```
 
-This provides: 功能清单、基础设施层、跨功能通用模式、补充上下文、overview.md 全文。
+This provides: 基础设施层、功能清单、跨功能通用模式、补充上下文、overview.md 全文。
 
-## Phase 4: 为每个功能派发 Subagent
+> **构建顺序**：先建基础设施（地基），再分析功能（建在基础设施之上）。
+
+## Phase 4a: 基础设施文档（如适用）
+
+> 如果 `_handoff.md` 中基础设施层为「无」，跳过，直接进入 Phase 4b。
+> 由主 agent 直接分析（不用 subagent，因为基础设施是跨功能的）。
+> ⚠️ **必须在 Phase 4b（功能分析）之前完成**，因为 subagent 需要基础设施上下文。
+
+#### Step 1 — 组件发现（先看代码，再输出清单）
+
+对 `_handoff.md` 基础设施表中的每个组件，`cat` 阅读其代表文件。
+
+阅读完后，输出组件清单：
+
+| 组件名（项目词汇） | 代表文件 | 职责一句话 |
+|------------------|---------|------------|
+
+**命名规则**：用项目真实概念（framework / config / plugin-host / logger / build-system / testing），禁止抽象通用词。
+
+> ⚠️ 未执行 cat、未阅读实际代码前，不得进入 Step 2。
+
+#### Step 2 — 追踪依赖关系 + 发现联动
+
+分析每个组件：
+- 哪些功能层使用了它？（grep import / require / from）
+- 组件之间的依赖关系？（如：插件系统依赖配置系统）
+- 改了组件 A，哪些看似无关的东西也要改？
+- 有 TODO/FIXME/HACK 的坑？
+
+#### Step 3 — 创建文档文件
+
+1. 读取模板：`cat .ai/L1-codebase-map/infrastructure/_infrastructure-template/README.md`
+2. 参照模板格式，在 `.ai/L1-codebase-map/infrastructure/` 下创建实际文件：
+   - 先更新 `README.md` — 填入组件索引表、架构全景、变更影响、已知陷阱
+   - 为每个组件创建子文件夹 `[组件名]/`：
+     - `README.md` — 组件概览 + 分层导航 + 关键文件 + 核心机制 + 对外接口
+     - `[层名].md` — 如果组件内部有多层结构，按层拆分（简单组件只需 README.md 即可）
+
+---
+
+## Phase 4b: 为每个功能派发 Subagent
 
 为 `_handoff.md` 功能清单里的**每个功能**派发一个独立的 subagent 进行分析。
 
@@ -26,6 +66,13 @@ This provides: 功能清单、基础设施层、跨功能通用模式、补充�
 ## 项目背景
 
 [粘贴 _handoff.md 中 overview.md 全文]
+
+## 基础设施上下文（如有）
+
+<!-- 如果 Phase 4a 已完成基础设施文档，将 infrastructure/README.md 的「组件索引」表和「架构全景」粘贴到这里。
+     如果没有基础设施层，删除本 section。 -->
+
+[粘贴 infrastructure/README.md 的组件索引表和架构全景，或删除本 section]
 
 ## 补充上下文（如有）
 
@@ -105,41 +152,6 @@ This provides: 功能清单、基础设施层、跨功能通用模式、补充�
 ### 检查
 
 所有 subagents 完成后，检查每个功能至少有 README.md + 分层文件，README 中包含分层导航表。
-
-## Phase 4c: 基础设施文档（如适用）
-
-> 如果 `_handoff.md` 中基础设施层为「无」，跳过。
-> 由主 agent 直接分析（不用 subagent，因为基础设施是跨功能的）。
-
-#### Step 1 — 组件发现（先看代码，再输出清单）
-
-对 `_handoff.md` 基础设施表中的每个组件，`cat` 阅读其代表文件。
-
-阅读完后，输出组件清单：
-
-| 组件名（项目词汇） | 代表文件 | 职责一句话 |
-|------------------|---------|------------|
-
-**命名规则**：用项目真实概念（framework / config / plugin-host / logger / build-system / testing），禁止抽象通用词。
-
-> ⚠️ 未执行 cat、未阅读实际代码前，不得进入 Step 2。
-
-#### Step 2 — 追踪依赖关系 + 发现联动
-
-分析每个组件：
-- 哪些功能层使用了它？（grep import / require / from）
-- 组件之间的依赖关系？（如：插件系统依赖配置系统）
-- 改了组件 A，哪些看似无关的东西也要改？
-- 有 TODO/FIXME/HACK 的坑？
-
-#### Step 3 — 创建文档文件
-
-1. 读取模板：`cat .ai/L1-codebase-map/infrastructure/_infrastructure-template/README.md`
-2. 参照模板格式，在 `.ai/L1-codebase-map/infrastructure/` 下创建实际文件：
-   - 先更新 `README.md` — 填入组件索引表、架构全景、变更影响、已知陷阱
-   - 为每个组件创建子文件夹 `[组件名]/`：
-     - `README.md` — 组件概览 + 分层导航 + 关键文件 + 核心机制 + 对外接口
-     - `[层名].md` — 如果组件内部有多层结构，按层拆分（简单组件只需 README.md 即可）
 
 ## Phase 5: module-map.md + key-files.md
 
