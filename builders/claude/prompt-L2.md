@@ -1,6 +1,6 @@
-# Cline 构建 L2 编码规则 — Prompt 模板
+# Claude 构建 L2 编码规则 — Prompt 模板
 
-> 将以下 prompt 复制到 Cline 对话中使用。
+> 将以下 prompt 复制到 Claude 对话中使用。
 > 使用前替换 `[项目目录]` 和 `[模块名]` 为实际值。
 >
 > **前置条件**: 已用 `prompt-L1a.md` + `prompt-L1b.md` 完成 L1 文档生成。
@@ -267,13 +267,13 @@ grep -rn "NODE_ENV\|RAILS_ENV\|DEBUG\|PRODUCTION\|STAGING" src/[模块名]/ | he
 
 ### 人工审核清单
 
-Cline 完成后，你需要审核所有 `[待人工确认]` 标记。常见需要确认的点：
+Claude 完成后，你需要审核所有 `[待人工确认]` 标记。常见需要确认的点：
 
-- **模块状态判断** — Cline 从 git log 推断活跃度，但你要确认 stable/active/legacy
-- **依赖禁止原因** — Cline 能发现"A 没有 import B"，但"为什么禁止"需要你补充
+- **模块状态判断** — Claude 从 git log 推断活跃度，但你要确认 stable/active/legacy
+- **依赖禁止原因** — Claude 能发现"A 没有 import B"，但"为什么禁止"需要你补充
 - **隐式合约** — 如 "调用 authenticate() 后返回的 token 包含哪些字段"
-- **反模式的 why** — Cline 从 lint 规则提取了禁止项，你可能需要补充原因
-- **新建文件模板** — Cline 从现有代码提取了模式，确认这是你想要的标准
+- **反模式的 why** — Claude 从 lint 规则提取了禁止项，你可能需要补充原因
+- **新建文件模板** — Claude 从现有代码提取了模式，确认这是你想要的标准
 
 ### 从旧版模板迁移（L2 部分）
 

@@ -1,6 +1,6 @@
-# Cline 创建与规划 L3 任务 — Prompt 模板
+# Claude 创建与规划 L3 任务 — Prompt 模板
 
-> 将以下 prompt 复制到 Cline 对话中使用。
+> 将以下 prompt 复制到 Claude 对话中使用。
 > 使用前替换 `[任务编号]`、`[任务描述]` 和 `[项目目录]` 为实际值。
 >
 > **前置条件**: 已用 `prompt-L1a.md`/`prompt-L1b.md` 和 `prompt-L2.md` 完成 L1/L2 文档生成。
