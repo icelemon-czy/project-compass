@@ -28,8 +28,9 @@
 3. **读模块规则** — 读取 `.ai/L2-rules/[模块名].md`（编码约束 + 合约）
 4. **做通用任务时** — 查 `.ai/L1-codebase-map/key-files.md`（任务食谱）
 5. **跨模块修改时** — 查 `.ai/L1-codebase-map/module-map.md`（变更联动表）
-6. **改底层基础设施时** — 查 `.ai/L1-codebase-map/infrastructure/README.md`（框架基类、配置、插件、构建流程、测试基础设施等）
-7. **创建新文件时** — 查 `.ai/L2-rules/templates.md`（标准代码模板）
+6. **理解运行时结构时** — 查 `.ai/L1-codebase-map/architecture.md`（请求生命周期 + 启动顺序 + 运行时协作）
+7. **改底层基础设施时** — 查 `.ai/L1-codebase-map/infrastructure/README.md`（框架基类、配置、插件、构建流程、测试基础设施等）
+8. **创建新文件时** — 查 `.ai/L2-rules/templates.md`（标准代码模板）
 
 ## 任务管理
 

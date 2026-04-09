@@ -21,6 +21,7 @@
 ```
 .ai/L1-codebase-map/
 ├── overview.md              ← 轻量索引（< 60 行），每次对话必读
+├── architecture.md          ← 运行时架构（请求生命周期、启动顺序、运行时协作）
 ├── module-map.md            ← 模块合约与耦合，跨模块修改时加载
 ├── key-files.md             ← 通用任务食谱，做常见任务时加载
 ├── infrastructure/          ← 基础设施文档（与 features 平级）

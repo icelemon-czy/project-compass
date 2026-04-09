@@ -1,7 +1,7 @@
 # Cline 构建 L1 代码导航文档 — Phase 4-5（单 Agent + 人工审核）
 
 > **前置条件**：已完成 `prompt-L1a.md`（与 `builders/cline/prompt-L1a.md` 共用），且 `.ai/L1-codebase-map/_handoff.md` 已存在。
-> **本文件产出**：features/[name]/ 完整文档 + infrastructure/ 完整文档 + module-map.md + key-files.md
+> **本文件产出**：features/[name]/ 完整文档 + infrastructure/ 完整文档 + architecture.md + module-map.md + key-files.md
 >
 > **与标准版的区别**：
 > - ❌ 不使用 subagents — 主 agent 自己分析所有功能和基础设施
@@ -176,12 +176,13 @@ README.md 中的「分层导航」表格式：
 
 ---
 
-### Phase 5: 填写 module-map.md + key-files.md
+### Phase 5: 填写 architecture.md + module-map.md + key-files.md
 
 > 所有功能和基础设施分析完成后执行本步。
 
-使用 `_handoff.md` 中"跨功能通用模式"部分，结合各 feature 文档的变更影响表：
+使用 `_handoff.md` 中“跨功能通用模式”部分，结合各 feature 和 infrastructure 文档：
 
+- **architecture.md** — 运行时架构：部署拓扑、请求生命周期、Feature ↔ Infrastructure 运行时协作表、启动顺序、中间件管道、错误传播路径、关键运行时配置
 - **module-map.md** — 依赖拓扑（ASCII 全局依赖图）、模块公开 API、依赖规则、跨功能的变更联动
 - **key-files.md** — 通用任务食谱（不属于单一功能的）、调查起点
 

@@ -59,6 +59,7 @@
  ├─ 匹配到具体功能 → features/[功能名]/README.md → 按需深入层文件
  ├─ 做常见开发任务（加端点/加表/修 bug） → key-files.md（任务食谱 + 调查起点）
  ├─ 修改涉及多个模块 → module-map.md（模块合约 + 依赖规则 + 变更联动）
+ ├─ 理解运行时结构/排查跨层问题 → architecture.md（请求生命周期 + 启动顺序 + 运行时协作）
  └─ 改底层基础设施 → infrastructure/README.md
 ```
 
