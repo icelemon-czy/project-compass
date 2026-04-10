@@ -46,6 +46,7 @@ AI 每次对话**只读 `overview.md`**（< 60 行），然后根据任务类型
 │   ├── overview.md           ← 唯一入口（< 60 行，功能索引 + 按需加载导航决策树）
 │   ├── module-map.md         ← 模块合约与耦合地图（跨模块修改时加载）
 │   ├── key-files.md          ← 通用任务食谱与调查起点（常见开发任务时加载）
+│   ├── architecture.md       ← 运行时架构（部署拓扑、请求生命周期、中间件管道）
 │   ├── infrastructure/       ← 基础设施文档（框架/中间件/构建流程/测试基础设施，与 features 平级）
 │   │   ├── _infrastructure-template/ ← 基础设施组件文档模板
 │   │   │   └── README.md        ← 组件概览 + 分层导航 + 格式参考
@@ -171,6 +172,7 @@ L1 features/user-auth/              L2 rules/
 - `L1-codebase-map/features/[功能名]/README.md` — **从 overview.md 索引表匹配到功能后加载，按需深入各层文件**
 - `L1-codebase-map/key-files.md` — 做通用开发任务时（加端点、加表、修 bug）
 - `L1-codebase-map/module-map.md` — 跨模块修改时（查变更联动表）
+- `L1-codebase-map/architecture.md` — 需要理解运行时行为、请求生命周期或排查跨层问题时
 - `L2-rules/[module-name].md` — 处理特定模块任务时（查合约和陷阱）
 - `L2-rules/templates.md` — 创建新文件时（查标准代码模板）
 - `L3-tasks/board.md` — 查看任务全局状态

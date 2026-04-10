@@ -46,6 +46,7 @@ Every target file has **bidirectional links** (source / related files) to preven
 │   ├── overview.md           ← Single entry point (< 60 lines, feature index + routing decision tree)
 │   ├── module-map.md         ← Module contracts & coupling map (loaded for cross-module changes)
 │   ├── key-files.md          ← Common task recipes & investigation starting points
+│   ├── architecture.md       ← Runtime architecture (deployment topology, request lifecycle, middleware pipeline)
 │   ├── infrastructure/       ← Infrastructure docs (framework/middleware/utilities, peer to features)
 │   │   ├── _infrastructure-template/ ← Infrastructure component doc template
 │   │   │   └── README.md         ← Component overview + layer nav + format reference
@@ -168,6 +169,7 @@ L1 features/user-auth/              L2 rules/
 - `L1-codebase-map/features/[name]/README.md` — **Loaded after matching feature from overview.md index, drill into layer files as needed**
 - `L1-codebase-map/key-files.md` — For common dev tasks (adding endpoints, tables, fixing bugs)
 - `L1-codebase-map/module-map.md` — For cross-module changes (check change propagation table)
+- `L1-codebase-map/architecture.md` — For understanding runtime behavior, request lifecycle, or cross-layer issues
 - `L2-rules/[module-name].md` — For specific module tasks (check contracts and pitfalls)
 - `L2-rules/templates.md` — When creating new files (check standard code templates)
 - `L3-tasks/board.md` — View global task status
