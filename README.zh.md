@@ -66,12 +66,18 @@ AI 每次对话**只读 `overview.md`**（< 60 行），然后根据任务类型
 │   ├── _module-template.md   ← 模块规则模板（合约 + 陷阱 + 边界）
 │   └── [module-name].md      ← 按项目实际模块创建
 │
-├── L3-tasks/                 ← 任务层（中频变化）
-│   ├── board.md              ← 任务看板（所有任务状态索引）
-│   ├── _task-template.md     ← 任务模板（复制来创建新任务）
-│   ├── TASK-xxx.md           ← 各任务详情（输入→计划→测试用例）
-│   ├── decision-log.md       ← 技术决策记录（ADR）
-│   └── review/               ← 人工审核区（AI 产出先放这，人工确认后合入）
+├── L3-specs/                 ← 需求规格与变更管理层（Spec-driven）
+│   ├── specs/                ← 当前系统需求（分层结构：TOR → HLR）
+│   │   ├── system.md         ← 系统级顶层需求（TOR）：系统边界 + 跨域约束
+│   │   ├── _capability-template/ ← 能力域 spec 模板
+│   │   └── <domain>/spec.md  ← 高层需求（HLR），每个能力域一个（可嵌套子能力域）
+│   ├── changes/              ← 进行中的变更（文件系统即状态）
+│   │   ├── _change-template/ ← 变更模板（proposal + delta spec + tasks）
+│   │   └── <name>/           ← 每个变更一个文件夹
+│   │       ├── proposal.md   ← 为什么 + 改什么 + 备选方案 + 决策理由
+│   │       ├── specs/<cap>/spec.md ← 增量 spec（ADDED/MODIFIED/REMOVED）
+│   │       └── tasks.md      ← 执行步骤（checkbox 格式）
+│   └── archive/              ← 已完成变更（proposal.md 中记录 review 状态）
 │
 ├── L4-session/               ← 会话层（高频变化，每次对话维护）
 │   └── active-session.md     ← 当前会话状态（含测试状态 + 下一步动作）
@@ -81,7 +87,7 @@ AI 每次对话**只读 `overview.md`**（< 60 行），然后根据任务类型
 │   │   ├── prompt-L1a.md     ← 生成 L1 文档 Phase 1-3（扫描 + overview；基础设施优先：2a 基础设施 → 2b 功能 → 2c 通用模式）
 │   │   ├── prompt-L1b.md     ← 生成 L1 文档 Phase 4-5（4a 基础设施文档 → 4b subagent 功能深入分析）
 │   │   ├── prompt-L2.md      ← 生成 L2 编码规则
-│   │   ├── prompt-L3.md      ← 创建与规划 L3 任务
+│   │   ├── prompt-L3.md      ← 从已有代码构建 L3 初始 Spec
 │   │   └── single-agent/     ← 单 Agent 变体：不使用 subagent，每个功能/组件完成后暂停等人工审核
 │   │       ├── prompt-L1a.md
 │   │       ├── prompt-L1b.md ← 核心差异：主 agent 逐个分析功能和基础设施，每个暂停审核
@@ -91,12 +97,13 @@ AI 每次对话**只读 `overview.md`**（< 60 行），然后根据任务类型
 │       ├── prompt-L1a.md     ← 生成 L1 文档 Phase 1-3（扫描 + overview；基础设施优先：2a 基础设施 → 2b 功能 → 2c 通用模式）
 │       ├── prompt-L1b.md     ← 生成 L1 文档 Phase 4-5（4a 基础设施文档 → 4b subagent 功能深入分析）
 │       ├── prompt-L2.md
-│       └── prompt-L3.md
+    └── prompt-L3.md      ← 从已有代码构建 L3 初始 Spec
 ├── entrypoints/              ← AI 工具入口文件模板
 │   ├── clinerules.md         ← Cline 入口模板（→ .clinerules）
 │   ├── claude.md             ← Claude Code 入口模板（→ CLAUDE.md）
 │   ├── cursorrules.md        ← Cursor 入口模板（→ .cursorrules）
-│   └── copilot-instructions.md ← GitHub Copilot 入口模板
+│   ├── copilot-instructions.md ← GitHub Copilot 入口模板
+│   └── change-management.md  ← 变更管理流程参考（→ .ai/L3-specs/）
 ├── roadmap/                  ← 路线图与调研
 │   ├── requirements-integration-research.md ← 需求衔接方案调研
 │   └── multi-agent-collaboration-research.md ← 多 Agent 并行协作调研
@@ -151,15 +158,38 @@ L1 features/user-auth/              L2 rules/
 
 ## 快速开始
 
-1. 将本模板复制到你的项目根目录，重命名为 `.ai/`
-2. 填写 `.ai/L1-codebase-map/overview.md` — **最重要的一步**
-   - 重点填写：功能→代码映射表、核心数据流、雷区清单
-   - 或使用 `builders/cline/prompt-L1a.md`（Cline）或 `builders/claude/prompt-L1a.md`（Claude Code）中的 prompt 让 AI 辅助填写
-   - Builder prompt 遵循**基础设施优先**顺序：先识别基础设施（Phase 2a）→ 再识别功能（Phase 2b）→ 最后通用模式（Phase 2c）；然后先生成基础设施文档（Phase 4a）再派发功能分析（Phase 4b）
-3. 填写 `.ai/L2-rules/global.md` — 写下具体的编码规则和反模式
-4. 复制 `.ai/L2-rules/_module-template.md`，按项目模块创建对应的规则文件
-5. 在项目根目录创建入口文件（`CLAUDE.md` / `.cursorrules`），指向 `.ai/` 下的文档
-6. 每次和 AI 对话时，按下方"加载策略"组装上下文
+### 第一步：复制模板到项目
+
+```bash
+# 将整个 project-compass 复制到你的项目的 .ai/ 目录下
+cp -r /path/to/project-compass /path/to/your-project/.ai/
+```
+
+### 第二步：用 builder prompt 依次构建 L1 → L2 → L3
+
+选择与你 AI 工具匹配的 builder（`builders/claude/` 或 `builders/cline/`），**按顺序**执行 prompt：
+
+| 顺序 | Builder Prompt | 构建内容 | 外部输入 |
+|------|---------------|---------|----------|
+| 1 | `prompt-L1a.md` | overview.md + 功能清单 + `_handoff.md` | 可选：补充上下文文件 |
+| 2 | `prompt-L1b.md` | features/ 文档 + architecture.md + module-map.md + key-files.md | 读取步骤 1 的 `_handoff.md` |
+| 3 | `prompt-L2.md` | global.md + templates.md + 模块规则 | 读取 L1 产出 |
+| 4 | `prompt-L3.md` | system.md（TOR）+ 各能力域 spec（HLR） | 可选：PRD / 产品规格 / API 文档 |
+
+> 每个 prompt 都是独立的完整指令。复制到 AI 新对话中，填入 `[占位符]`，让 AI 执行即可。
+
+### 第三步：部署 entrypoint
+
+将对应的 entrypoint 模板复制到项目根目录：
+
+| AI 工具 | 来源 | 目标 |
+|---------|------|------|
+| Claude Code | `.ai/entrypoints/claude.md` | 项目根目录 `CLAUDE.md`（如已有 `CLAUDE.md`，将内容追加进去） |
+| Cline | `.ai/entrypoints/clinerules.md` | 项目根目录 `.clinerules` |
+| Cursor | `.ai/entrypoints/cursorrules.md` | 项目根目录 `.cursorrules`（或 `.cursor/rules/`） |
+| GitHub Copilot | `.ai/entrypoints/copilot-instructions.md` | `.github/copilot-instructions.md` |
+
+完成后，每次 AI 对话都会自动加载 `.ai/` 上下文并自主导航。
 
 ## 加载策略
 
@@ -175,12 +205,13 @@ L1 features/user-auth/              L2 rules/
 - `L1-codebase-map/architecture.md` — 需要理解运行时行为、请求生命周期或排查跨层问题时
 - `L2-rules/[module-name].md` — 处理特定模块任务时（查合约和陷阱）
 - `L2-rules/templates.md` — 创建新文件时（查标准代码模板）
-- `L3-tasks/board.md` — 查看任务全局状态
-- `L3-tasks/TASK-xxx.md` — 当前进行中的任务详情
+- `L3-specs/specs/system.md` — 查看系统级需求（TOR）
+- `L3-specs/changes/` — 查看进行中的变更
+- `L3-specs/change-management.md` — 创建或归档变更时（详细流程参考）
 
 ### 偶尔参考
-- `L3-tasks/decision-log.md` — 遇到"为什么这样做"的问题时
-- `L3-tasks/board.md` — 规划下一步时（查看 open 任务）
+- `L3-specs/archive/` — 遇到“为什么这样做”的问题时（查 archive 中的 proposal.md）
+- `L3-specs/specs/<domain>/spec.md` — 查看已有能力域的需求
 
 ## 实际工作流程（模式 B：AI 自主导航）
 
@@ -219,8 +250,8 @@ L1 features/user-auth/              L2 rules/
 └─────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────┐
-│  Step 6  AI 管理任务                                       │
-│  → 查 board.md 看现有任务 / 创建新 TASK-xxx.md              │
+│  Step 6  AI 管理变更                                       │
+│  → 查 changes/ 现有变更 / 创建 proposal + delta spec + tasks│
 │  → 写执行计划 + 验收问题 → 等人类确认                        │
 └─────────────────────────────────────────────────────────┘
                             ↓
@@ -251,8 +282,10 @@ L1 features/user-auth/              L2 rules/
 | global.md | 具体可执行规则、反模式清单、错误处理模式 | "架构模式: Clean Architecture"（太抽象） |
 | templates.md | 新建文件的代码模板（Service、Test 等） | 应从实际代码中提取，不是编造 |
 | 模块规则 | 对外合约（函数签名+稳定性）、模块内编码约束、边界规则、测试策略 | 数据流、文件列表、变更影响（放 L1） |
-| board.md | 任务状态索引（ID + 标题 + 状态） | 任务详情（放在 TASK-xxx.md） |
-| TASK-xxx.md | 任务输入 + AI 计划 + 测试用例 + 执行步骤 | "重构某模块"（太模糊） |
+| specs/system.md | 系统边界、跨域需求（TOR） | 功能级需求（放到对应能力域 spec） |
+| specs/<domain>/spec.md | 能力域需求 + WHEN/THEN 场景（HLR） | 实现细节（放到变更的 tasks） |
+| changes/<name>/ | proposal（为什么 + 决策）+ delta spec + tasks | — |
+| archive/<name>/ | 已完成变更历史（proposal + spec + tasks） | — |
 | active-session.md | 下一步具体动作、测试状态、涉及文件状态 | "正在做某功能"（太模糊） |
 
 ## 维护节奏
@@ -261,8 +294,8 @@ L1 features/user-auth/              L2 rules/
 |------|--------|------|
 | L1 代码导航 | 人 + AI辅助 | 架构变更时 |
 | L2 规则 | 人 | 规范变更时 |
-| L3 任务计划 | 人 + AI | 每个任务周期 |
-| L3 决策日志 | 人 + AI | 每次重要决策后 |
+| L3 需求规格 | 人审核 | 随变更归档累积 |
+| L3 变更 | Agent 创建，人确认 | 每个变更周期 |
 | L4 会话状态 | AI（人审核） | 每次对话结束时 |
 
 ## 集成方式

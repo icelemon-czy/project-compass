@@ -66,12 +66,18 @@ Every target file has **bidirectional links** (source / related files) to preven
 │   ├── _module-template.md   ← Module rules template (contracts + pitfalls + boundaries)
 │   └── [module-name].md      ← Created per actual project module
 │
-├── L3-tasks/                 ← Task layer (medium-frequency changes)
-│   ├── board.md              ← Task board (status index for all tasks)
-│   ├── _task-template.md     ← Task template (copy to create new task)
-│   ├── TASK-xxx.md           ← Task details (input → plan → test cases)
-│   ├── decision-log.md       ← Architecture Decision Records (ADR)
-│   └── review/               ← Human review area (AI output goes here first, merged after approval)
+├── L3-specs/                 ← Spec-driven requirements & change management layer
+│   ├── specs/                ← Living system specifications (TOR → HLR hierarchy)
+│   │   ├── system.md         ← Top-Level Requirements (TOR): system boundary & cross-cutting concerns
+│   │   ├── _capability-template/ ← Capability spec template
+│   │   └── <domain>/spec.md  ← High-Level Requirements (HLR) per capability domain (nestable)
+│   ├── changes/              ← In-progress changes (filesystem = status)
+│   │   ├── _change-template/ ← Change template (proposal + delta spec + tasks)
+│   │   └── <name>/           ← One folder per change
+│   │       ├── proposal.md   ← Why + what + alternatives + decision rationale
+│   │       ├── specs/<cap>/spec.md ← Delta spec (ADDED/MODIFIED/REMOVED requirements)
+│   │       └── tasks.md      ← Implementation checklist (checkbox format)
+│   └── archive/              ← Completed changes (with review status in proposal.md)
 │
 ├── L4-session/               ← Session layer (high-frequency changes, maintained per conversation)
 │   └── active-session.md     ← Current session state (test status + next actions)
@@ -81,7 +87,7 @@ Every target file has **bidirectional links** (source / related files) to preven
 │   │   ├── prompt-L1a.md     ← Generate L1 docs Phase 1-3 (scan + overview; infra-first discovery: 2a infra → 2b features → 2c patterns)
 │   │   ├── prompt-L1b.md     ← Generate L1 docs Phase 4-5 (4a: infra docs → 4b: subagent feature analysis)
 │   │   ├── prompt-L2.md      ← Generate L2 coding rules
-│   │   ├── prompt-L3.md      ← Create & plan L3 tasks
+│   │   ├── prompt-L3.md      ← Build initial L3 specs from existing code
 │   │   └── single-agent/     ← Single-agent variant: no subagents, pause for human review after each item
 │   │       ├── prompt-L1a.md
 │   │       ├── prompt-L1b.md ← Core difference: main agent analyzes each feature/infra one at a time
@@ -91,12 +97,13 @@ Every target file has **bidirectional links** (source / related files) to preven
 │       ├── prompt-L1a.md     ← Generate L1 docs Phase 1-3 (scan + overview; infra-first discovery: 2a infra → 2b features → 2c patterns)
 │       ├── prompt-L1b.md     ← Generate L1 docs Phase 4-5 (4a: infra docs → 4b: subagent feature analysis)
 │       ├── prompt-L2.md
-│       └── prompt-L3.md
+    └── prompt-L3.md      ← Build initial L3 specs from existing code
 ├── entrypoints/              ← AI tool entry point templates
 │   ├── clinerules.md         ← Cline entry template (→ .clinerules)
 │   ├── claude.md             ← Claude Code entry template (→ CLAUDE.md)
 │   ├── cursorrules.md        ← Cursor entry template (→ .cursorrules)
-│   └── copilot-instructions.md ← GitHub Copilot entry template
+│   ├── copilot-instructions.md ← GitHub Copilot entry template
+│   └── change-management.md  ← Change management workflow reference (→ .ai/L3-specs/)
 └── README.md                 ← This file
 ```
 
@@ -148,15 +155,38 @@ L1 features/user-auth/              L2 rules/
 
 ## Quick Start
 
-1. Copy this template to your project root, rename to `.ai/`
-2. Fill in `.ai/L1-codebase-map/overview.md` — **the most important step**
-   - Focus on: feature → code mapping table, core data flows, danger zone list
-   - Or use `builders/cline/prompt-L1a.md` (Cline) or `builders/claude/prompt-L1a.md` (Claude Code) to let AI assist
-   - The builder prompts follow **infrastructure-first order**: identify infra (Phase 2a) → features (Phase 2b) → patterns (Phase 2c), then document infra (Phase 4a) before running feature subagents (Phase 4b)
-3. Fill in `.ai/L2-rules/global.md` — Write concrete coding rules and anti-patterns
-4. Copy `.ai/L2-rules/_module-template.md`, create rule files for each project module
-5. Create an entry point file in project root (`CLAUDE.md` / `.cursorrules`), pointing to `.ai/` docs
-6. Each AI conversation, assemble context using the "Loading Strategy" below
+### Step 1: Copy template to your project
+
+```bash
+# Copy the entire project-compass into your project's .ai/ directory
+cp -r /path/to/project-compass /path/to/your-project/.ai/
+```
+
+### Step 2: Build L1 → L2 → L3 using builder prompts
+
+Choose the builder matching your AI tool (`builders/claude/` or `builders/cline/`), then run prompts **in order**:
+
+| Order | Builder Prompt | What it builds | External input |
+|-------|---------------|----------------|----------------|
+| 1 | `prompt-L1a.md` | overview.md + feature list + `_handoff.md` | Optional: supplementary context file |
+| 2 | `prompt-L1b.md` | features/ docs + architecture.md + module-map.md + key-files.md | Reads `_handoff.md` from step 1 |
+| 3 | `prompt-L2.md` | global.md + templates.md + module rules | Reads L1 output |
+| 4 | `prompt-L3.md` | system.md (TOR) + capability specs (HLR) | Optional: PRD / product spec / API docs |
+
+> Each prompt is a self-contained instruction. Copy it into a new conversation with the AI, fill in the `[placeholders]`, and let the AI execute.
+
+### Step 3: Deploy entrypoint
+
+Copy the matching entrypoint template to your project root:
+
+| AI Tool | Source | Target |
+|---------|--------|--------|
+| Claude Code | `.ai/entrypoints/claude.md` | `CLAUDE.md` in project root (if `CLAUDE.md` already exists, append the content) |
+| Cline | `.ai/entrypoints/clinerules.md` | `.clinerules` in project root |
+| Cursor | `.ai/entrypoints/cursorrules.md` | `.cursorrules` in project root (or `.cursor/rules/`) |
+| GitHub Copilot | `.ai/entrypoints/copilot-instructions.md` | `.github/copilot-instructions.md` |
+
+After this, every AI conversation will auto-load `.ai/` context and self-navigate.
 
 ## Loading Strategy
 
@@ -172,12 +202,13 @@ L1 features/user-auth/              L2 rules/
 - `L1-codebase-map/architecture.md` — For understanding runtime behavior, request lifecycle, or cross-layer issues
 - `L2-rules/[module-name].md` — For specific module tasks (check contracts and pitfalls)
 - `L2-rules/templates.md` — When creating new files (check standard code templates)
-- `L3-tasks/board.md` — View global task status
-- `L3-tasks/TASK-xxx.md` — Current in-progress task details
+- `L3-specs/specs/system.md` — System-level requirements (TOR)
+- `L3-specs/changes/` — View in-progress changes
+- `L3-specs/change-management.md` — When creating or archiving changes (detailed workflow)
 
 ### Occasional Reference
-- `L3-tasks/decision-log.md` — When asking "why was this done this way?"
-- `L3-tasks/board.md` — When planning next steps (check open tasks)
+- `L3-specs/archive/` — When asking "why was this done this way?" (check proposal.md)
+- `L3-specs/specs/<domain>/spec.md` — When checking existing requirements
 
 ## Workflow (Mode B: AI Self-Navigation)
 
@@ -216,8 +247,8 @@ L1 features/user-auth/              L2 rules/
 └─────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────┐
-│  Step 6  AI manages tasks                               │
-│  → check board.md / create new TASK-xxx.md              │
+│  Step 6  AI manages changes                             │
+│  → check changes/ / create proposal + delta spec + tasks│
 │  → write plan + verification questions → await human OK │
 └─────────────────────────────────────────────────────────┘
                             ↓
@@ -248,8 +279,10 @@ L1 features/user-auth/              L2 rules/
 | global.md | Concrete executable rules, anti-pattern checklist, error handling patterns | "Architecture pattern: Clean Architecture" (too abstract) |
 | templates.md | Code templates for new files (Service, Test, etc.) | Should be extracted from actual code, not fabricated |
 | Module rules | Public contracts (function signatures + stability), internal coding constraints, boundary rules, test strategy | Data flows, file lists, change impact (goes in L1) |
-| board.md | Task status index (ID + title + status) | Task details (goes in TASK-xxx.md) |
-| TASK-xxx.md | Task input + AI plan + test cases + execution steps | "Refactor some module" (too vague) |
+| specs/system.md | System boundary, cross-cutting requirements (TOR) | Feature-specific requirements (goes in domain spec) |
+| specs/<domain>/spec.md | Capability requirements with WHEN/THEN scenarios (HLR) | Implementation details (goes in change tasks) |
+| changes/<name>/ | proposal (why + decision) + delta spec + tasks | — |
+| archive/<name>/ | Completed change history (proposal + spec + tasks) | — |
 | active-session.md | Specific next actions, test status, file states | "Working on some feature" (too vague) |
 
 ## Maintenance Cadence
@@ -258,8 +291,8 @@ L1 features/user-auth/              L2 rules/
 |----------|--------------|-----------|
 | L1 Code Navigation | Human + AI assist | On architecture changes |
 | L2 Rules | Human | On convention changes |
-| L3 Task Plans | Human + AI | Each task cycle |
-| L3 Decision Log | Human + AI | After each important decision |
+| L3 Specs | Human review | Accumulated via change archive |
+| L3 Changes | Agent creates, Human confirms | Each change cycle |
 | L4 Session State | AI (human review) | End of each conversation |
 
 ## Integration

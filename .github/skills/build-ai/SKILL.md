@@ -1,78 +1,104 @@
 ---
 name: build-ai
 description: "Build .ai project context for AI-assisted development from scratch. Use when: init .ai, setup ai context, new project setup, 构建AI上下文, 初始化.ai, build ai docs, create .ai directory, scaffold ai context, 新项目配置"
-argument-hint: "Optional: target project path or specific phases (e.g., 'L1 only', 'skip L2')"
+argument-hint: "Optional: target project path or specific layers (e.g., 'L1 only', 'skip L3')"
 ---
 
 # Build .ai Project Context
 
-Creates a complete `.ai/` context directory for AI-assisted development.
+为项目搭建完整的 `.ai/` AI 上下文目录。
 
 ## Four-Layer Architecture
 
 | Layer | Purpose | Key Output |
 |-------|---------|------------|
-| L1 Codebase Map | Project navigation for AI | overview.md, feature docs, module-map, key-files |
+| L1 Codebase Map | Project navigation for AI | overview.md, feature docs, architecture.md, module-map, key-files |
 | L2 Coding Rules | Coding standards from actual code | global.md, templates.md, module rules |
-| L3 Task Management | Task board and workflow | board.md, task template, decision log |
+| L3 Spec-Driven Changes | Requirements specs & change management | system.md, capability specs, change-management.md |
 | L4 Session State | AI working memory | active-session.md |
 
 ## Prerequisites
 
 - Target project has source code to analyze
-- No existing `.ai/` directory (or user wants to rebuild)
+- Know the project root path
 
 ## Procedure
 
-Follow phases in order. Each builds on the previous.
+Three steps. Execute in order.
 
-### Phase 0: Scaffold
+---
 
-Create the `.ai/` directory structure with template files.
-Read and follow [scaffold instructions](./references/scaffold.md).
+### Step 1: Copy project-compass to `.ai/`
 
-→ Output: directory tree + reference templates + initialized files
+将 project-compass 模板复制到目标项目下：
 
-### Phase 1-3: L1 Discovery
+```bash
+cp -r /path/to/project-compass /path/to/your-project/.ai/
+```
 
-Scan the project, identify features, write the overview index.
-Read and follow [L1 discovery instructions](./references/l1-discovery.md).
+复制后，目录结构、模板文件、`change-management.md`、`L4-session/active-session.md` 等已就位。
 
-→ Output: `overview.md` + feature list + `_handoff.md`
+> 如果 `.ai/` 已存在且用户想重建，先确认是否备份。
 
-### Phase 4-5: L1 Deep Analysis
+---
 
-Analyze each feature in depth using subagents, build module map.
-Read and follow [L1 deep analysis instructions](./references/l1-deep-analysis.md).
+### Step 2: Build L1 → L2 → L3
 
-→ Output: `features/*/` docs + `module-map.md` + `key-files.md`
+选择与用户 AI 工具匹配的 builder（`builders/claude/` 或 `builders/cline/`），**按顺序**执行 prompt。
 
-### Phase 6: L2 Coding Rules
+每个 prompt 是独立的完整指令。复制到 AI 新对话中，填入 `[占位符]`，让 AI 执行。
 
-Extract coding patterns from the actual codebase.
-Read and follow [L2 coding rules instructions](./references/l2-rules.md).
+| Order | Builder Prompt | What it builds | External input |
+|-------|---------------|----------------|----------------|
+| 1 | `prompt-L1a.md` | overview.md + feature list + `_handoff.md` | Optional: supplementary context file |
+| 2 | `prompt-L1b.md` | features/ docs + architecture.md + module-map.md + key-files.md | Reads `_handoff.md` from step 1 |
+| 3 | `prompt-L2.md` | global.md + templates.md + module rules | Reads L1 output |
+| 4 | `prompt-L3.md` | system.md (TOR) + capability specs (HLR) | Optional: PRD / product spec / API docs |
 
-→ Output: `global.md` + `templates.md` + per-module rule files
+#### Builder variants
 
-### Phase 7: Entrypoint
+| Tool | Directory | Subagent behavior |
+|------|-----------|-------------------|
+| Claude Code | `builders/claude/` | Subagent can read+write, creates files directly |
+| Cline (sub-agent) | `builders/cline/sub-agent/` | Subagent read-only, outputs text for main agent to write |
+| Cline (single-agent) | `builders/cline/single-agent/` | No subagents, pauses for human review after each item |
 
-Create the AI navigation entrypoint. Read [entrypoint template](./references/entrypoint.md).
+#### Builder prompt details (reference)
 
-Ask the user which tool(s) they use, then create the appropriate file:
+For the detailed logic inside each prompt, see these reference docs:
 
-| Tool | File | Location |
-|------|------|----------|
-| Claude Code | `CLAUDE.md` | Project root |
-| Cline | `.clinerules` | Project root |
-| Cursor | `.cursorrules` | Project root |
-| GitHub Copilot | `.github/copilot-instructions.md` | `.github/` |
+- [L1 discovery (Phase 1-3)](./references/l1-discovery.md) — scan project, identify features, write overview
+- [L1 deep analysis (Phase 4-5)](./references/l1-deep-analysis.md) — feature deep dive, module-map, key-files, architecture
+- [L2 coding rules (Phase 6)](./references/l2-rules.md) — extract patterns from actual code
+- [L3 spec bootstrap (Phase 7)](./references/l3-specs.md) — build initial specs from code + optional user docs
 
-### Phase 8: Verify
+> These references are for understanding the build logic. Users interact with the builder prompts directly, not these files.
 
-Run through this checklist:
+---
+
+### Step 3: Deploy entrypoint
+
+将对应的 entrypoint 模板复制到项目根目录：
+
+| AI Tool | Source | Target |
+|---------|--------|--------|
+| Claude Code | `.ai/entrypoints/claude.md` | Project root `CLAUDE.md` (if `CLAUDE.md` already exists, append content) |
+| Cline | `.ai/entrypoints/clinerules.md` | Project root `.clinerules` |
+| Cursor | `.ai/entrypoints/cursorrules.md` | Project root `.cursorrules` (or `.cursor/rules/`) |
+| GitHub Copilot | `.ai/entrypoints/copilot-instructions.md` | `.github/copilot-instructions.md` |
+
+---
+
+### Verify
+
+All steps done. Run through this checklist:
 
 - [ ] `overview.md` is under 60 lines, only index entries (no details)
 - [ ] Each feature has README.md with a layer navigation table
+- [ ] `architecture.md` exists and covers request lifecycle / startup sequence
 - [ ] `global.md` rules are extracted from actual code patterns, not invented
 - [ ] Every line passes: "Can AI derive this from code?" If yes → delete it
+- [ ] `specs/system.md` has System Boundary and Cross-Cutting Requirements
+- [ ] Each capability domain has `specs/<domain>/spec.md` with Requirement + Scenario
+- [ ] `L3-specs/change-management.md` exists
 - [ ] Entrypoint file created and points to correct `.ai/` paths

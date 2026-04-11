@@ -12,7 +12,7 @@
 
 **正在做**: [具体到函数级别，如: 将 `UserService.authenticate()` 从 `auth.ts` 迁移到 `auth/service.ts`]
 
-**当前任务**: [如: TASK-001.md 步骤 3 — 迁移认证逻辑，已完成 3/8 处调用方更新]
+**当前变更**: [如: changes/fix-login-bug/ — tasks.md 步骤 3，已完成 3/8 处调用方更新]
 
 **涉及文件**:
 - `[文件路径]` — [具体状态，如: API 签名已改，旧方法标记 @deprecated]
