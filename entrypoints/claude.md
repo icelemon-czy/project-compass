@@ -42,6 +42,11 @@
 - 代码完成 + 测试通过 → proposal.md 状态改为 `pending-review`，等待人类确认
 - 人类确认后 → 归档：合并 delta spec 到 `specs/`，移动变更到 `archive/`
 
+同步 .ai 文档（如果本次修改了代码）：
+- 新增 / 删除 / 重组了功能模块 → 更新 L1 相关文档
+- 引入新编码模式或规则变化 → 更新 L2 相关文档
+- 详细步骤见 `cat .ai/doc-sync.md`
+
 ## 关键约束
 
 - 开始实现前先 `ls .ai/L3-specs/changes/`，确认无冲突的进行中变更

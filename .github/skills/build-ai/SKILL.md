@@ -36,7 +36,7 @@ Three steps. Execute in order.
 cp -r /path/to/project-compass /path/to/your-project/.ai/
 ```
 
-复制后，目录结构、模板文件、`change-management.md`、`L4-session/active-session.md` 等已就位。
+复制后，目录结构、模板文件、`change-management.md`、`doc-sync.md`、`L4-session/active-session.md` 等已就位。
 
 > 如果 `.ai/` 已存在且用户想重建，先确认是否备份。
 
@@ -101,4 +101,5 @@ All steps done. Run through this checklist:
 - [ ] `specs/system.md` has System Boundary and Cross-Cutting Requirements
 - [ ] Each capability domain has `specs/<domain>/spec.md` with Requirement + Scenario
 - [ ] `L3-specs/change-management.md` exists
+- [ ] `doc-sync.md` exists at `.ai/` root
 - [ ] Entrypoint file created and points to correct `.ai/` paths
