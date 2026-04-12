@@ -119,6 +119,15 @@
 
 展示合并后的主 spec diff，让人类确认。
 
+### 4. 验证追溯
+
+归档完成后，更新受影响域的追溯矩阵：
+
+1. 读取 `.ai/L5-validation/validation-rules.md`
+2. 对每个受影响的能力域，执行正向追溯（Spec → Code → Test）
+3. 更新 `.ai/L5-validation/traceability/<domain>.md`
+4. 报告新增的问题（unimplemented / untested）
+
 ## 状态流转
 
 ```

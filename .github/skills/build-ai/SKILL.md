@@ -16,6 +16,7 @@ argument-hint: "Optional: target project path or specific layers (e.g., 'L1 only
 | L2 Coding Rules | Coding standards from actual code | global.md, templates.md, module rules |
 | L3 Spec-Driven Changes | Requirements specs & change management | system.md, capability specs, change-management.md |
 | L4 Session State | AI working memory | active-session.md |
+| L5 Validation | Spec-to-code traceability & verification | traceability matrices, validation reports |
 
 ## Prerequisites
 
@@ -42,7 +43,7 @@ cp -r /path/to/project-compass /path/to/your-project/.ai/
 
 ---
 
-### Step 2: Build L1 → L2 → L3
+### Step 2: Build L1 → L2 → L3 → L5
 
 选择与用户 AI 工具匹配的 builder（`builders/claude/` 或 `builders/cline/`），**按顺序**执行 prompt。
 
@@ -54,6 +55,7 @@ cp -r /path/to/project-compass /path/to/your-project/.ai/
 | 2 | `prompt-L1b.md` | features/ docs + architecture.md + module-map.md + key-files.md | Reads `_handoff.md` from step 1 |
 | 3 | `prompt-L2.md` | global.md + templates.md + module rules | Reads L1 output |
 | 4 | `prompt-L3.md` | system.md (TOR) + capability specs (HLR) | Optional: PRD / product spec / API docs |
+| 5 | `prompt-L5.md` | traceability matrices + validation report | Reads L1 + L3 output |
 
 #### Builder variants
 
@@ -102,4 +104,6 @@ All steps done. Run through this checklist:
 - [ ] Each capability domain has `specs/<domain>/spec.md` with Requirement + Scenario
 - [ ] `L3-specs/change-management.md` exists
 - [ ] `doc-sync.md` exists at `.ai/` root
+- [ ] `L5-validation/validation-rules.md` exists
+- [ ] Each spec domain has a traceability file in `L5-validation/traceability/`
 - [ ] Entrypoint file created and points to correct `.ai/` paths

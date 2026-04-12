@@ -12,8 +12,9 @@ You need a **layered, on-demand loading** context management system so AI can, i
 
 1. **Pinpoint** — Know which files to look at for a given task (feature → code mapping)
 2. **Follow rules** — Know how to write and what not to do (rules + anti-patterns)
-3. **Understand goals** — Know the current objective (task layer)
+3. **Understand goals** — Know the current objective (spec-driven requirements)
 4. **Continue progress** — Know where the last step left off and what to do next (session layer)
+5. **Validate** — Verify that implementation matches spec (traceability + test design)
 
 ### Design Principles
 
@@ -38,7 +39,7 @@ Receive task
 Paths are composable — e.g., cross-feature changes load both feature README + module-map.
 Every target file has **bidirectional links** (source / related files) to prevent AI from getting lost.
 
-## Four-Layer Architecture
+## Five-Layer Architecture
 
 ```
 .ai/
@@ -82,28 +83,43 @@ Every target file has **bidirectional links** (source / related files) to preven
 ├── L4-session/               ← Session layer (high-frequency changes, maintained per conversation)
 │   └── active-session.md     ← Current session state (test status + next actions)
 │
+├── L5-validation/            ← Validation layer (spec-to-code traceability & test design)
+│   ├── validation-rules.md   ← Validation rules reference (how AI performs verification)
+│   ├── traceability/         ← Traceability matrices (spec ↔ code ↔ test mapping)
+│   │   ├── _domain-template.md ← Traceability template
+│   │   └── <domain>.md       ← One file per capability domain
+│   ├── test-specs/           ← Test case designs (expanded from L3 Scenarios)
+│   │   ├── _domain-template.md ← Test spec template
+│   │   └── <domain>.md       ← Concrete test cases (input/expected/edge cases)
+│   └── reports/              ← Validation reports (timestamped snapshots)
+│       └── <date>-<scope>.md ← Verification results + gap analysis
+│
 ├── builders/                  ← Auto-generation prompt collection (organized by tool)
 │   ├── cline/               ← Cline-specific (subagent read-only, outputs text for main agent to write)
 │   │   ├── prompt-L1a.md     ← Generate L1 docs Phase 1-3 (scan + overview; infra-first discovery: 2a infra → 2b features → 2c patterns)
 │   │   ├── prompt-L1b.md     ← Generate L1 docs Phase 4-5 (4a: infra docs → 4b: subagent feature analysis)
 │   │   ├── prompt-L2.md      ← Generate L2 coding rules
 │   │   ├── prompt-L3.md      ← Build initial L3 specs from existing code
+│   │   ├── prompt-L5.md      ← Build L5 validation traceability & test specs
 │   │   └── single-agent/     ← Single-agent variant: no subagents, pause for human review after each item
 │   │       ├── prompt-L1a.md
 │   │       ├── prompt-L1b.md ← Core difference: main agent analyzes each feature/infra one at a time
 │   │       ├── prompt-L2.md  ← Pauses for review after each module
-│   │       └── prompt-L3.md
+│   │       ├── prompt-L3.md
+│   │       └── prompt-L5.md
 │   └── claude/              ← Claude Code-specific (subagent has read+write, creates files directly)
 │       ├── prompt-L1a.md     ← Generate L1 docs Phase 1-3 (scan + overview; infra-first discovery: 2a infra → 2b features → 2c patterns)
 │       ├── prompt-L1b.md     ← Generate L1 docs Phase 4-5 (4a: infra docs → 4b: subagent feature analysis)
 │       ├── prompt-L2.md
-    └── prompt-L3.md      ← Build initial L3 specs from existing code
+│       ├── prompt-L3.md      ← Build initial L3 specs from existing code
+│       └── prompt-L5.md      ← Build L5 validation traceability & test specs
 ├── entrypoints/              ← AI tool entry point templates
 │   ├── clinerules.md         ← Cline entry template (→ .clinerules)
 │   ├── claude.md             ← Claude Code entry template (→ CLAUDE.md)
 │   ├── cursorrules.md        ← Cursor entry template (→ .cursorrules)
 │   ├── copilot-instructions.md ← GitHub Copilot entry template
-│   └── change-management.md  ← Change management workflow reference (→ .ai/L3-specs/)
+│   ├── change-management.md  ← Change management workflow reference (→ .ai/L3-specs/)
+│   └── doc-sync.md           ← Doc sync workflow reference (→ .ai/doc-sync.md)
 └── README.md                 ← This file
 ```
 
@@ -172,6 +188,7 @@ Choose the builder matching your AI tool (`builders/claude/` or `builders/cline/
 | 2 | `prompt-L1b.md` | features/ docs + architecture.md + module-map.md + key-files.md | Reads `_handoff.md` from step 1 |
 | 3 | `prompt-L2.md` | global.md + templates.md + module rules | Reads L1 output |
 | 4 | `prompt-L3.md` | system.md (TOR) + capability specs (HLR) | Optional: PRD / product spec / API docs |
+| 5 | `prompt-L5.md` | traceability matrices + test specs + validation report | Reads L1 + L3 output |
 
 > Each prompt is a self-contained instruction. Copy it into a new conversation with the AI, fill in the `[placeholders]`, and let the AI execute.
 
@@ -205,6 +222,9 @@ After this, every AI conversation will auto-load `.ai/` context and self-navigat
 - `L3-specs/specs/system.md` — System-level requirements (TOR)
 - `L3-specs/changes/` — View in-progress changes
 - `L3-specs/change-management.md` — When creating or archiving changes (detailed workflow)
+- `L5-validation/validation-rules.md` — When validating spec-to-code traceability
+- `L5-validation/traceability/<domain>.md` — When checking implementation coverage
+- `L5-validation/test-specs/<domain>.md` — When designing or generating tests
 
 ### Occasional Reference
 - `L3-specs/archive/` — When asking "why was this done this way?" (check proposal.md)
@@ -283,6 +303,8 @@ After this, every AI conversation will auto-load `.ai/` context and self-navigat
 | specs/<domain>/spec.md | Capability requirements with WHEN/THEN scenarios (HLR) | Implementation details (goes in change tasks) |
 | changes/<name>/ | proposal (why + decision) + delta spec + tasks | — |
 | archive/<name>/ | Completed change history (proposal + spec + tasks) | — |
+| traceability/<domain>.md | Spec → code → test mapping table with status | Implementation details |
+| test-specs/<domain>.md | Concrete test cases (input/expected/edge/error) for untested Scenarios | Framework-specific syntax |
 | active-session.md | Specific next actions, test status, file states | "Working on some feature" (too vague) |
 
 ## Maintenance Cadence
@@ -294,6 +316,7 @@ After this, every AI conversation will auto-load `.ai/` context and self-navigat
 | L3 Specs | Human review | Accumulated via change archive |
 | L3 Changes | Agent creates, Human confirms | Each change cycle |
 | L4 Session State | AI (human review) | End of each conversation |
+| L5 Validation | AI generates, Human reviews | After L3 build or change archive |
 
 ## Integration
 

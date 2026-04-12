@@ -12,8 +12,9 @@ AI 的上下文窗口是有限的。对于任何有一定规模的代码库，�
 
 1. **精准定位** — 收到任务时，知道该看哪些文件（功能→代码映射）
 2. **遵守规则** — 知道该怎么写，不该怎么写（规则 + 反模式）
-3. **理解目标** — 知道当前在做什么（任务层）
+3. **理解目标** — 知道当前在做什么（需求规格层）
 4. **延续进度** — 知道上一步做到哪了、下一步做什么（会话层）
+5. **验证一致** — 检查实现是否符合 spec（追溯 + 测试设计）
 
 ### 设计原则
 
@@ -38,7 +39,7 @@ AI 每次对话**只读 `overview.md`**（< 60 行），然后根据任务类型
 路径可组合 — 例如跨功能修改会同时加载 feature README + module-map。
 每个目标文件都有**双向链接**（来源 / 相关文件），防止 AI 迷路。
 
-## 四层架构
+## 五层架构
 
 ```
 .ai/
@@ -82,28 +83,43 @@ AI 每次对话**只读 `overview.md`**（< 60 行），然后根据任务类型
 ├── L4-session/               ← 会话层（高频变化，每次对话维护）
 │   └── active-session.md     ← 当前会话状态（含测试状态 + 下一步动作）
 │
+├── L5-validation/            ← 验证层（spec 与代码的追溯 + 测试用例设计）
+│   ├── validation-rules.md   ← 验证规则参考（AI 如何执行验证）
+│   ├── traceability/         ← 追溯矩阵（spec ↔ 代码 ↔ 测试映射）
+│   │   ├── _domain-template.md ← 追溯模板
+│   │   └── <domain>.md       ← 每个能力域一个文件
+│   ├── test-specs/           ← 测试用例设计（从 L3 Scenario 展开）
+│   │   ├── _domain-template.md ← 测试用例模板
+│   │   └── <domain>.md       ← 具体测试用例（输入/预期/边界情况）
+│   └── reports/              ← 验证报告（带时间戳的快照）
+│       └── <date>-<scope>.md ← 验证结果 + 缺口分析
+│
 ├── builders/                  ← 自动生成文档的 Prompt 集合（按工具分目录）
 │   ├── cline/               ← Cline 专用（subagent 只读，输出文本由主 agent 写入文件）
 │   │   ├── prompt-L1a.md     ← 生成 L1 文档 Phase 1-3（扫描 + overview；基础设施优先：2a 基础设施 → 2b 功能 → 2c 通用模式）
 │   │   ├── prompt-L1b.md     ← 生成 L1 文档 Phase 4-5（4a 基础设施文档 → 4b subagent 功能深入分析）
 │   │   ├── prompt-L2.md      ← 生成 L2 编码规则
 │   │   ├── prompt-L3.md      ← 从已有代码构建 L3 初始 Spec
+│   │   ├── prompt-L5.md      ← 构建 L5 验证追溯和测试用例
 │   │   └── single-agent/     ← 单 Agent 变体：不使用 subagent，每个功能/组件完成后暂停等人工审核
 │   │       ├── prompt-L1a.md
 │   │       ├── prompt-L1b.md ← 核心差异：主 agent 逐个分析功能和基础设施，每个暂停审核
 │   │       ├── prompt-L2.md  ← 逐模块暂停审核
-│   │       └── prompt-L3.md
+│   │       ├── prompt-L3.md
+│   │       └── prompt-L5.md
 │   └── claude/              ← Claude Code 专用（subagent 可读写，直接创建文件）
 │       ├── prompt-L1a.md     ← 生成 L1 文档 Phase 1-3（扫描 + overview；基础设施优先：2a 基础设施 → 2b 功能 → 2c 通用模式）
 │       ├── prompt-L1b.md     ← 生成 L1 文档 Phase 4-5（4a 基础设施文档 → 4b subagent 功能深入分析）
 │       ├── prompt-L2.md
-    └── prompt-L3.md      ← 从已有代码构建 L3 初始 Spec
+│       ├── prompt-L3.md      ← 从已有代码构建 L3 初始 Spec
+│       └── prompt-L5.md      ← 构建 L5 验证追溯和测试用例
 ├── entrypoints/              ← AI 工具入口文件模板
 │   ├── clinerules.md         ← Cline 入口模板（→ .clinerules）
 │   ├── claude.md             ← Claude Code 入口模板（→ CLAUDE.md）
 │   ├── cursorrules.md        ← Cursor 入口模板（→ .cursorrules）
 │   ├── copilot-instructions.md ← GitHub Copilot 入口模板
-│   └── change-management.md  ← 变更管理流程参考（→ .ai/L3-specs/）
+│   ├── change-management.md  ← 变更管理流程参考（→ .ai/L3-specs/）
+│   └── doc-sync.md           ← 文档同步流程参考（→ .ai/doc-sync.md）
 ├── roadmap/                  ← 路线图与调研
 │   ├── requirements-integration-research.md ← 需求衔接方案调研
 │   └── multi-agent-collaboration-research.md ← 多 Agent 并行协作调研
@@ -175,6 +191,7 @@ cp -r /path/to/project-compass /path/to/your-project/.ai/
 | 2 | `prompt-L1b.md` | features/ 文档 + architecture.md + module-map.md + key-files.md | 读取步骤 1 的 `_handoff.md` |
 | 3 | `prompt-L2.md` | global.md + templates.md + 模块规则 | 读取 L1 产出 |
 | 4 | `prompt-L3.md` | system.md（TOR）+ 各能力域 spec（HLR） | 可选：PRD / 产品规格 / API 文档 |
+| 5 | `prompt-L5.md` | 追溯矩阵 + 测试用例设计 + 验证报告 | 读取 L1 + L3 产出 |
 
 > 每个 prompt 都是独立的完整指令。复制到 AI 新对话中，填入 `[占位符]`，让 AI 执行即可。
 
@@ -208,6 +225,9 @@ cp -r /path/to/project-compass /path/to/your-project/.ai/
 - `L3-specs/specs/system.md` — 查看系统级需求（TOR）
 - `L3-specs/changes/` — 查看进行中的变更
 - `L3-specs/change-management.md` — 创建或归档变更时（详细流程参考）
+- `L5-validation/validation-rules.md` — 验证 spec 与代码一致性时
+- `L5-validation/traceability/<domain>.md` — 检查实现覆盖率时
+- `L5-validation/test-specs/<domain>.md` — 设计或生成测试时
 
 ### 偶尔参考
 - `L3-specs/archive/` — 遇到“为什么这样做”的问题时（查 archive 中的 proposal.md）
@@ -286,6 +306,8 @@ cp -r /path/to/project-compass /path/to/your-project/.ai/
 | specs/<domain>/spec.md | 能力域需求 + WHEN/THEN 场景（HLR） | 实现细节（放到变更的 tasks） |
 | changes/<name>/ | proposal（为什么 + 决策）+ delta spec + tasks | — |
 | archive/<name>/ | 已完成变更历史（proposal + spec + tasks） | — |
+| traceability/<domain>.md | Spec → 代码 → 测试映射表，含状态（verified/untested 等） | 实现细节 |
+| test-specs/<domain>.md | 具体测试用例（输入/预期/边界/异常），从 L3 Scenario 展开 | 框架相关语法 |
 | active-session.md | 下一步具体动作、测试状态、涉及文件状态 | "正在做某功能"（太模糊） |
 
 ## 维护节奏
@@ -297,6 +319,7 @@ cp -r /path/to/project-compass /path/to/your-project/.ai/
 | L3 需求规格 | 人审核 | 随变更归档累积 |
 | L3 变更 | Agent 创建，人确认 | 每个变更周期 |
 | L4 会话状态 | AI（人审核） | 每次对话结束时 |
+| L5 验证 | AI 生成，人审核 | L3 构建后或变更归档后 |
 
 ## 集成方式
 
