@@ -96,23 +96,32 @@ Every target file has **bidirectional links** (source / related files) to preven
 │
 ├── builders/                  ← Auto-generation prompt collection (organized by tool)
 │   ├── cline/               ← Cline-specific (subagent read-only, outputs text for main agent to write)
-│   │   ├── prompt-L1a.md     ← Generate L1 docs Phase 1-3 (scan + overview; infra-first discovery: 2a infra → 2b features → 2c patterns)
-│   │   ├── prompt-L1b.md     ← Generate L1 docs Phase 4-5 (4a: infra docs → 4b: subagent feature analysis)
-│   │   ├── prompt-L2.md      ← Generate L2 coding rules
-│   │   ├── prompt-L3.md      ← Build initial L3 specs from existing code
-│   │   ├── prompt-L5.md      ← Build L5 validation traceability & test specs
+│   │   ├── sub-agent/        ← Sub-agent variant (default): subagents analyze features in parallel
+│   │   │   ├── prompt-L1a.md ← Generate L1 docs Phase 1-3 (scan + overview; infra-first discovery)
+│   │   │   ├── prompt-L1b.md ← Generate L1 docs Phase 4-5 (4a: infra docs → 4b: subagent feature analysis)
+│   │   │   ├── prompt-L2.md  ← Generate L2 coding rules
+│   │   │   ├── prompt-L3.md  ← Build initial L3 specs from existing code
+│   │   │   └── prompt-L5.md  ← Build L5 validation traceability & test specs
 │   │   └── single-agent/     ← Single-agent variant: no subagents, pause for human review after each item
+│   │       ├── README.md     ← Mode comparison & usage guide
 │   │       ├── prompt-L1a.md
 │   │       ├── prompt-L1b.md ← Core difference: main agent analyzes each feature/infra one at a time
 │   │       ├── prompt-L2.md  ← Pauses for review after each module
 │   │       ├── prompt-L3.md
 │   │       └── prompt-L5.md
 │   └── claude/              ← Claude Code-specific (subagent has read+write, creates files directly)
-│       ├── prompt-L1a.md     ← Generate L1 docs Phase 1-3 (scan + overview; infra-first discovery: 2a infra → 2b features → 2c patterns)
+│       ├── prompt-L1a.md     ← Generate L1 docs Phase 1-3 (scan + overview; infra-first discovery)
 │       ├── prompt-L1b.md     ← Generate L1 docs Phase 4-5 (4a: infra docs → 4b: subagent feature analysis)
 │       ├── prompt-L2.md
 │       ├── prompt-L3.md      ← Build initial L3 specs from existing code
 │       └── prompt-L5.md      ← Build L5 validation traceability & test specs
+├── .github/skills/            ← Copilot custom skills (auto-invoked by keyword)
+│   ├── build-ai/SKILL.md     ← Build .ai context from scratch (keyword: init .ai, build ai docs)
+│   ├── update-ai/SKILL.md    ← Update existing .ai context (keyword: refresh .ai, update ai docs)
+│   ├── check-changes/SKILL.md ← Show status of all in-progress changes (keyword: change status, 变更状态)
+│   ├── spec-fix/SKILL.md     ← Spec-first bug fix: check spec → update test → fix code (keyword: bug, fix issue)
+│   ├── review-tests/SKILL.md ← Review test coverage against L3 specs (keyword: review tests, 测试覆盖)
+│   └── new-change/SKILL.md   ← Create new change with spec-driven workflow (keyword: new feature, 新需求)
 ├── entrypoints/              ← AI tool entry point templates
 │   ├── clinerules.md         ← Cline entry template (→ .clinerules)
 │   ├── claude.md             ← Claude Code entry template (→ CLAUDE.md)
@@ -180,7 +189,11 @@ cp -r /path/to/project-compass /path/to/your-project/.ai/
 
 ### Step 2: Build L1 → L2 → L3 using builder prompts
 
-Choose the builder matching your AI tool (`builders/claude/` or `builders/cline/`), then run prompts **in order**:
+Choose the builder matching your AI tool, then run prompts **in order**:
+
+- **Claude Code** → `builders/claude/`
+- **Cline (sub-agent mode)** → `builders/cline/sub-agent/` — subagents analyze features in parallel, efficient for large projects
+- **Cline (single-agent mode)** → `builders/cline/single-agent/` — main agent analyzes one by one, pauses for human review after each item
 
 | Order | Builder Prompt | What it builds | External input |
 |-------|---------------|----------------|----------------|

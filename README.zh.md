@@ -96,23 +96,32 @@ AI 每次对话**只读 `overview.md`**（< 60 行），然后根据任务类型
 │
 ├── builders/                  ← 自动生成文档的 Prompt 集合（按工具分目录）
 │   ├── cline/               ← Cline 专用（subagent 只读，输出文本由主 agent 写入文件）
-│   │   ├── prompt-L1a.md     ← 生成 L1 文档 Phase 1-3（扫描 + overview；基础设施优先：2a 基础设施 → 2b 功能 → 2c 通用模式）
-│   │   ├── prompt-L1b.md     ← 生成 L1 文档 Phase 4-5（4a 基础设施文档 → 4b subagent 功能深入分析）
-│   │   ├── prompt-L2.md      ← 生成 L2 编码规则
-│   │   ├── prompt-L3.md      ← 从已有代码构建 L3 初始 Spec
-│   │   ├── prompt-L5.md      ← 构建 L5 验证追溯和测试用例
+│   │   ├── sub-agent/        ← Sub-agent 变体（默认）：subagent 并行分析功能
+│   │   │   ├── prompt-L1a.md ← 生成 L1 文档 Phase 1-3（扫描 + overview；基础设施优先）
+│   │   │   ├── prompt-L1b.md ← 生成 L1 文档 Phase 4-5（4a 基础设施文档 → 4b subagent 功能深入分析）
+│   │   │   ├── prompt-L2.md  ← 生成 L2 编码规则
+│   │   │   ├── prompt-L3.md  ← 从已有代码构建 L3 初始 Spec
+│   │   │   └── prompt-L5.md  ← 构建 L5 验证追溯和测试用例
 │   │   └── single-agent/     ← 单 Agent 变体：不使用 subagent，每个功能/组件完成后暂停等人工审核
+│   │       ├── README.md     ← 模式对比与使用指南
 │   │       ├── prompt-L1a.md
 │   │       ├── prompt-L1b.md ← 核心差异：主 agent 逐个分析功能和基础设施，每个暂停审核
 │   │       ├── prompt-L2.md  ← 逐模块暂停审核
 │   │       ├── prompt-L3.md
 │   │       └── prompt-L5.md
 │   └── claude/              ← Claude Code 专用（subagent 可读写，直接创建文件）
-│       ├── prompt-L1a.md     ← 生成 L1 文档 Phase 1-3（扫描 + overview；基础设施优先：2a 基础设施 → 2b 功能 → 2c 通用模式）
+│       ├── prompt-L1a.md     ← 生成 L1 文档 Phase 1-3（扫描 + overview；基础设施优先）
 │       ├── prompt-L1b.md     ← 生成 L1 文档 Phase 4-5（4a 基础设施文档 → 4b subagent 功能深入分析）
 │       ├── prompt-L2.md
 │       ├── prompt-L3.md      ← 从已有代码构建 L3 初始 Spec
 │       └── prompt-L5.md      ← 构建 L5 验证追溯和测试用例
+├── .github/skills/            ← Copilot 自定义技能（关键词触发自动调用）
+│   ├── build-ai/SKILL.md     ← 从零构建 .ai 上下文（关键词：init .ai、构建 AI 上下文）
+│   ├── update-ai/SKILL.md    ← 更新已有 .ai 上下文（关键词：刷新 .ai、更新 AI 文档）
+│   ├── check-changes/SKILL.md ← 查看所有变更状态（关键词：变更状态、进度、change status）
+│   ├── spec-fix/SKILL.md     ← Spec-first 修 bug：查 spec → 改测试 → 修代码（关键词：bug、行为不对）
+│   ├── review-tests/SKILL.md ← 审查测试覆盖率 vs L3 spec（关键词：审查测试、测试覆盖）
+│   └── new-change/SKILL.md   ← Spec-driven 创建新变更（关键词：新需求、加功能、new feature）
 ├── entrypoints/              ← AI 工具入口文件模板
 │   ├── clinerules.md         ← Cline 入口模板（→ .clinerules）
 │   ├── claude.md             ← Claude Code 入口模板（→ CLAUDE.md）
@@ -121,7 +130,6 @@ AI 每次对话**只读 `overview.md`**（< 60 行），然后根据任务类型
 │   ├── change-management.md  ← 变更管理流程参考（→ .ai/L3-specs/）
 │   └── doc-sync.md           ← 文档同步流程参考（→ .ai/doc-sync.md）
 ├── roadmap/                  ← 路线图与调研
-│   ├── requirements-integration-research.md ← 需求衔接方案调研
 │   └── multi-agent-collaboration-research.md ← 多 Agent 并行协作调研
 └── README.md                 ← 本文件
 ```
@@ -183,7 +191,11 @@ cp -r /path/to/project-compass /path/to/your-project/.ai/
 
 ### 第二步：用 builder prompt 依次构建 L1 → L2 → L3
 
-选择与你 AI 工具匹配的 builder（`builders/claude/` 或 `builders/cline/`），**按顺序**执行 prompt：
+选择与你 AI 工具匹配的 builder，**按顺序**执行 prompt：
+
+- **Claude Code** → `builders/claude/`
+- **Cline（sub-agent 模式）** → `builders/cline/sub-agent/` — subagent 并行分析功能，适合功能多的大项目
+- **Cline（single-agent 模式）** → `builders/cline/single-agent/` — 主 agent 逐个分析，每项暂停等人工审核
 
 | 顺序 | Builder Prompt | 构建内容 | 外部输入 |
 |------|---------------|---------|----------|
