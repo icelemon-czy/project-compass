@@ -95,6 +95,8 @@ ls .ai/L3-specs/changes/ | grep -v _change-template
 
 ### Step 6: 从 Scenario 写测试代码
 
+读取 `.ai/L2-rules/testing.md`（如存在）— 遵守项目测试规范。
+
 对 delta spec 中**尚未有测试的** Scenario，写测试：
 
 - **WHEN** → 测试的 setup + action

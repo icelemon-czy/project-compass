@@ -51,6 +51,8 @@ ls .ai/L5-validation/test-specs/ | grep -v _domain-template
 
 #### 2c: 验证实际测试代码
 
+读取 `.ai/L2-rules/testing.md`（如存在）— 作为审查基准。
+
 对追溯文件中标记为 ✅ verified 的 Scenario，**抽样验证**实际测试代码是否真正覆盖：
 
 1. 根据追溯文件中的测试文件路径，读取实际测试代码

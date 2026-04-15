@@ -125,12 +125,31 @@ git branch -a 2>/dev/null | head -20
 ```
 判断：是 Conventional Commits？分支名用 `feat/` `fix/` 前缀？
 
-#### 4h: 测试规范
-从测试文件中提取：
-- 用什么测试框架？（从 import 看）
-- 测试文件放在哪？（同目录 `*.test.ts` 还是单独 `tests/` 目录？）
-- 测试命名模式？（`should_xxx_when_yyy`？`test_xxx`？）
-- mock 了什么？（从 `jest.mock` / `@patch` / `gomock` 看）
+#### 4h: 测试规范（→ L2-rules/testing.md）
+从测试文件中提取，**写入 `testing.md`（不是 global.md）**：
+
+```bash
+# 测试框架（从依赖推断）
+cat package.json pyproject.toml go.mod 2>/dev/null | grep -i "jest\|mocha\|vitest\|pytest\|testify\|junit\|playwright\|cypress"
+
+# 测试文件分布和命名
+find . -name '*.test.*' -o -name '*.spec.*' -o -name 'test_*' -o -name '*_test.*' 2>/dev/null | head -20
+
+# 测试配置
+cat jest.config* vitest.config* pytest.ini conftest.py 2>/dev/null | head -60
+
+# 抽样 2-3 个测试文件结构
+head -30 src/**/*.test.ts tests/*.py 2>/dev/null
+```
+
+读取 `.ai/L2-rules/testing.md` 模板，根据扫描结果填写：
+- 测试框架 + 运行命令
+- 文件命名和位置约定
+- 单元测试：隔离策略、mock 工具、断言风格、数据构造
+- 集成测试：数据库策略、外部服务 mock
+- UI 测试（如有）：选择器策略、等待机制
+- 覆盖率要求
+- 反模式
 
 **填写 global.md 时的规则**：
 - 只写从代码中实际观察到的规范，不要假设或编造

@@ -98,6 +98,7 @@ All steps done. Run through this checklist:
 - [ ] Each feature has README.md with a layer navigation table
 - [ ] `architecture.md` exists and covers request lifecycle / startup sequence
 - [ ] `global.md` rules are extracted from actual code patterns, not invented
+- [ ] `testing.md` exists with project-specific test conventions
 - [ ] Every line passes: "Can AI derive this from code?" If yes → delete it
 - [ ] `specs/system.md` has System Boundary and Cross-Cutting Requirements
 - [ ] Each capability domain has `specs/<domain>/spec.md` with Requirement + Scenario

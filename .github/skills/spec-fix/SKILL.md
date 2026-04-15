@@ -49,8 +49,9 @@ argument-hint: "Describe the bug or unexpected behavior (e.g., 'login allows emp
 
 在改代码之前，先确保测试能捕获正确行为：
 
-1. 读取 `.ai/L5-validation/traceability/` 对应域的追溯文件 — 找到该 Scenario 对应的测试
-2. 读取 `.ai/L5-validation/test-specs/` 对应域的测试设计 — 检查是否有该场景
+1. 读取 `.ai/L2-rules/testing.md`（如存在）— 遵守项目测试规范
+2. 读取 `.ai/L5-validation/traceability/` 对应域的追溯文件 — 找到该 Scenario 对应的测试
+3. 读取 `.ai/L5-validation/test-specs/` 对应域的测试设计 — 检查是否有该场景
 
 **三种情况**：
 
