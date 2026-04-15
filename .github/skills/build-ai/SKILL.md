@@ -8,7 +8,7 @@ argument-hint: "Optional: target project path or specific layers (e.g., 'L1 only
 
 为项目搭建完整的 `.ai/` AI 上下文目录。
 
-## Four-Layer Architecture
+## Five-Layer Architecture
 
 | Layer | Purpose | Key Output |
 |-------|---------|------------|
@@ -62,6 +62,7 @@ cp -r /path/to/project-compass /path/to/your-project/.ai/
 | Tool | Directory | Subagent behavior |
 |------|-----------|-------------------|
 | Claude Code | `builders/claude/` | Subagent can read+write, creates files directly |
+| GitHub Copilot | `builders/copilot/` | No subagents, sequential analysis, auto-continues |
 | Cline (sub-agent) | `builders/cline/sub-agent/` | Subagent read-only, outputs text for main agent to write |
 | Cline (single-agent) | `builders/cline/single-agent/` | No subagents, pauses for human review after each item |
 
@@ -86,8 +87,6 @@ For the detailed logic inside each prompt, see these reference docs:
 |---------|--------|--------|
 | Claude Code | `.ai/entrypoints/claude.md` | Project root `CLAUDE.md` (if `CLAUDE.md` already exists, append content) |
 | Cline | `.ai/entrypoints/clinerules.md` | Project root `.clinerules` |
-| Cursor | `.ai/entrypoints/cursorrules.md` | Project root `.cursorrules` (or `.cursor/rules/`) |
-| GitHub Copilot | `.ai/entrypoints/copilot-instructions.md` | `.github/copilot-instructions.md` |
 
 ---
 

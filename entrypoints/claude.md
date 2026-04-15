@@ -26,7 +26,10 @@
 9. **查当前需求** — `cat .ai/L3-specs/specs/system.md`（TOR）和相关 `specs/<domain>/spec.md`（HLR），了解当前需求定义
 10. **判断变更路径**：
     - 已有 spec 范围内的修复 / 实现 → 直接实现
-    - 新增或修改系统行为 → `cat .ai/L3-specs/change-management.md`，按流程创建变更后再实现
+    - 新增或修改系统行为 → 创建变更：
+      1. 在 `changes/<name>/` 创建 proposal.md（参考 `_change-template/`）
+      2. 展示 proposal + 业务问题给用户确认
+      3. 确认后自动执行：delta spec → 写测试（红）→ 实现代码（绿）→ 完成
     - 参考历史变更 → `ls .ai/L3-specs/archive/`
 
 ## 对话结束时
