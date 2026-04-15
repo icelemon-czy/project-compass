@@ -82,6 +82,7 @@ Project Compass 在项目中建立一个 `.ai/` 目录，用 **5 层纯 Markdown
 │
 ├── L2-rules/                ← 编码规则（低频更新）
 │   ├── global.md            ← 可执行规则 + 反模式清单
+│   ├── testing.md           ← 项目测试规范
 │   └── templates.md         ← 新建文件的代码模板
 │
 ├── L3-specs/                ← 需求：Spec-Driven（随变更更新）
@@ -140,22 +141,19 @@ AI 每次对话 **只读 < 60 行索引**，根据任务按需深入
 ```
 收集上下文（L1 导航定位 + L3 现有 Spec）
       ↓
-创建 Proposal（为什么做 + 改什么 + 备选方案）
+创建 Proposal + 提业务问题 → 🧑 等人确认（唯一人工门槛）
+      ↓  确认后全自动 ↓
+Delta Spec（WHEN/THEN 场景化需求）
       ↓
-写 Delta Spec（WHEN/THEN 场景化需求）
+先写测试 ← Spec Scenario 直接映射（红灯）
       ↓
-提验收问题 → 等人确认
+再写代码 ← 让测试通过（绿灯）
       ↓
-先写/更新测试用例 ← 从 Spec Scenario 直接映射
-      ↓
-再写代码 ← 让测试从红变绿
-      ↓
-更新追溯矩阵（Spec ↔ Code ↔ Test）
-      ↓
-归档（delta spec 合并到主 spec）
+更新追溯矩阵 + 归档
 ```
 
 核心纪律：**永远 Spec → Test → Code，不允许跳过**
+人只确认一次（Proposal），之后 AI 全自动执行
 
 ---
 
@@ -189,23 +187,23 @@ AI 每次对话 **只读 < 60 行索引**，根据任务按需深入
       ↓
   ① 收集上下文 — L1 定位功能 + L3 查现有 Spec
       ↓
-  ② Proposal — 为什么做 + 改什么 + 影响范围
+  ② Proposal + 业务问题 — 为什么做 + 改什么 + 3-5 个确认问题
       ↓
+  🧑 人确认 proposal + 回答问题（唯一人工门槛）
+      ↓  确认后全自动 ↓
   ③ Delta Spec — 补写/修改 WHEN/THEN 场景
       ↓
-  ④ 验收问题 — 提 3-5 个业务问题 → 🧑 等人确认
+  ④ Tasks — 生成 checkbox 执行步骤（Tests 在最前）
       ↓
-  ⑤ Tasks — 生成 checkbox 执行步骤
+  ⑤ 写测试（红灯）— Scenario → setup + assertion
       ↓
-  ⑥ 🧑 人确认 proposal + spec + tasks
+  ⑥ 写代码（绿灯）— 让测试通过
       ↓
-  ⑦ 执行 — 先写测试（红灯）→ 再改代码（绿灯）
-      ↓
-  ⑧ 归档 — delta spec 合并到主 spec → 移入 archive/
+  ⑦ 归档 — delta spec 合并到主 spec → 移入 archive/
 ```
 
 > **文件系统即状态** — `changes/` = 进行中，`archive/` = 已完成
-> **人参与 2 个节点** — ④ 回答验收问题 + ⑥ 确认方案
+> **人只参与 1 个节点** — ② 确认 Proposal + 回答业务问题，之后 AI 全自动
 
 ---
 
@@ -238,27 +236,32 @@ Spec 是核心驱动 — 代码和测试都围绕它生长
 
 ---
 
-# 自动化：Builder + 6 个 Skill
+# 自动化：Builder + 9 个 Skill
 
-**Builder Prompt**：5 个独立 prompt 从零构建 `.ai/`（`builders/cline/` 下）
+**Builder Prompt**：5 个独立 prompt 从零构建 `.ai/`（三种工具变体）
 
 | 顺序 | Prompt | 构建内容 |
 |:-----|:-------|:---------|
 | 1 | `prompt-L1a.md` | overview.md + 功能清单 + `_handoff.md` |
 | 2 | `prompt-L1b.md` | features/ 文档 + architecture + module-map + key-files |
-| 3 | `prompt-L2.md` | global.md + templates.md + 模块规则 |
+| 3 | `prompt-L2.md` | global.md + testing.md + templates.md + 模块规则 |
 | 4 | `prompt-L3.md` | system.md (TOR) + 能力域 spec (HLR) |
 | 5 | `prompt-L5.md` | 追溯矩阵 + 验证报告 |
 
-**6 个 Copilot Skill（关键词自动触发，中英文支持）**
+Builder 变体：`builders/claude/`（子代理读写）· `builders/copilot/`（顺序执行）· `builders/cline/`（子代理只读 / 单代理）
+
+**9 个 Skill（关键词自动触发，中英文支持）**
 
 | 哲学归属 | Skill | 触发词 | 做什么 |
 |:---------|:------|:-------|:-------|
 | 渐进式加载 | `/build-ai` | "初始化 .ai" | 从零构建完整上下文 |
 | 渐进式加载 | `/update-ai` | "刷新 .ai" | 代码变了同步上下文 |
-| Spec-Driven | `/new-change` | "加个功能" | 走完 proposal → spec → tasks |
+| Spec-Driven | `/new-change` | "加个功能" | proposal → 确认 → spec → TDD |
+| Spec-Driven | `/continue-change` | "继续开发" | 接续已有变更的 TDD 执行 |
 | Spec-Driven | `/spec-fix` | "有 bug" | Spec → Test → Code 修复 |
+| Spec-Driven | `/archive-change` | "归档" | 合并 delta spec → 移入 archive |
 | 验证闭环 | `/review-tests` | "测试够吗" | 交叉比对 spec 与测试覆盖率 |
+| 验证闭环 | `/setup-testing` | "测试规范" | 扫描代码生成 testing.md |
 | 验证闭环 | `/check-changes` | "变更状态" | 汇总所有进行中变更进度 |
 
 ---
@@ -267,13 +270,11 @@ Spec 是核心驱动 — 代码和测试都围绕它生长
 
 **纯 Markdown 模板，`cp` 即用，不锁定任何平台**
 
-<br>
-
 | AI 工具 | Entrypoint 文件 | 放置位置 |
 |:--------|:----------------|:---------|
+| Claude Code | `entrypoints/claude.md` | 项目根目录 `CLAUDE.md` |
 | Cline | `entrypoints/clinerules.md` | 项目根目录 `.clinerules` |
-
-<br>
+| GitHub Copilot | `entrypoints/copilot-instructions.md` | `.github/copilot-instructions.md` |
 
 > 同一套 `.ai/` 文档，切换工具只需换 entrypoint。
 > 团队成员可以用不同的 AI 工具，共享同一份上下文。
@@ -313,12 +314,11 @@ AI 不再迷路 — 每次只看需要的，< 60 行即可开始工作
 `cp -r project-compass /your-project/.ai/`
 
 **② 用 Builder Prompt 构建上下文**
-在 Cline 中依次执行 L1a → L1b → L2 → L3 → L5
-两种模式可选：`sub-agent/`（子代理只读）或 `single-agent/`（逐项暂停人工审）
-每个 prompt 独立，复制到新对话中执行即可
+选择你的 AI 工具对应的 Builder（`builders/claude/` · `builders/copilot/` · `builders/cline/`）
+依次执行 L1a → L1b → L2 → L3 → L5，每个 prompt 独立
 
 **③ 部署 Entrypoint 入口文件**
-复制 `entrypoints/clinerules.md` 到项目根目录 `.clinerules`
+复制对应的 entrypoint 到项目根目录（Claude → `CLAUDE.md` / Cline → `.clinerules` / Copilot → `.github/copilot-instructions.md`）
 → 此后每次 AI 对话自动加载 `.ai/` 上下文并自主导航
 
 <br>
