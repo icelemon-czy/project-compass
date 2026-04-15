@@ -1,0 +1,130 @@
+---
+name: archive-change
+description: "Archive a completed change: merge delta spec into main specs, move to archive, update traceability. Use when: 归档, archive, 合并spec, merge spec, 变更完成, change done, 审核通过, approved"
+argument-hint: "Optional: change name (e.g., 'add-csv-export'). Omit to list pending-review changes."
+---
+
+# Archive Change
+
+变更完成后，将 delta spec 合并到主 spec，移动到 archive，更新追溯。
+
+> **前置条件**：变更的 proposal.md 状态为 `pending-review`，且所有测试通过。
+
+## Procedure
+
+---
+
+### Step 1: 定位变更
+
+**有参数** → 直接读取 `.ai/L3-specs/changes/<name>/proposal.md`，确认状态为 `pending-review`。
+
+**无参数** → 扫描所有 `pending-review` 状态的变更：
+
+```bash
+ls .ai/L3-specs/changes/ | grep -v _change-template
+```
+
+对每个变更读取 proposal.md 的状态，只展示 `pending-review` 的：
+
+```
+## 待归档变更
+
+| # | 变更名 | 目的 |
+|---|--------|------|
+| 1 | add-csv-export | 报表支持 CSV 导出 |
+
+请选择一个编号进行归档：
+```
+
+如无 `pending-review` 的变更，告知用户"没有待归档的变更"并停止。
+
+**等用户选择后继续。**
+
+---
+
+### Step 2: 展示变更摘要 → 等人确认
+
+读取变更的完整内容，展示归档预览：
+
+```
+## 归档预览: <change-name>
+
+### Delta Spec 合并计划
+| 能力域 | 操作 | Requirement 数量 |
+|--------|------|-----------------|
+| auth | MODIFIED | 2 |
+| export | ADDED (新能力域) | 3 |
+
+### 测试状态
+- tasks.md: X/X 完成
+- 所有测试通过: ✅
+
+确认归档？（合并 delta spec 到主 spec + 移动到 archive）
+```
+
+**停下来等待人类确认。**
+
+---
+
+### Step 3: 合并 delta spec 到主 spec
+
+对变更的 `specs/` 下每个能力域：
+
+1. 读取 delta spec（`changes/<name>/specs/<cap>/spec.md`）
+2. 读取主 spec（`.ai/L3-specs/specs/<cap>/spec.md`，如存在）
+
+按区段执行：
+
+| Delta 区段 | 操作 |
+|-----------|------|
+| `## ADDED Requirements` | 追加到主 spec 的 Requirements 末尾 |
+| `## MODIFIED Requirements` | 找到同名 Requirement，整块替换 |
+| `## REMOVED Requirements` | 删除同名 Requirement 块 |
+| 新能力域（主 spec 不存在） | 从 `_capability-template/` 创建新 `specs/<cap>/spec.md`，写入所有 Requirement |
+
+---
+
+### Step 4: 更新追溯
+
+更新 `.ai/L5-validation/traceability/<domain>.md`：
+
+- ADDED Requirement 的 Scenario → 确认标为 ✅ verified
+- MODIFIED Requirement 的 Scenario → 确认状态仍正确
+- REMOVED Requirement 的 Scenario → 从追溯文件中移除
+
+---
+
+### Step 5: 移动到 archive
+
+1. proposal.md 状态改为 `approved`
+2. 移动整个目录：`changes/<name>/` → `archive/<name>/`
+3. 如果 `.ai/L4-session/active-session.md` 指向该变更 → 清除引用
+
+```bash
+mkdir -p .ai/L3-specs/archive/
+mv .ai/L3-specs/changes/<name>/ .ai/L3-specs/archive/<name>/
+```
+
+---
+
+### Step 6: 验证
+
+1. 主 spec 语法完整（无断裂的 Requirement 块）
+2. 追溯文件与主 spec 一致
+3. `changes/` 下已无该变更
+
+展示合并后受影响的主 spec 变化摘要：
+
+```
+## 归档完成: <change-name>
+
+### 主 spec 变化
+- specs/auth/spec.md: 修改 2 个 Requirement
+- specs/export/spec.md: 新建，3 个 Requirement
+
+### 追溯更新
+- traceability/auth.md: 2 个 Scenario 状态确认
+- traceability/export.md: 新建，3 个 Scenario ✅
+
+变更已移至 archive/<change-name>/。
+```
