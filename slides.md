@@ -240,9 +240,15 @@ Spec 是核心驱动 — 代码和测试都围绕它生长
 
 # 自动化：Builder + 6 个 Skill
 
-**Builder Prompt**：5 步从零构建 `.ai/`（支持 Claude Code / Cline 两种模式）
+**Builder Prompt**：5 个独立 prompt 从零构建 `.ai/`（`builders/cline/` 下）
 
-<br>
+| 顺序 | Prompt | 构建内容 |
+|:-----|:-------|:---------|
+| 1 | `prompt-L1a.md` | overview.md + 功能清单 + `_handoff.md` |
+| 2 | `prompt-L1b.md` | features/ 文档 + architecture + module-map + key-files |
+| 3 | `prompt-L2.md` | global.md + templates.md + 模块规则 |
+| 4 | `prompt-L3.md` | system.md (TOR) + 能力域 spec (HLR) |
+| 5 | `prompt-L5.md` | 追溯矩阵 + 验证报告 |
 
 **6 个 Copilot Skill（关键词自动触发，中英文支持）**
 
@@ -308,6 +314,7 @@ AI 不再迷路 — 每次只看需要的，< 60 行即可开始工作
 
 **② 用 Builder Prompt 构建上下文**
 在 Cline 中依次执行 L1a → L1b → L2 → L3 → L5
+两种模式可选：`sub-agent/`（子代理只读）或 `single-agent/`（逐项暂停人工审）
 每个 prompt 独立，复制到新对话中执行即可
 
 **③ 部署 Entrypoint 入口文件**
