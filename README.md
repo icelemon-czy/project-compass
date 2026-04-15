@@ -125,7 +125,6 @@ Every target file has **bidirectional links** (source / related files) to preven
 ├── entrypoints/              ← AI tool entry point templates
 │   ├── clinerules.md         ← Cline entry template (→ .clinerules)
 │   ├── claude.md             ← Claude Code entry template (→ CLAUDE.md)
-│   ├── cursorrules.md        ← Cursor entry template (→ .cursorrules)
 │   ├── copilot-instructions.md ← GitHub Copilot entry template
 │   ├── change-management.md  ← Change management workflow reference (→ .ai/L3-specs/)
 │   └── doc-sync.md           ← Doc sync workflow reference (→ .ai/doc-sync.md)
@@ -213,7 +212,6 @@ Copy the matching entrypoint template to your project root:
 |---------|--------|--------|
 | Claude Code | `.ai/entrypoints/claude.md` | `CLAUDE.md` in project root (if `CLAUDE.md` already exists, append the content) |
 | Cline | `.ai/entrypoints/clinerules.md` | `.clinerules` in project root |
-| Cursor | `.ai/entrypoints/cursorrules.md` | `.cursorrules` in project root (or `.cursor/rules/`) |
 | GitHub Copilot | `.ai/entrypoints/copilot-instructions.md` | `.github/copilot-instructions.md` |
 
 After this, every AI conversation will auto-load `.ai/` context and self-navigate.
@@ -251,7 +249,7 @@ After this, every AI conversation will auto-load `.ai/` context and self-navigat
 ┌─────────────────────────────────────────────────────────┐
 │  Step 0 (One-time setup)                                │
 │  Copy template from entrypoints/ → project root entry   │
-│  (.clinerules / CLAUDE.md / .cursorrules etc.)          │
+│  (.clinerules / CLAUDE.md / copilot-instructions etc.)  │
 └─────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────┐
@@ -341,7 +339,6 @@ Copy the corresponding template from `entrypoints/` to your project root:
 |---------|--------------|-----------|
 | Cline | `entrypoints/clinerules.md` | Project root `.clinerules` |
 | Claude Code | `entrypoints/claude.md` | Project root `CLAUDE.md` |
-| Cursor | `entrypoints/cursorrules.md` | Project root `.cursorrules` (or `.cursor/rules/`) |
 | GitHub Copilot | `entrypoints/copilot-instructions.md` | `.github/copilot-instructions.md` |
 
 Entry files contain complete navigation instructions. AI automatically reads `.ai/` docs and navigates on demand.

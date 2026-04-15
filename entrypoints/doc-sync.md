@@ -1,9 +1,9 @@
 # .ai 文档同步流程
 
-> 本文件是 AI 在修改代码后同步 .ai 文档的参考。
+> 本文件是 AI 在 git commit 前同步 .ai 文档的参考。
 > 部署位置：`.ai/doc-sync.md`
 >
-> entrypoint 文件（CLAUDE.md / .clinerules / .cursorrules / copilot-instructions.md）引用本文件。
+> `git-commit` skill 在提交前引用本文件。
 
 ## 适用范围
 
@@ -12,7 +12,7 @@ L3 spec 的更新由 `change-management.md` 的归档流程处理。
 
 ## 何时触发
 
-本次对话中如果做了以下任一操作，结束前需要同步：
+**在 git commit 前**，检查本次待提交的变更是否命中以下任一操作：
 
 | 代码变更类型 | 需要更新的文档 |
 |-------------|---------------|

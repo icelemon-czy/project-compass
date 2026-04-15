@@ -36,7 +36,16 @@ git diff HEAD --name-only
 
 Skip this check if the only changed files are `README.md`, `README.zh.md`, or files inside `.ai/L4-session/` (session state updates don't require README changes).
 
-## Step 2 — Commit & Push
+## Step 2 — Doc Sync Check
+
+在提交前，检查待提交的代码变更是否需要同步 `.ai/` 文档：
+
+1. 读取 `.ai/doc-sync.md`（如存在）
+2. 对照变更列表，判断是否命中 L1/L2 同步条件
+3. 如果命中 → 按 doc-sync.md 的步骤更新对应文档，将更新一并纳入本次提交
+4. 如果没命中 → 跳过
+
+## Step 3 — Commit & Push
 
 Using the summary from Step 1:
 1. `git add -A`

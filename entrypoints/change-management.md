@@ -3,7 +3,7 @@
 > 本文件是 AI 进行变更管理的完整参考。
 > 部署位置：`.ai/L3-specs/change-management.md`
 >
-> entrypoint 文件（CLAUDE.md / .clinerules / .cursorrules / copilot-instructions.md）引用本文件。
+> entrypoint 文件（CLAUDE.md / .clinerules / copilot-instructions.md）引用本文件。
 
 ## L3 目录结构
 

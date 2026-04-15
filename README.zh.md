@@ -125,7 +125,6 @@ AI 每次对话**只读 `overview.md`**（< 60 行），然后根据任务类型
 ├── entrypoints/              ← AI 工具入口文件模板
 │   ├── clinerules.md         ← Cline 入口模板（→ .clinerules）
 │   ├── claude.md             ← Claude Code 入口模板（→ CLAUDE.md）
-│   ├── cursorrules.md        ← Cursor 入口模板（→ .cursorrules）
 │   ├── copilot-instructions.md ← GitHub Copilot 入口模板
 │   ├── change-management.md  ← 变更管理流程参考（→ .ai/L3-specs/）
 │   └── doc-sync.md           ← 文档同步流程参考（→ .ai/doc-sync.md）
@@ -215,7 +214,6 @@ cp -r /path/to/project-compass /path/to/your-project/.ai/
 |---------|------|------|
 | Claude Code | `.ai/entrypoints/claude.md` | 项目根目录 `CLAUDE.md`（如已有 `CLAUDE.md`，将内容追加进去） |
 | Cline | `.ai/entrypoints/clinerules.md` | 项目根目录 `.clinerules` |
-| Cursor | `.ai/entrypoints/cursorrules.md` | 项目根目录 `.cursorrules`（或 `.cursor/rules/`） |
 | GitHub Copilot | `.ai/entrypoints/copilot-instructions.md` | `.github/copilot-instructions.md` |
 
 完成后，每次 AI 对话都会自动加载 `.ai/` 上下文并自主导航。
@@ -253,7 +251,7 @@ cp -r /path/to/project-compass /path/to/your-project/.ai/
 ┌─────────────────────────────────────────────────────────┐
 │  Step 0（一次性配置）                                      │
 │  复制 entrypoints/ 下对应模板 → 项目根目录入口文件          │
-│  （.clinerules / CLAUDE.md / .cursorrules 等）            │
+│  （.clinerules / CLAUDE.md / copilot-instructions 等）    │
 └─────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────┐
@@ -343,7 +341,6 @@ cp -r /path/to/project-compass /path/to/your-project/.ai/
 |---------|----------|----------|
 | Cline | `entrypoints/clinerules.md` | 项目根目录 `.clinerules` |
 | Claude Code | `entrypoints/claude.md` | 项目根目录 `CLAUDE.md` |
-| Cursor | `entrypoints/cursorrules.md` | 项目根目录 `.cursorrules`（或 `.cursor/rules/`）|
 | GitHub Copilot | `entrypoints/copilot-instructions.md` | `.github/copilot-instructions.md` |
 
 入口文件包含完整的导航指令，AI 会自动读取 `.ai/` 下的文档并按需导航。
