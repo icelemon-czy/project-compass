@@ -85,30 +85,24 @@ argument-hint: "Describe what you want to build (e.g., 'a TODO app with React', 
 
 1. 创建项目目录
 2. 运行对应的脚手架命令（`npm init`、`cargo init`、`go mod init` 等）
-3. 安装核心依赖
+3. 安装核心依赖（含测试框架）
 4. 创建基础目录结构
-5. 配置测试框架
-6. 创建 `.gitignore`
-7. 初始化 git（如尚未初始化）
+5. 创建 `.gitignore`
+6. 初始化 git（如尚未初始化）
 
-#### Step 5: 创建入口文件 + 基础代码
-
-- 创建最小可运行的入口文件（`main.ts`、`app.py`、`main.go` 等）
-- 创建一个 hello-world 级别的端点或功能
-- 创建第一个测试文件，验证基础设施可用
-- **运行测试，确认绿灯**
+> 此阶段 **不写业务代码**，只搭骨架。业务代码在 Phase D 用 TDD 方式写。
 
 ---
 
-### Phase C: 构建 `.ai/` 上下文（自动）
+### Phase C: 构建 `.ai/` 上下文 + Spec（自动）
 
-#### Step 6: 复制 project-compass 模板
+#### Step 5: 复制 project-compass 模板
 
 ```bash
 cp -r /path/to/project-compass /path/to/project/.ai/
 ```
 
-#### Step 7: 构建 L1 — 代码导航
+#### Step 6: 构建 L1 — 代码导航
 
 基于刚创建的项目结构，填写：
 
@@ -117,23 +111,23 @@ cp -r /path/to/project-compass /path/to/project/.ai/
 - `L1-codebase-map/module-map.md` — 模块关系（初始版本）
 - `L1-codebase-map/key-files.md` — 关键文件索引
 
-#### Step 8: 构建 L2 — 编码规则
+#### Step 7: 构建 L2 — 编码规则
 
 - `L2-rules/global.md` — 根据技术选型生成编码规则
 - `L2-rules/testing.md` — 根据测试框架生成测试规范
 - `L2-rules/templates.md` — 代码模板（基于项目约定）
 
-#### Step 9: 构建 L3 — 需求 Spec
+#### Step 8: 构建 L3 — 需求 Spec
 
 - `L3-specs/specs/system.md` — 系统级需求（TOR），从 Step 1 的需求澄清直接映射
 - 为每个核心功能创建能力域 spec：`L3-specs/specs/<domain>/spec.md`
   - 每个 Requirement 至少 1 个 WHEN/THEN Scenario
 
-#### Step 10: 构建 L5 — 追溯矩阵
+#### Step 9: 构建 L5 — 初始追溯矩阵
 
-- `L5-validation/traceability/` — 初始追溯矩阵（Spec ↔ Code ↔ Test）
+- `L5-validation/traceability/` — 初始追溯矩阵（Spec ↔ Code ↔ Test），此时 Code/Test 列为空
 
-#### Step 11: 部署 Entrypoint
+#### Step 10: 部署 Entrypoint
 
 根据用户使用的 AI 工具，复制对应的 entrypoint：
 
@@ -145,9 +139,38 @@ cp -r /path/to/project-compass /path/to/project/.ai/
 
 ---
 
-### Phase D: 验证（需人检查）
+### Phase D: TDD — 基于 Spec 写第一批代码（自动）
 
-#### Step 12: 展示完成状态
+#### Step 11: 从 Spec Scenario 写测试
+
+读取 `.ai/L2-rules/testing.md` — 遵守项目测试规范。
+
+对 L3 中每个核心能力域的 Scenario，写测试：
+
+- **WHEN** → 测试的 setup + action
+- **THEN** → 测试的 assertion
+- 优先覆盖 happy path，再覆盖关键 edge case
+
+**运行测试，确认全部失败（红灯）。**
+
+#### Step 12: 实现代码
+
+让测试通过：
+
+1. 创建入口文件（`main.ts`、`app.py`、`main.go` 等）
+2. 按 `L2-rules/global.md` 编码规则实现
+3. 创建新文件 → 查 `L2-rules/templates.md`
+4. **运行测试，确认全部通过（绿灯）**
+
+#### Step 13: 更新追溯矩阵
+
+更新 `L5-validation/traceability/` — 已实现的 Scenario 标为 ✅ verified。
+
+---
+
+### Phase E: 验证（需人检查）
+
+#### Step 14: 展示完成状态
 
 向用户展示：
 
@@ -159,19 +182,20 @@ cp -r /path/to/project-compass /path/to/project/.ai/
 
 ### 已创建
 - [x] 项目脚手架 + 依赖安装
-- [x] 基础代码 + 测试通过
 - [x] .ai/ 上下文（L1 ~ L5）
 - [x] Entrypoint 部署
+- [x] 基于 Spec 的测试（红灯 → 绿灯）
+- [x] 追溯矩阵已更新
 
 ### .ai/ 概览
 - L1: overview.md + N 个 feature 文档
 - L2: global.md + testing.md + templates.md
 - L3: system.md + N 个能力域 spec
-- L5: 追溯矩阵
+- L5: 追溯矩阵（N 个 Scenario ✅）
 
 ### 建议的下一步
-1. 用 `/new-change` 开始第一个功能开发
-2. 用 `/review-tests` 检查初始测试覆盖
+1. 用 `/new-change` 开始下一个功能开发
+2. 用 `/review-tests` 检查测试覆盖
 ```
 
 **等待人类检查确认。这是第二个人工门槛。**
