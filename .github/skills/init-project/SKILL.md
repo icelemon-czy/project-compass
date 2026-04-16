@@ -1,0 +1,177 @@
+---
+name: init-project
+description: "Initialize a new project from scratch: requirements → tech stack → scaffold → .ai context. Use when: 新项目, init project, 从零开始, start from scratch, 我想做一个, I want to build, 初始化项目, create project, 新建项目, bootstrap"
+argument-hint: "Describe what you want to build (e.g., 'a TODO app with React', '一个博客系统用 Go')"
+---
+
+# Init Project（从零到可开发）
+
+从用户的一句话出发，完成：需求澄清 → 技术选型 → 项目脚手架 → `.ai/` 上下文 → 第一个 Spec。
+
+> **核心纪律**：人确认两次 —— ① 需求 + 技术方案，② `.ai/` 构建完成后检查。其余 AI 全自动。
+
+## Prerequisites
+
+- 用户描述了想做什么（可以很粗略，如"我想做一个 XX"）
+- project-compass 模板可用
+
+## Procedure
+
+---
+
+### Phase A: 需求澄清 + 技术选型（需人确认）
+
+#### Step 1: 需求澄清
+
+通过用户描述，提炼以下内容：
+
+- **项目目标**：一句话概括这个项目做什么、给谁用
+- **核心功能**：3-7 个最关键的功能点
+- **非功能需求**：性能、部署方式、是否需要认证等
+
+如果用户描述太模糊，提出 3-5 个澄清问题：
+- ✅ 业务范围（"需要支持多用户吗？"）
+- ✅ 部署目标（"本地运行还是部署到云？"）
+- ✅ 集成需求（"需要对接第三方 API 吗？"）
+- ❌ 不问技术细节（那是 AI 该决定的）
+
+#### Step 2: 技术选型建议
+
+根据需求推荐技术方案：
+
+| 维度 | 要给出的建议 |
+|:-----|:-------------|
+| 语言 + 框架 | 主要语言、Web 框架、ORM 等 |
+| 数据存储 | 数据库类型 + 具体选择 |
+| 项目结构 | 目录布局方案 |
+| 测试框架 | 单测 + 集成测试工具 |
+| 构建 + 部署 | 包管理、构建工具、CI 建议 |
+
+如果用户已指定技术栈，直接采用，只补充未指定的部分。
+
+#### Step 3: 展示方案 → 等人确认
+
+向用户展示：
+
+```
+## 项目方案
+
+**项目名称**: <name>
+**一句话**: <what it does>
+
+### 核心功能
+1. ...
+2. ...
+
+### 技术选型
+- 语言: ...
+- 框架: ...
+- 数据库: ...
+- 测试: ...
+
+### 需要确认
+1. [如有未确定的业务问题]
+```
+
+**停下来等待人类确认。这是第一个人工门槛。**
+
+---
+
+### Phase B: 脚手架搭建（自动）
+
+#### Step 4: 初始化项目
+
+根据确认的方案，执行项目初始化：
+
+1. 创建项目目录
+2. 运行对应的脚手架命令（`npm init`、`cargo init`、`go mod init` 等）
+3. 安装核心依赖
+4. 创建基础目录结构
+5. 配置测试框架
+6. 创建 `.gitignore`
+7. 初始化 git（如尚未初始化）
+
+#### Step 5: 创建入口文件 + 基础代码
+
+- 创建最小可运行的入口文件（`main.ts`、`app.py`、`main.go` 等）
+- 创建一个 hello-world 级别的端点或功能
+- 创建第一个测试文件，验证基础设施可用
+- **运行测试，确认绿灯**
+
+---
+
+### Phase C: 构建 `.ai/` 上下文（自动）
+
+#### Step 6: 复制 project-compass 模板
+
+```bash
+cp -r /path/to/project-compass /path/to/project/.ai/
+```
+
+#### Step 7: 构建 L1 — 代码导航
+
+基于刚创建的项目结构，填写：
+
+- `L1-codebase-map/overview.md` — 功能索引（< 60 行）
+- `L1-codebase-map/features/` — 按核心功能创建 feature 文档
+- `L1-codebase-map/module-map.md` — 模块关系（初始版本）
+- `L1-codebase-map/key-files.md` — 关键文件索引
+
+#### Step 8: 构建 L2 — 编码规则
+
+- `L2-rules/global.md` — 根据技术选型生成编码规则
+- `L2-rules/testing.md` — 根据测试框架生成测试规范
+- `L2-rules/templates.md` — 代码模板（基于项目约定）
+
+#### Step 9: 构建 L3 — 需求 Spec
+
+- `L3-specs/specs/system.md` — 系统级需求（TOR），从 Step 1 的需求澄清直接映射
+- 为每个核心功能创建能力域 spec：`L3-specs/specs/<domain>/spec.md`
+  - 每个 Requirement 至少 1 个 WHEN/THEN Scenario
+
+#### Step 10: 构建 L5 — 追溯矩阵
+
+- `L5-validation/traceability/` — 初始追溯矩阵（Spec ↔ Code ↔ Test）
+
+#### Step 11: 部署 Entrypoint
+
+根据用户使用的 AI 工具，复制对应的 entrypoint：
+
+| 工具 | 操作 |
+|:-----|:-----|
+| Claude Code | `cp .ai/entrypoints/claude.md ./CLAUDE.md` |
+| Cline | `cp .ai/entrypoints/clinerules.md ./.clinerules` |
+| GitHub Copilot | `cp .ai/entrypoints/copilot-instructions.md ./.github/copilot-instructions.md` |
+
+---
+
+### Phase D: 验证（需人检查）
+
+#### Step 12: 展示完成状态
+
+向用户展示：
+
+```
+## 项目初始化完成
+
+**项目**: <name>
+**位置**: <path>
+
+### 已创建
+- [x] 项目脚手架 + 依赖安装
+- [x] 基础代码 + 测试通过
+- [x] .ai/ 上下文（L1 ~ L5）
+- [x] Entrypoint 部署
+
+### .ai/ 概览
+- L1: overview.md + N 个 feature 文档
+- L2: global.md + testing.md + templates.md
+- L3: system.md + N 个能力域 spec
+- L5: 追溯矩阵
+
+### 建议的下一步
+1. 用 `/new-change` 开始第一个功能开发
+2. 用 `/review-tests` 检查初始测试覆盖
+```
+
+**等待人类检查确认。这是第二个人工门槛。**
