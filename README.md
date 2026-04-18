@@ -116,12 +116,18 @@ Every target file has **bidirectional links** (source / related files) to preven
 │       ├── prompt-L3.md      ← Build initial L3 specs from existing code
 │       └── prompt-L5.md      ← Build L5 validation traceability & test specs
 ├── .github/skills/            ← Copilot custom skills (auto-invoked by keyword)
-│   ├── build-ai/SKILL.md     ← Build .ai context from scratch (keyword: init .ai, build ai docs)
-│   ├── update-ai/SKILL.md    ← Update existing .ai context (keyword: refresh .ai, update ai docs)
-│   ├── check-changes/SKILL.md ← Show status of all in-progress changes (keyword: change status, 变更状态)
-│   ├── spec-fix/SKILL.md     ← Spec-first bug fix: check spec → update test → fix code (keyword: bug, fix issue)
-│   ├── review-tests/SKILL.md ← Review test coverage against L3 specs (keyword: review tests, 测试覆盖)
-│   └── new-change/SKILL.md   ← Create new change with spec-driven workflow (keyword: new feature, 新需求)
+│   ├── git-init/SKILL.md          ← Initialize a new git repository (keyword: init git, new repo)
+│   ├── init-project/SKILL.md      ← Bootstrap a new project from scratch (keyword: 新项目, init project, 从零开始)
+│   ├── build-ai/SKILL.md          ← Build .ai context from scratch (keyword: init .ai, build ai docs)
+│   ├── update-ai/SKILL.md         ← Update existing .ai context (keyword: refresh .ai, update ai docs)
+│   ├── setup-testing/SKILL.md     ← Set up / update testing conventions (keyword: testing rules, 测试规范)
+│   ├── new-change/SKILL.md        ← Create new change with spec-driven workflow (keyword: new feature, 新需求)
+│   ├── continue-change/SKILL.md   ← Resume an in-progress change from last session (keyword: 继续开发, continue)
+│   ├── check-changes/SKILL.md     ← Show status of all in-progress changes (keyword: change status, 变更状态)
+│   ├── review-tests/SKILL.md      ← Run tests + coverage audit + false-pass hunting (keyword: review tests, 虚假通过)
+│   ├── fix-bug/SKILL.md           ← Unified bug-fix entry with automatic triage (keyword: bug, fix issue, review failed, 虚假通过)
+│   ├── archive-change/SKILL.md    ← Archive a completed change, merge delta spec (keyword: 归档, archive)
+│   └── git-commit/SKILL.md        ← Stage/commit/push with conventional message + doc-sync check (keyword: commit, push)
 ├── entrypoints/              ← AI tool entry point templates
 │   ├── clinerules.md         ← Cline entry template (→ .clinerules)
 │   ├── claude.md             ← Claude Code entry template (→ CLAUDE.md)
@@ -328,6 +334,53 @@ After this, every AI conversation will auto-load `.ai/` context and self-navigat
 | L3 Changes | Agent creates, Human confirms | Each change cycle |
 | L4 Session State | AI (human review) | End of each conversation |
 | L5 Validation | AI generates, Human reviews | After L3 build or change archive |
+
+## Skills (Auto-Invoked Workflows)
+
+Project Compass ships with **13 GitHub Copilot custom skills** under `.github/skills/`.
+They are auto-invoked by keyword and chain into a full spec-driven workflow.
+
+### The 13 Skills
+
+| Category | Skill | When to use |
+|:---------|:------|:------------|
+| **Bootstrap (4)** | `/git-init` | Initialize a new git repository |
+| | `/init-project` | Start a brand new project from scratch |
+| | `/build-ai` | Add `.ai/` context to an existing codebase |
+| | `/setup-testing` | Configure / update testing conventions |
+| **Develop (2)** | `/new-change` | Any new feature or requirement |
+| | `/continue-change` | Resume yesterday's work |
+| **Review & Archive (3)** | `/review-tests` | Run tests + coverage audit + **false-pass hunting** |
+| | `/archive-change` | Merge delta spec and close the change |
+| | `/check-changes` | Show status of all in-progress changes |
+| **Fix (1)** | `/fix-bug` | **Unified fix entry** with automatic triage (code / test / spec-ambiguity / false-pass) |
+| **Docs & Ship (2)** | `/update-ai` | Refresh `.ai/` after code changes |
+| | `/git-commit` | Commit + doc-sync check + push |
+
+### Two Human Gates (Everything Else Is Automated)
+
+| Gate | Skill | Decision |
+|:-----|:------|:---------|
+| **1. Proposal confirmation** | `/new-change` | Business: do we want this, how |
+| **2. Review approval** | `/review-tests` | Quality: is it tested well, any false-pass |
+
+### Skill-Driven Workflow
+
+```
+/new-change --✔️ gate 1--> implementing --> pending-review
+                                                    ↓
+                                              /review-tests
+                           ┌───────────────┼───────────────┐
+                           ↓                 ↓                 ↓
+                       ❌ failing         ⚠️ false-pass    ✔️ all green
+                           ↓                 ↓                 ↓
+                       /fix-bug          /fix-bug         --✔️ gate 2-->
+                    (auto triage)    (auto triage)              ↓
+                           ↓                 ↓            /archive-change
+                           └───── back to pending-review
+```
+
+See [WORKFLOW-ANALYSIS.md](WORKFLOW-ANALYSIS.md) for detailed per-skill workflows and the false-pass anti-pattern checklist.
 
 ## Integration
 

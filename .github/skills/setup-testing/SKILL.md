@@ -113,5 +113,5 @@ cat .ai/L2-rules/testing.md 2>/dev/null
 
 文件位置：`.ai/L2-rules/testing.md`
 
-后续写测试时，new-change / continue-change / spec-fix 会自动加载此规范。
+后续写测试时，new-change / continue-change / fix-bug 会自动加载此规范。
 ```

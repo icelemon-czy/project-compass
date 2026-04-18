@@ -1,7 +1,28 @@
 # [变更名称]
 
-> **状态**: implementing / pending-review / approved
+> **状态**: drafting / implementing / pending-review / review-failed / approved / archived
 > **创建**: YYYY-MM-DD
+
+## Status Machine（不要删）
+
+```
+drafting ──→ implementing ──→ pending-review ──→ approved ──→ archived
+   ↑              ↑  ↑              │
+   │              │  └──────────────┘
+   │              │   review 打回 (review-failed → implementing)
+   │              │
+   └──────────────┘
+     spec 歧义回退（走 /fix-bug Step 3C）
+```
+
+| 状态 | 含义 | 由谁推进 |
+|:-----|:-----|:---------|
+| `drafting` | Proposal 写作中，待业务确认 | 人（业务） |
+| `implementing` | Delta spec + 测试 + 代码实施中 | AI |
+| `pending-review` | 绿灯完成，等 Reviewer 审查 | AI → 人 |
+| `review-failed` | Review 打回，记录原因（见下方 Review Feedback） | 人 → AI |
+| `approved` | Review 通过，待归档 | 人 |
+| `archived` | 已归档到 `archive/` | AI（通过 /archive-change） |
 
 ## Why
 
@@ -41,3 +62,16 @@
 <!-- 影响范围：涉及哪些代码、API、依赖 -->
 
 [填写]
+
+## Review Feedback
+
+<!-- 每次 /review-tests 打回时追加一条，由 /fix-bug 解决后标记 resolved -->
+
+- [ ] YYYY-MM-DD [reviewer]: [问题描述 / 反模式编号 / 文件:行] → 状态: open / resolved by [commit]
+
+## Known Gaps
+
+<!-- Review 认为"非阻塞"的缺口，允许归档但登记在案 -->
+
+- [ ] [描述] — 计划在 [哪个后续变更] 补齐
+

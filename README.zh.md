@@ -116,12 +116,18 @@ AI 每次对话**只读 `overview.md`**（< 60 行），然后根据任务类型
 │       ├── prompt-L3.md      ← 从已有代码构建 L3 初始 Spec
 │       └── prompt-L5.md      ← 构建 L5 验证追溯和测试用例
 ├── .github/skills/            ← Copilot 自定义技能（关键词触发自动调用）
-│   ├── build-ai/SKILL.md     ← 从零构建 .ai 上下文（关键词：init .ai、构建 AI 上下文）
-│   ├── update-ai/SKILL.md    ← 更新已有 .ai 上下文（关键词：刷新 .ai、更新 AI 文档）
-│   ├── check-changes/SKILL.md ← 查看所有变更状态（关键词：变更状态、进度、change status）
-│   ├── spec-fix/SKILL.md     ← Spec-first 修 bug：查 spec → 改测试 → 修代码（关键词：bug、行为不对）
-│   ├── review-tests/SKILL.md ← 审查测试覆盖率 vs L3 spec（关键词：审查测试、测试覆盖）
-│   └── new-change/SKILL.md   ← Spec-driven 创建新变更（关键词：新需求、加功能、new feature）
+│   ├── git-init/SKILL.md          ← 初始化新 git 仓库（关键词：init git、新仓库）
+│   ├── init-project/SKILL.md      ← 从零搭建新项目（关键词：新项目、init project、从零开始）
+│   ├── build-ai/SKILL.md          ← 从零构建 .ai 上下文（关键词：init .ai、构建 AI 上下文）
+│   ├── update-ai/SKILL.md         ← 更新已有 .ai 上下文（关键词：刷新 .ai、更新 AI 文档）
+│   ├── setup-testing/SKILL.md     ← 配置 / 更新测试规范（关键词：测试规范、testing rules）
+│   ├── new-change/SKILL.md        ← Spec-driven 创建新变更（关键词：新需求、加功能、new feature）
+│   ├── continue-change/SKILL.md   ← 接续上次未完成的变更（关键词：继续开发、continue）
+│   ├── check-changes/SKILL.md     ← 查看所有变更状态（关键词：变更状态、进度、change status）
+│   ├── review-tests/SKILL.md      ← 跑测试 + 覆盖审查 + 虚假通过狩猎（关键词：审查测试、虚假通过）
+│   ├── fix-bug/SKILL.md           ← 统一修复入口，自动分诊根因（关键词：bug、修bug、review 打回、虚假通过）
+│   ├── archive-change/SKILL.md    ← 归档已完成变更，合并 delta spec（关键词：归档、archive）
+│   └── git-commit/SKILL.md        ← 生成 commit message + doc-sync 检查 + push（关键词：commit、提交）
 ├── entrypoints/              ← AI 工具入口文件模板
 │   ├── clinerules.md         ← Cline 入口模板（→ .clinerules）
 │   ├── claude.md             ← Claude Code 入口模板（→ CLAUDE.md）
@@ -330,6 +336,53 @@ cp -r /path/to/project-compass /path/to/your-project/.ai/
 | L3 变更 | Agent 创建，人确认 | 每个变更周期 |
 | L4 会话状态 | AI（人审核） | 每次对话结束时 |
 | L5 验证 | AI 生成，人审核 | L3 构建后或变更归档后 |
+
+## Skills — 自动触发的工作流
+
+Project Compass 自带 **13 个 GitHub Copilot 自定义技能**（`.github/skills/`）。
+通过关键词自动触发，串成一条完整的 spec-driven 工作流。
+
+### 13 个 Skill
+
+| 分类 | Skill | 何时用 |
+|:-----|:------|:-------|
+| **启动（4）** | `/git-init` | 初始化 git 仓库 |
+| | `/init-project` | 从零建新项目 |
+| | `/build-ai` | 已有代码，首次构建 `.ai/` |
+| | `/setup-testing` | 配置 / 更新测试规范 |
+| **开发（2）** | `/new-change` | 新功能 / 新需求 |
+| | `/continue-change` | 接续昨天的工作 |
+| **审核归档（3）** | `/review-tests` | 跑测试 + 覆盖审查 + **虚假通过狩猎** |
+| | `/archive-change` | 合并 delta spec，归档 |
+| | `/check-changes` | 查看所有进行中变更 |
+| **修复（1）** | `/fix-bug` | **统一修复入口**，自动分诊（代码/测试/spec 歧义/虚假通过） |
+| **文档发布（2）** | `/update-ai` | 代码改了后刷新 `.ai/` |
+| | `/git-commit` | 提交 + doc-sync 检查 + push |
+
+### 两个人工门槛（其余全部自动）
+
+| 门槛 | 所在 Skill | 决策内容 |
+|:-----|:-----------|:---------|
+| **1. Proposal 确认** | `/new-change` | 业务：要不要做、怎么做 |
+| **2. Review 批准** | `/review-tests` | 质量：测试够不够、有没有虚假通过 |
+
+### Skill 驱动的完整工作流
+
+```
+/new-change --✔️ 门槛 1--> implementing --> pending-review
+                                                    ↓
+                                              /review-tests
+                           ┌─────────────────┼─────────────────┐
+                           ↓                 ↓                 ↓
+                       ❌ 红灯             ⚠️ 虚假通过      ✔️ 全绿齐全
+                           ↓                 ↓                 ↓
+                       /fix-bug          /fix-bug          --✔️ 门槛 2-->
+                    (自动分诊)         (自动分诊)              ↓
+                           ↓                 ↓            /archive-change
+                           └──── 回到 pending-review
+```
+
+每个 skill 的内部 workflow + 虚假通过反模式清单，见 [WORKFLOW-ANALYSIS.md](WORKFLOW-ANALYSIS.md)。
 
 ## 集成方式
 
