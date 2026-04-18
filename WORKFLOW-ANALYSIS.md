@@ -4,7 +4,9 @@
 
 ---
 
-## 零、已修复的缺口（本轮）
+## 零、已修复的缺口（历史记录）
+
+### 第一轮（v0.3.0）
 
 | # | 原缺口 | 补丁 | 落地文件 |
 |:--|:-------|:-----|:---------|
@@ -13,6 +15,23 @@
 | 3 | 没有"虚假通过"审查 | `/review-tests` Step 3 加入 7 条反模式清单 | 同上 |
 | 4 | 状态机不完整，没有 `review-failed` | `_change-template/proposal.md` 加状态机图 + `Review Feedback` + `Known Gaps` 区段 | `L3-specs/changes/_change-template/proposal.md` |
 | 5 | 宣传"唯一人工门槛"不准确 | 本文档第六节明确列出**两个人工门槛** | 本文档 |
+
+### 第二轮（Skill 算法具体化）
+
+| # | 原缺口 | 补丁 | 落地文件 |
+|:--|:-------|:-----|:---------|
+| 6 | `/review-tests` "抽样验证"导致虚假通过漏检 | 完全重写：穷举主表、调用链验证、反向推理、覆盖缺口分析、确定性判定规则（9 步流程） | `review-tests/SKILL.md` |
+| 7 | 所有 Skill 的检查步骤只描述 WHAT 不描述 HOW | 11 个 Skill 全部加入具体检测算法/操作命令/判定条件 | 见下方明细 |
+| 8 | `/git-commit` doc-sync 判断无具体规则 | 新增 5 条命中规则表（按变更类型→需同步文档映射） | `git-commit/SKILL.md` |
+| 9 | `/check-changes` "很久未推进"无量化 | 量化为 > 7 天 + git log 检测命令 | `check-changes/SKILL.md` |
+| 10 | `/setup-testing` "取最常见的"无算法 | 三级优先级（config > 依赖 > grep 统计）；[待确认]限 3 个且附原因 | `setup-testing/SKILL.md` |
+| 11 | `/init-project` 需求提取主观 | 7 维度 checklist + 技术选型至少 2 方案 pros/cons 对比 | `init-project/SKILL.md` |
+| 12 | `/new-change` 问题生成无维度 + L2 规则只列不查 | 问题来自 6 维度；Step 7 新增 L2 合规自检表 | `new-change/SKILL.md` |
+| 13 | `/continue-change` "代码是否存在"无操作 | grep + 命中 0 行 = 不存在 | `continue-change/SKILL.md` |
+| 14 | `/fix-bug` 分诊靠感觉 + 补 edge case 无方法 | Q1→Q6 决策树 + 边界值识别表 | `fix-bug/SKILL.md` |
+| 15 | `/archive-change` "确认 verified"无依据 + "语法完整"无规则 | 必须有 review-tests 报告；5 条结构完整性规则 | `archive-change/SKILL.md` |
+| 16 | `/build-ai` Verify 只是 checkbox | 替换为可执行 bash 验证脚本 | `build-ai/SKILL.md` |
+| 17 | `/update-ai` Step 4 "update accordingly" | 5 个子步骤全部改为 diff 对比 + 具体增删操作 | `update-ai/SKILL.md` |
 
 ---
 
@@ -120,17 +139,24 @@ Phase E: 展示完成状态              ✋ 人工检查
 ### 2.5 `/new-change`
 
 ```
-Step 1: 理解需求 + 写 proposal.md (状态=drafting)
+Step 1: 收集上下文 + 定位功能模块
   ↓
-Step 2: 展示 Proposal                ✋ 人工门槛 1：业务确认
+Step 2: 写 proposal.md (状态=implementing)
   ↓
-Step 3: 状态→implementing，写 Delta Spec（ADDED/MODIFIED Requirements）
+Step 3: 展示 Proposal + 业务问题        ✋ 人工门槛 1：业务确认
+         问题来自 6 个维度：范围/边界/错误处理/并发/兼容/迁移
   ↓
-Step 4: TDD
-   ├─ 从 Scenario 写测试 → 红灯
-   └─ 写代码 → 绿灯
+Step 4: 生成 Delta Spec（ADDED/MODIFIED/REMOVED Requirements）
   ↓
-Step 5: 更新 L5 追溯 → 状态改为 pending-review
+Step 5: 生成 tasks.md（第一组固定为 Tests）
+  ↓
+Step 6: TDD — 从 Scenario 写测试 → 红灯
+  ↓
+Step 7: 实现代码 → 绿灯
+   ├─ 写代码前：强制读取 L2 规则，明列 3-5 条关键规则
+   └─ 写代码后：L2 合规自检表（逐条 ✅/🔴，有 🔴 先修）
+  ↓
+Step 8: 更新 L5 追溯 → 状态改为 pending-review
   ↓
 提示用户: 运行 /review-tests
 ```
@@ -149,30 +175,51 @@ Step 5: 更新 L5 追溯 → 状态改为 pending-review
   pending-review → 提示用户 /review-tests 或 /archive-change
 ```
 
-### 2.7 `/review-tests`（已改造）
+### 2.7 `/review-tests`（已改造 — 深度重写版）
 
 ```
-Step 0: 【新增】跑测试套件
+Step 0: 跑测试 + 扫描异常标记（.skip/.only/pending）
   ├─ 红灯 → 立即转 /fix-bug，结束
-  └─ 绿灯 → 继续
+  ├─ .only → 🔴 高风险（其他测试被静默跳过）
+  └─ 全绿且无异常 → 继续
   ↓
-Step 1: 确定审查范围 (pending-review 变更 / 指定域)
+Step 1: 确定审查范围 + 收集完整 Scenario 清单
+         初始化"主表"（每行 = 一个 Spec Scenario，后续步骤逐列填充）
+         列: Req | Scenario | Spec THEN | 测试函数 | 实际 assertion | 调用链 | 反模式 | 反向推理 | 结论
   ↓
-Step 2: 静态覆盖审查（Scenario ↔ traceability ↔ 测试代码）
+Step 2: 逐 Scenario 定位测试（穷举，非抽样）
+  ├─ 2a: 逐字摘抄 Spec THEN（不改写不概括）
+  ├─ 2b: 定位测试函数（traceability → grep → 找不到 = ❌ 缺失）
+  └─ 2c: 逐 assertion 比对 vs Spec THEN（检查存在性 / 对齐度 / 强度）
   ↓
-Step 3: 【新增】虚假通过狩猎 — 7 条反模式：
-  1. 断言缺失
-  2. 断言太弱 (toBeTruthy / not null / >= 0)
-  3. Happy path only
-  4. Mock 了要测的东西
-  5. Assertion 绕开 spec THEN
-  6. 条件永真 / 只 snapshot 不检查
-  7. try-catch 吞异常
+Step 3: 【新增】调用链验证（防 Mock 架空）
+  ├─ 3a: 从测试反向追踪到被测入口函数
+  └─ 3b: 确认被测函数是真实代码（mock 外部依赖 ✅ / mock 被测函数本身 🔴）
+         + 检查 test data 是否触发 Spec WHEN 条件
   ↓
-Step 4: 输出报告（含虚假通过表）+ 三选一结论：
-   ✅ 通过 / ⚠️ 有缺口非阻塞 / ❌ 打回
+Step 4: 虚假通过狩猎（7+N 条反模式，逐测试函数逐条标注 ✅/🔴）
+  ├─ 每条有具体检测算法（不是只看信号）
+  └─ 项目自定义反模式从 L2-rules/testing.md 追加
   ↓
-Step 5: 状态回流
+Step 5: 【新增】反向推理 —"删掉代码还能绿吗？"
+         对每个关键 assertion 做阅读级推理
+  ├─ 会变红 → ✅ 测试有效
+  ├─ 不会变红 → 🔴 测试无效
+  └─ 不确定 → ⚠️ 需人工复核
+  ↓
+Step 6: 【新增】覆盖缺口分析
+  ├─ 6a: 代码分支无对应 Scenario → 建议补 spec + 补测试
+  └─ 6b: 边界值检查（空串/0/负数/null/超限）→ 登记缺失边界
+  ↓
+Step 7: 输出审查报告
+  ├─ 主表（每行每列必填，空列 = 缺陷）
+  ├─ 覆盖概要 / 反模式统计 / 覆盖缺口
+  └─ 结论（确定性规则，不允许 AI 自由裁量）：
+     有任何 🔴 或 ❌ → 打回
+     只有 ⚠️ → 有缺口但非阻塞
+     全部 ✅ → 通过
+  ↓
+Step 8: 状态回流
    ✅ → 提示 /archive-change
    ❌ → pending-review → review-failed → implementing，提示 /fix-bug
    ⚠️ → 登记到 Known Gaps，保持 pending-review
@@ -185,16 +232,21 @@ Step 0: 场景识别（看 changes/ 状态确定触发场景）
   ↓
 Step 1: 定位 spec + feature 文档
   ↓
-Step 2: 跑测试 + 分诊（对照 assertion ↔ spec THEN ↔ 实际行为）
-  ├─ A. 代码 Bug        → Step 3A
-  ├─ B. 测试 Bug        → Step 3B
-  ├─ C. 虚假通过        → Step 3B (让它红) → Step 3A
-  ├─ D. Spec 歧义       → Step 3C
-  └─ E. Spec 缺失       → Step 3C
+Step 2: 跑测试 + 按决策树分诊（Q1→Q6 逐步排查，非整体感觉）
+  Q1: 有测试失败吗？
+  ├─ 是 → Q2: 找到对应 Spec WHEN/THEN？
+  │   ├─ 是 → Q3: assertion 和 THEN 说的同一件事？
+  │   │   ├─ 是 → A. 代码 Bug → Step 3A
+  │   │   └─ 否 → B. 测试 Bug → Step 3B
+  │   └─ 否 → E. Spec 缺失 → Step 3C
+  └─ 否（全绿但行为错）→ Q4: Spec 中有对应 THEN？
+      ├─ 是 → C. 虚假通过 → Step 3B
+      └─ 否 → D/E. Spec 歧义或缺失 → Step 3C
   ↓
 Step 3A 改代码 → 测试由红转绿
-Step 3B 改/加测试 → 确认能捕获问题（必须见红灯）
+Step 3B 改/加测试（含边界值表识别 edge case）→ 确认能捕获问题（必须见红灯）
 Step 3C 新建/复用 fix 变更 → delta spec → ✋ 确认 → 回 3B → 3A
+         （环检测：depth >= 2 禁止再嵌套，回溯到 parent-change）
   ↓
 Step 4: 更新 L5 追溯 + proposal 状态回流（review-failed → implementing → pending-review）
   ↓
@@ -369,16 +421,28 @@ drafting ──→ implementing ──→ pending-review ──→ approved ─�
 
 ## 七、虚假通过反模式清单（Reviewer 必过）
 
-这是 `/review-tests` Step 3 的核心检查表，**每条都要逐一过**：
+这是 `/review-tests` Step 4 的核心检查表，**每条都要逐一过，每条必须标注 ✅ 通过 / 🔴 命中**：
 
-| # | 反模式 | 一句话识别 | 风险 |
-|:--|:-------|:----------|:-----|
-| 1 | 断言缺失 | 测试跑完没 assert | 🔴 |
-| 2 | 断言太弱 | 只 `toBeTruthy` / `not null` / `>= 0` | 🔴 |
-| 3 | Happy path only | 只有正常路径，没 edge / error | 🔴 |
-| 4 | Mock 了要测的东西 | 把被测函数本身 mock 掉 | 🔴 |
-| 5 | Assertion 绕开 spec THEN | 断言内容和 spec 的 THEN 不一致 | 🟡 |
-| 6 | 条件永真 | `expect(x).toBe(x)` / 空 snapshot | 🔴 |
-| 7 | 吞异常 | `try { } catch { }` 空壳 | 🔴 |
+| # | 反模式 | 检测算法（AI 必须按此操作） | 风险 |
+|:--|:-------|:--------------------------|:-----|
+| 1 | **断言缺失** | 在测试函数体内 grep `assert\|expect\|should\|verify`。数量 = 0 → 命中 | 🔴 |
+| 2 | **断言太弱** | 列出所有 assertion。任何一个只做 `toBeTruthy()\|toBeDefined()\|toBeNotNull()\|!= null\|>= 0` 而不比对具体预期值 → 命中 | 🔴 |
+| 3 | **Happy path only** | 统计该 Requirement 下所有 Scenario。只有 1 个正常路径 test，缺 edge/error path → 命中 | 🔴 |
+| 4 | **Mock 了要测的东西** | 调用链验证（Step 3b）已检查。mock 被测函数本身 → 命中 | 🔴 |
+| 5 | **Assertion 绕开 spec THEN** | 比对"Spec THEN"列和"实际 assertion"列。验证的不是同一件事 → 命中 | 🟡 |
+| 6 | **条件永真** | `expect(x).toBe(x)` / `expect(true).toBe(true)` / 空 snapshot → 命中 | 🔴 |
+| 7 | **吞异常** | try-catch 中 catch 块为空 / 只有 console.log / 没有 expect → 命中 | 🔴 |
 
-发现任何一条 → 打回 → `/fix-bug` Step 3B。
+> 第 8+ 条：项目可在 `.ai/L2-rules/testing.md` 的"自定义反模式"区段追加。前 7 条是底线，不可删除。
+
+**每个测试函数的输出格式**：
+
+```
+| # | 反模式 | 结果 | 证据 |
+|:--|:-------|:-----|:-----|
+| 1 | 断言缺失 | ✅ 通过 | 2 个 expect |
+| 2 | 断言太弱 | 🔴 命中 | `expect(result).toBeTruthy()` 应改为具体值 |
+| ... | ... | ... | ... |
+```
+
+发现任何一条 🔴 → 打回 → `/fix-bug` Step 3B。
