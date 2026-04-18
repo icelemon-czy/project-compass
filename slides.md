@@ -179,15 +179,22 @@ AI 每次对话 **只读 < 60 行索引**，根据任务按需深入
 
 # 日常工作流：
 
-**13 个常备 Skill—开发者说一句话，AI 走完全流程**
+**12 个常备 Skill—开发者说一句话，AI 走完全流程**
 
-| Skill | 说明 | 你说的话 | AI 做什么 | **省了什么** |
-|:------|:-----|:---------|:----------|:------------|
-| `/new-change` | 新功能/需求 | "加个 CSV 导出" | proposal → spec → TDD | 手写需求和测试计划 |
-| `/fix-bug` | 修 Bug / review 打回 | "登录报 500" | 自动分诊：代码/测试/spec 歧义/虚假通过 | 手动定位根因 |
-| `/archive-change` | 归档变更 | "做完了" | 合并 spec → archive | 手动整理文档 |
-| `/review-tests` | 测试审查 | "测试够吗" | 跑测试 + 覆盖审查 + 虚假通过狩猎 | 逐个核对覆盖率 |
-| ... | 还有 9 个 | 建项目 · 接续开发 · 进度查看 · 构建/刷新 .ai · 测试规范 · 提交 等 | | |
+| Skill | 说明 | AI 做什么 |
+|:------|:-----|:----------|
+| `/new-change` | 新功能 | proposal → spec → TDD （门槛 1） |
+| `/fix-bug` | 修 bug / review 打回 | 自动分诊：代码 / 测试 / spec 歧义 / 虚假通过 |
+| `/review-tests` | 测试审查 | 跑测试 + 覆盖审查 + 虚假通过狩猎（门槛 2） |
+| `/archive-change` | 归档 | 合并 delta spec → archive |
+| `/continue-change` | 接续变更 | 读进度 → 接着写 |
+| `/check-changes` | 进度查看 | 列出所有进行中变更状态 |
+| `/init-project` | 新建项目 | 需求 → 选型 → 脚手架 → .ai |
+| `/build-ai` | 已有代码建 `.ai/` | 从代码反推 L1/L2 |
+| `/update-ai` | 刷新 `.ai/` | git diff + 人工确认 → 更新 L1/L2 |
+| `/setup-testing` | 测试规范 | 生成 `L2-rules/testing.md` |
+| `/git-init` | 初始化 git | `.gitignore` + 首交 |
+| `/git-commit` | 提交 | conventional commit + doc-sync 检查 |
 
 > **核心收益**：开发者只做两个决策——**确认 Proposal（业务） + 批准 Review（质量）**，其余全部自动
 

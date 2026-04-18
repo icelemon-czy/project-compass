@@ -78,9 +78,55 @@ ls .ai/L3-specs/changes/ | grep -v _change-template
 | Delta 区段 | 操作 |
 |-----------|------|
 | `## ADDED Requirements` | 追加到主 spec 的 Requirements 末尾 |
-| `## MODIFIED Requirements` | 找到同名 Requirement，整块替换 |
+| `## MODIFIED Requirements` | 找到同名 Requirement，**整块替换**（不做 patch 级合并）|
 | `## REMOVED Requirements` | 删除同名 Requirement 块 |
 | 新能力域（主 spec 不存在） | 从 `_capability-template/` 创建新 `specs/<cap>/spec.md`，写入所有 Requirement |
+
+#### 合并示例（MODIFIED）
+
+**主 spec 中原有**：
+```markdown
+### Requirement: 用户登录
+The system SHALL authenticate users by username and password.
+
+#### Scenario: 正常登录
+- WHEN 用户提供正确用户名密码
+- THEN 返回 200 和 session token
+```
+
+**delta spec MODIFIED 块**：
+```markdown
+## MODIFIED Requirements
+
+### Requirement: 用户登录
+The system SHALL authenticate users by username and password,
+**and MUST reject empty passwords with 400**.
+
+#### Scenario: 正常登录
+- WHEN 用户提供正确用户名密码
+- THEN 返回 200 和 session token
+
+#### Scenario: 空密码（新增）
+- WHEN 用户提供空密码
+- THEN 返回 400，错误码 PASSWORD_REQUIRED
+```
+
+**合并后主 spec**：
+```markdown
+### Requirement: 用户登录
+The system SHALL authenticate users by username and password,
+**and MUST reject empty passwords with 400**.
+
+#### Scenario: 正常登录
+- WHEN 用户提供正确用户名密码
+- THEN 返回 200 和 session token
+
+#### Scenario: 空密码
+- WHEN 用户提供空密码
+- THEN 返回 400，错误码 PASSWORD_REQUIRED
+```
+
+> **规则**：MODIFIED 是整个 Requirement 块整块替换，不是句子级 diff。写 delta 时必须复制原 Requirement 再改。
 
 ---
 

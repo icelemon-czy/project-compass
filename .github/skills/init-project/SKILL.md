@@ -8,7 +8,7 @@ argument-hint: "Describe what you want to build (e.g., 'a TODO app with React', 
 
 从用户的一句话出发，完成：需求澄清 → 技术选型 → 项目脚手架 → `.ai/` 上下文 → 第一个 Spec。
 
-> **核心纪律**：人确认两次 —— ① 需求 + 技术方案，② `.ai/` 构建完成后检查。其余 AI 全自动。
+> **诚实声明**：本 Skill 的流程不是"一键生成"。需求澄清和技术选型本质上是对话，可能要停下来问你 **多次**（不止一两次）。主要的确认点是 Phase A（方案）和 Phase E（.ai 验收），但中间每当用户给的信息模糊时都会再问。其余能自动的都自动。
 
 ## Prerequisites
 

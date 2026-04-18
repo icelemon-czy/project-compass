@@ -8,6 +8,11 @@ argument-hint: "Optional: target project path or specific layers (e.g., 'L1 only
 
 为项目搭建完整的 `.ai/` AI 上下文目录。
 
+> **依赖的 Builder Prompts**：本 Skill 的 L1/L2 生成步骤依赖仓库根目录的 `builders/*.md`。运行前请确认 `builders/` 的 commit 与本 Skill 同一仓库同一版本。如果 builders 被单独更新过，可能与本 Skill 的接口不兼容。期望导航：
+> - L1 builder：`builders/build-l1.md`（或此目录下等效文件）
+> - L2 builder：`builders/build-l2.md`
+> - 查找不到时：告知用户并停止，不要自己编造 builder 逻辑。
+
 ## Five-Layer Architecture
 
 | Layer | Purpose | Key Output |

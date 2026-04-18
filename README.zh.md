@@ -1,6 +1,6 @@
 # Project Compass
 
-> **[English Version](README.md)**
+> **[English Version](README.md)** · 版本见 [VERSION](VERSION) · [CHANGELOG](CHANGELOG.md)
 
 > 通用 AI 上下文模板 — 适用于任意语言、任意框架、任意规模的项目
 > 将本模板复制到你的项目根目录（重命名为 `.ai/`），按 `[填写]` 提示填入具体内容即可
@@ -339,10 +339,10 @@ cp -r /path/to/project-compass /path/to/your-project/.ai/
 
 ## Skills — 自动触发的工作流
 
-Project Compass 自带 **13 个 GitHub Copilot 自定义技能**（`.github/skills/`）。
-通过关键词自动触发，串成一条完整的 spec-driven 工作流。
+Project Compass 自带 **12 个 Copilot / Claude Code 自定义技能**（`.github/skills/`）。
+见下方 [Skill 发现机制](#skill-发现机制-copilot--claude-code-怎么找到它们) 了解 AI 工具如何识别这些技能。
 
-### 13 个 Skill
+### 12 个 Skill
 
 | 分类 | Skill | 何时用 |
 |:-----|:------|:-------|

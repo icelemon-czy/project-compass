@@ -1,6 +1,6 @@
 # Project Compass
 
-> **[中文版 / Chinese Version](README.zh.md)**
+> **[中文版 / Chinese Version](README.zh.md)** · Version: see [VERSION](VERSION) · [CHANGELOG](CHANGELOG.md)
 
 > Universal AI context template — works with any language, any framework, any scale.
 > Copy this template to your project root (rename to `.ai/`), fill in the `[fill in]` placeholders.
@@ -337,10 +337,10 @@ After this, every AI conversation will auto-load `.ai/` context and self-navigat
 
 ## Skills (Auto-Invoked Workflows)
 
-Project Compass ships with **13 GitHub Copilot custom skills** under `.github/skills/`.
-They are auto-invoked by keyword and chain into a full spec-driven workflow.
+Project Compass ships with **12 Copilot / Claude Code custom skills** under `.github/skills/`.
+See the [Skill Discovery](#skill-discovery--how-copilot--claude-code-find-these-skills) section below for how your AI tool picks them up.
 
-### The 13 Skills
+### The 12 Skills
 
 | Category | Skill | When to use |
 |:---------|:------|:------------|
@@ -357,7 +357,9 @@ They are auto-invoked by keyword and chain into a full spec-driven workflow.
 | **Docs & Ship (2)** | `/update-ai` | Refresh `.ai/` after code changes |
 | | `/git-commit` | Commit + doc-sync check + push |
 
-### Two Human Gates (Everything Else Is Automated)
+### Two Key Human Gates
+
+AI runs autonomously **except** at two decision points. (A few skills — `/archive-change`, `/fix-bug` Step 3C — also request a short confirmation; they are *light* gates, not full review cycles.)
 
 | Gate | Skill | Decision |
 |:-----|:------|:---------|
@@ -366,19 +368,28 @@ They are auto-invoked by keyword and chain into a full spec-driven workflow.
 
 ### Skill-Driven Workflow
 
+```mermaid
+flowchart TD
+    A[/new-change] -->|✔️ gate 1| B[implementing]
+    B --> C[pending-review]
+    C --> D[/review-tests]
+    D -->|❌ failing| E[/fix-bug auto triage]
+    D -->|⚠️ false-pass| E
+    D -->|✔️ all green + gate 2| F[/archive-change]
+    E --> C
 ```
-/new-change --✔️ gate 1--> implementing --> pending-review
-                                                    ↓
-                                              /review-tests
-                           ┌───────────────┼───────────────┐
-                           ↓                 ↓                 ↓
-                       ❌ failing         ⚠️ false-pass    ✔️ all green
-                           ↓                 ↓                 ↓
-                       /fix-bug          /fix-bug         --✔️ gate 2-->
-                    (auto triage)    (auto triage)              ↓
-                           ↓                 ↓            /archive-change
-                           └───── back to pending-review
-```
+
+### Skill Discovery — How Copilot / Claude Code Find These Skills
+
+These skills are plain Markdown files with YAML front-matter. Discovery depends on the tool:
+
+| Tool | Mechanism |
+|:-----|:----------|
+| **Claude Code / Cline** | Native support: reads `.github/skills/<name>/SKILL.md`, matches the `description` keywords against user input, auto-invokes |
+| **GitHub Copilot** | No native skill loader (as of this repo's version). The `.github/copilot-instructions.md` entry file explicitly tells Copilot: "when the user types `/new-change` (or mentions matching keywords), follow the procedure in `.github/skills/new-change/SKILL.md`". Users must type the slash command or a matching keyword. |
+| **Any LLM with file access** | Works as a manual playbook: paste SKILL.md content into the chat |
+
+So the "auto-invoked" claim is **real for Claude Code / Cline, and instruction-driven for Copilot**. If you use Copilot, keep the entry file installed.
 
 See [WORKFLOW-ANALYSIS.md](WORKFLOW-ANALYSIS.md) for detailed per-skill workflows and the false-pass anti-pattern checklist.
 

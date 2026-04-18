@@ -3,7 +3,18 @@
 > 复制本文件到项目的 `.github/copilot-instructions.md`
 
 你有一套项目文档在 `.ai/` 下，按以下流程工作：
+## Skill 触发规则（重要）
 
+项目 `.github/skills/<name>/SKILL.md` 提供了工作流 playbook。Copilot 本身没有原生 skill 发现，故按以下规则手动触发：
+
+1. 当用户输入以下斐命令（识别为明确意图） → 打开并**完整遵循**对应 SKILL.md 的 Procedure：
+   - `/git-init`、`/git-commit`
+   - `/init-project`、`/build-ai`、`/update-ai`、`/setup-testing`
+   - `/new-change`、`/continue-change`、`/check-changes`
+   - `/review-tests`、`/fix-bug`、`/archive-change`
+2. 当用户未输入斐命令，但描述命中某 SKILL.md `description:` 里的关键词（中英任一）→ 先提示用户：“这看起来是 `/xxx` 的场景，需要按该流程走吗？”，确认后再执行。
+3. 多个斐命令只能串行，不得并行触发。
+4. SKILL 中的 “等待用户确认” 步骤必须停下来等，不得自行后续。
 ## 每次对话启动时（自动）
 
 读取以下 3 个文件，建立基础认知：

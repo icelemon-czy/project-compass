@@ -2,6 +2,8 @@
 
 > **状态**: drafting / implementing / pending-review / review-failed / approved / archived
 > **创建**: YYYY-MM-DD
+> **父变更** (parent-change): 无 / `<上游变更名>`
+> **嵌套深度** (depth): 0  <!-- 不得 ≥ 2，防止 /fix-bug 递归 -->
 
 ## Status Machine（不要删）
 
@@ -23,6 +25,26 @@ drafting ──→ implementing ──→ pending-review ──→ approved ─�
 | `review-failed` | Review 打回，记录原因（见下方 Review Feedback） | 人 → AI |
 | `approved` | Review 通过，待归档 | 人 |
 | `archived` | 已归档到 `archive/` | AI（通过 /archive-change） |
+
+### 允许的状态转移（Skill 写入前必验证）
+
+| 从 | 到 | 触发 Skill |
+|:---|:---|:------------|
+| — | drafting | /new-change |
+| drafting | implementing | /new-change（用户确认 proposal）|
+| implementing | pending-review | /new-change Step 7 / /continue-change（全绿）|
+| pending-review | review-failed | /review-tests（打回）|
+| review-failed | implementing | /fix-bug（开始修）|
+| pending-review | approved | /review-tests（通过）|
+| approved | archived | /archive-change |
+
+其他转移一律拒绝。不允许的转移出现时，Skill 必须报错并停止。
+
+### 转移日志（append-only）
+
+<!-- 每次状态改动追加一行，不要改历史行 -->
+
+- `YYYY-MM-DD HH:MM` — [从] → [到] by [skill 或 human] | 原因: [简短记录]
 
 ## Why
 

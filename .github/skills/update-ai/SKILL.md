@@ -42,6 +42,8 @@ cat .ai/L4-session/active-session.md
 
 ### Step 2: Detect Changes
 
+> **Known limitation**: `git diff --name-status` is a heuristic. It cannot reliably distinguish "new feature" from "refactor that split one file into three", or "feature removed" from "file renamed". **The detection result is a draft list, not ground truth** — Step 3 must ask the user to confirm every entry before Step 4 writes anything.
+
 Compare current code state with documented state:
 
 ```bash

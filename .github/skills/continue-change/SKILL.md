@@ -53,6 +53,16 @@ ls .ai/L3-specs/changes/ | grep -v _change-template
 3. 读取 `tasks.md` — 找到下一个未完成的 checkbox
 4. 读取 `.ai/L4-session/active-session.md` — 是否有上次中断的进度
 
+#### 2a: L4 漂移检查（必要）
+
+L4 session 内容和实际文件状态可能不一致（上个会话崩了、手工改过代码、git checkout 到其他分支等）。接续前必须交叉验证：
+
+1. active-session.md 声称正在改的文件 → `git status` 此刻有没有相应的 unstaged/staged 改动？
+2. tasks.md 已勾选的 checkbox → 对应代码是否真的存在？
+3. 声称测试通过 → 重跑一次测试确认
+
+**任何不一致 → 先把不一致下发给用户，问以哪边为准**，然后更新 L4 和/或 tasks.md，再继续。不得在 L4 没对齐的前提下盲目接着写代码。
+
 ---
 
 ### Step 3: 判断当前阶段

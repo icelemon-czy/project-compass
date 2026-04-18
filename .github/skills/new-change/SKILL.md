@@ -121,10 +121,10 @@ ls .ai/L3-specs/changes/ | grep -v _change-template
 
 让测试通过：
 
-1. 读取 `.ai/L2-rules/global.md` + 相关模块规则 — 遵守编码约束
+1. **强制注入 L2 规则（写任何新代码前）**：完整读取 `.ai/L2-rules/global.md`、`.ai/L2-rules/testing.md`、以及此变更涉及的每个模块的 `L2-rules/<module>.md`。在输出中明列本次要遵守的关键规则（3-5 条）。不允许跳过
 2. 跨模块修改 → 先查 `.ai/L1-codebase-map/module-map.md` 变更联动表
 3. 创建新文件 → 查 `.ai/L2-rules/templates.md`
-4. 实现代码
+4. 实现代码，每一步對比 Step 1 列出的规则
 5. **运行测试，确认全部通过（绿灯）**
 
 勾选 tasks.md 中对应实现步骤的 checkbox。
