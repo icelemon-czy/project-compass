@@ -134,8 +134,8 @@ The system SHALL authenticate users by username and password,
 
 更新 `.ai/L5-validation/traceability/<domain>.md`：
 
-- ADDED Requirement 的 Scenario → 确认标为 ✅ verified
-- MODIFIED Requirement 的 Scenario → 确认状态仍正确
+- ADDED Requirement 的 Scenario → 确认标为 ✅ verified。**确认方法**：检查该变更是否已通过 `/review-tests` 且报告结论为 ✅ 或 ⚠️；如果没有（例如在归档前未运行 review-tests），**必须先运行 `/review-tests`** 再回来归档
+- MODIFIED Requirement 的 Scenario → 确认状态仍正确（按同样方法检查 review-tests 报告）
 - REMOVED Requirement 的 Scenario → 从追溯文件中移除
 
 ---
@@ -155,8 +155,13 @@ mv .ai/L3-specs/changes/<name>/ .ai/L3-specs/archive/<name>/
 
 ### Step 6: 验证
 
-1. 主 spec 语法完整（无断裂的 Requirement 块）
-2. 追溯文件与主 spec 一致
+1. 主 spec 结构完整性检查（逐条验证，任何一条失败 → 报错并停止）：
+   - [ ] 每个 Requirement 以 `### Requirement:` 开头
+   - [ ] 每个 Requirement 下至少有 1 个 `#### Scenario:`
+   - [ ] 每个 Scenario 包含 `WHEN` 和 `THEN`（可以搜索关键词确认）
+   - [ ] 无孤立的 Scenario（即 Scenario 前必须有 Requirement 父级标题）
+   - [ ] 无重复的 Requirement 名称（`grep -c '### Requirement: <名称>' spec.md` 应 = 1）
+2. 追溯文件与主 spec 一致（追溯文件中的 Scenario 数量 = 主 spec 中的 Scenario 数量）
 3. `changes/` 下已无该变更
 
 展示合并后受影响的主 spec 变化摘要：

@@ -58,7 +58,7 @@ ls .ai/L3-specs/changes/ | grep -v _change-template
 L4 session 内容和实际文件状态可能不一致（上个会话崩了、手工改过代码、git checkout 到其他分支等）。接续前必须交叉验证：
 
 1. active-session.md 声称正在改的文件 → `git status` 此刻有没有相应的 unstaged/staged 改动？
-2. tasks.md 已勾选的 checkbox → 对应代码是否真的存在？
+2. tasks.md 已勾选的 checkbox → 对应代码是否真的存在？具体操作：对每个 `✅` 的实现任务，提取关键函数名/文件名，执行 `grep -rn "<函数名>" <src-dir>`，命中 0 行 → 代码不存在，该 checkbox 状态不实
 3. 声称测试通过 → 重跑一次测试确认
 
 **任何不一致 → 先把不一致下发给用户，问以哪边为准**，然后更新 L4 和/或 tasks.md，再继续。不得在 L4 没对齐的前提下盲目接着写代码。

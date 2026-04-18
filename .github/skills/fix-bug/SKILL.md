@@ -47,7 +47,25 @@ Skill 内部**自动分诊**，分辨是 **代码 Bug / 测试 Bug / Spec 歧义
 
 **先跑一次完整测试**，拿到失败输出（或确认全绿但行为仍错）。
 
-对照 **测试 assertion ↔ Spec WHEN/THEN ↔ 实际行为**，三方比对判断根因：
+然后按以下**决策树**逐步分诊（不要凭整体感觉判断，严格按分支走）：
+
+```
+Q1: 有测试失败吗？
+├── 是 → Q2: 找到对应 Spec 的 WHEN/THEN 了吗？
+│   ├── 是 → Q3: 测试 assertion 和 Spec THEN 说的是同一件事吗？
+│   │   ├── 是（assertion 正确，代码没实现对）→ 根因 A: 代码 Bug → Step 3A
+│   │   └── 否（assertion 写错了/mock 错了）→ 根因 B: 测试 Bug → Step 3B
+│   └── 否（Spec 中找不到对应 Requirement）→ 根因 E: Spec 缺失 → Step 3C
+└── 否（全绿但行为错）→ Q4: 行为不对的那个场景，Spec 中有 THEN 吗？
+    ├── 是 → Q5: 测试 assertion 验证了那个 THEN 吗？
+    │   ├── 是但 assertion 太弱（如 toBeTruthy）→ 根因 C: 虚假通过 → Step 3B
+    │   └── 否（assertion 验证的是别的东西）→ 根因 C: 虚假通过 → Step 3B
+    └── 否 → Q6: Spec 描述模糊还是完全没有？
+        ├── 模糊（对同一 WHEN 有两种 THEN 解读）→ 根因 D: Spec 歧义 → Step 3C
+        └── 完全没有 → 根因 E: Spec 缺失 → Step 3C
+```
+
+分诊结果对照表（决策树终端节点的归总）：
 
 | # | 情况 | 判据 | 根因分类 | 处理路径 |
 |:--|:-----|:-----|:---------|:---------|
@@ -80,7 +98,13 @@ Skill 内部**自动分诊**，分辨是 **代码 Bug / 测试 Bug / Spec 歧义
 2. 对照 spec 的 WHEN/THEN 重写 / 加强测试：
    - 断言写反 → 修正断言
    - Mock 错 → 修正 mock，最好换成更真实的 fixture
-   - 虚假通过 → 补 edge case / error path，让测试能真正暴露问题
+   - 虚假通过 → 补 edge case / error path，让测试能真正暴露问题。**识别要补哪些 edge case 的算法**：对照 Spec 中该 Requirement 的所有 WHEN 输入参数，按以下边界值表逐项检查：
+     - 字符串：空串 `""`、超长、特殊字符（`<script>`、`' OR 1=1`）
+     - 数字：0、负数、最大值、小数
+     - 集合：空集、1 个、满/超限
+     - 可选参数：null / undefined / 缺失
+     
+     已有 Scenario 覆盖的 → 跳过。未覆盖的 → 补测试
 3. 跑测试，**确认此时测试是红的**（证明它有辨别能力）
 4. 如果是虚假通过导致代码也有问题 → 继续 Step 3A 修代码
 5. 跳到 Step 4

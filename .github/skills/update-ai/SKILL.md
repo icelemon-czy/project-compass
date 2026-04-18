@@ -101,24 +101,27 @@ For each new feature, run a mini L1 analysis:
 1. Identify entry point and layers
 2. Trace data flow
 3. Create `features/[name]/README.md` + layer files
-4. Add entry to `overview.md` feature index
+4. Add entry to `overview.md` feature index — **具体操作**：在 overview.md 的 feature 列表区段末尾追加一行 `- [name]: [一句话描述] → features/[name]/README.md`
 
 #### 4b: Updated Features
 
 For each changed feature:
 
 1. Re-read the code (follow the entry points in the existing docs)
-2. Check if layers changed (new layers, removed layers)
-3. Update README.md data flow and change impact table
-4. Update layer files as needed
-5. Check if module-map.md dependencies changed
+2. 对比 `git diff HEAD~N -- <feature相关文件>` 的具体变更，逐项检查：
+   - 入口文件变了 → 更新 README.md 中的入口路径
+   - 新增/删除了层（如新加了 middleware）→ 更新层导航表
+   - 数据流变了 → 更新 data flow 描述
+   - 依赖关系变了 → 更新 change impact table
+3. Update layer files as needed
+4. Check if module-map.md dependencies changed — **具体**：`git diff HEAD~N -- <src>` 中有新增/删除 `import`/`require` → 在 module-map.md 中 ±对应依赖箭头
 
 #### 4c: Deleted Features
 
 1. Remove `features/[name]/` directory
-2. Remove entry from `overview.md` feature index
-3. Update `module-map.md` (remove module, update dependency rules)
-4. Check `key-files.md` for references to deleted feature
+2. Remove entry from `overview.md` feature index — **具体**：删除包含该 feature name 的行
+3. Update `module-map.md` (remove module, update dependency rules) — **具体**：删除以该模块为源或目标的所有依赖规则
+4. Check `key-files.md` for references to deleted feature — `grep -n "<feature-name>" .ai/L1-codebase-map/key-files.md`，命中的行删除或标注"已移除"
 
 #### 4d: L2 Rules Update
 
@@ -135,15 +138,18 @@ grep -rn "extends Error\|class.*Error" --include='*.ts' --include='*.py' | head 
 cat .eslintrc* tsconfig.json pyproject.toml 2>/dev/null
 ```
 
-Update `global.md` and `templates.md` accordingly.
+对比当前代码模式和 `global.md` 中记录的模式：
+- 新增的 export 模式/错误处理模式 → 追加到 global.md 对应区段
+- 不再使用的旧模式 → 从 global.md 中删除或标注"已废弃"
+- lint 配置变了 → 更新 global.md 中的 lint 规则引用
 
 #### 4e: Cross-cutting Updates
 
 After individual updates, sync:
 
-1. **overview.md** — Ensure feature index matches reality
-2. **module-map.md** — Update dependency rules and change impact table
-3. **key-files.md** — Update task recipes if workflows changed
+1. **overview.md** — `ls .ai/L1-codebase-map/features/` 的目录列表 vs overview.md 中的 feature 列表，缺的补、多的删
+2. **module-map.md** — 对每个模块执行 `grep -rn "import\|require" <module-dir> | grep -v node_modules`，对比已记录的依赖，有差异则更新
+3. **key-files.md** — 对每个已记录的 key file 执行 `test -f <path>`，不存在的删除；`git diff --name-status` 中新增的入口文件考虑加入
 4. **infrastructure/README.md** — Update if framework/config changed
 
 ### Step 5: Update Session

@@ -4,11 +4,15 @@ description: "Review test quality by running tests, cross-referencing specs, and
 argument-hint: "Optional: specific domain or change name (e.g., 'auth', 'add-csv-export'). Defaults to the change currently in pending-review."
 ---
 
-# Review Tests — 审查 + 跑测试 + 虚假通过审查
-
-三件事一起做：**跑测试** + **覆盖审查** + **虚假通过狩猎**。
+# Review Tests — 跑测试 + 逐个验证 + 虚假通过狩猎
 
 > 这是工作流中的 **人工门槛 2（Review 批准）** 所在环节。Reviewer 在此决定能不能归档。
+
+## 核心原则
+
+**绝不信任"绿灯"本身。** 只信任 "每个绿灯背后有一个与 spec THEN 精确对齐的 assertion，且该 assertion 实际调用了被测代码"。
+
+本 Skill 的输出是一份**逐测试函数**的审查表。任何测试函数如果无法填满表中所有列，就是缺陷。
 
 ## Prerequisites
 
@@ -18,122 +22,248 @@ argument-hint: "Optional: specific domain or change name (e.g., 'auth', 'add-csv
 
 ## Procedure
 
-### Step 0: 跑测试（强制，新增）
+### Step 0: 跑测试 + 检查异常标记
 
 ```bash
-# 先运行项目的完整测试套件，捕获结果
+# 1. 先运行项目的完整测试套件，捕获结果
 <项目测试命令，读 L2-rules/testing.md 获取>
+
+# 2. 扫描测试异常标记（必做）
+grep -rn "\.skip\|\.only\|xit(\|xdescribe(\|xtest(\|@Disabled\|@Ignore\|pytest\.mark\.skip\|@unittest\.skip\|pending(" <test-dir>
 ```
 
 根据结果分支：
 
 | 测试结果 | 处理 |
 |:---------|:-----|
-| ❌ 有失败 | **立即转 `/fix-bug`**，把失败输出作为输入。本 Skill 到此结束 |
-| ✅ 全绿 | 继续 Step 1 — 但**不代表通过**，还要查虚假通过 |
+| ❌ 有测试失败 | **立即转 `/fix-bug`**，把失败输出作为输入。本 Skill 到此结束 |
+| ⚠️ 有 skip/only/pending 标记 | **记录到报告的"异常标记"区段**，每个 skip 必须有 reason，否则标为问题。`.only` 一律标为 🔴 高风险（说明其他测试被静默跳过） |
+| ✅ 全绿且无异常标记 | 继续 Step 1 |
 
-### Step 1: 确定审查范围
-
-- 参数指定了域/变更名 → 只审查该范围
-- 无参数 → 优先审查所有 `pending-review` 状态的变更；否则审查所有域
+### Step 1: 确定审查范围 + 收集 Scenario 清单
 
 ```bash
 ls .ai/L3-specs/specs/ | grep -v _capability-template | grep -v system.md
-ls .ai/L3-specs/changes/
-ls .ai/L5-validation/traceability/ | grep -v _domain-template
+ls .ai/L3-specs/changes/ | grep -v _change-template
 ```
 
-### Step 2: 逐域审查（静态部分）
+- 参数指定了域/变更名 → 只审查该范围
+- 无参数 → 优先审查所有 `pending-review` 状态的变更
 
-对每个范围内的能力域：
+**输出：完整的 Scenario 清单**
 
-#### 2a: 收集 Scenario
+读取范围内所有 `spec.md` + `changes/*/specs/*/spec.md`（delta），枚举每一个 Requirement 和 Scenario。填入下表（后续步骤逐列填充）：
 
-读取 `specs/<domain>/spec.md` + `changes/` 下相关 delta，统计全部 Requirement + Scenario。
+```
+| # | Requirement | Scenario | Spec THEN（逐字摘抄） | 测试函数 | 测试文件:行 | 实际 assertion | 调用链验证 | 反模式命中 | 反向推理 | 结论 |
+```
 
-#### 2b: 读取追溯状态
+**此表是本 Skill 的核心输出。每一行必须填满所有列，空列 = 缺陷。**
 
-读取 `traceability/<domain>.md`：
-- ✅ verified — 有代码 + 有测试
-- ⚠️ untested — 有代码无测试
-- ⚠️ partial — 测试存在但不完整
-- ❌ unimplemented — 代码都没实现
+### Step 2: 逐 Scenario 定位测试（穷举，非抽样）
 
-#### 2c: 抽样验证实际测试代码
+对 Step 1 表中的**每一行**：
 
-对 ✅ verified 的 Scenario，打开测试文件，验证是否真的覆盖 WHEN → THEN。
+#### 2a: 从 Spec Scenario 逐字摘抄 THEN
 
-### Step 3: 虚假通过狩猎（关键，新增）
+打开对应 `spec.md`，找到该 Scenario 的 THEN 子句，**逐字复制**到表的"Spec THEN"列。不要改写、概括或省略。
 
-测试"绿"不等于"对"。逐个 ✅ verified 的测试，用以下 **7 条反模式清单** 过一遍：
+#### 2b: 定位对应测试函数
 
-| # | 反模式 | 信号 | 风险等级 |
-|:--|:-------|:-----|:---------|
-| 1 | **断言缺失** | 测试跑完没有 `assert` / `expect` | 🔴 高 |
-| 2 | **断言太弱** | 只断言 `toBeTruthy()`、`not null`、`>= 0`，不验证具体值 | 🔴 高 |
-| 3 | **Happy path only** | 只有 1 个用例，没有 edge case / error path | 🔴 高 |
-| 4 | **Mock 了要测的东西** | 把被测函数本身 mock 掉，只验证 mock 被调用 | 🔴 高 |
-| 5 | **Assertion 绕开 spec THEN** | 测试 assert 的内容和 spec 的 THEN 不一致 | 🟡 中 |
-| 6 | **条件永真** | `expect(x).toBe(x)` / `if (true) assert` / 只 snapshot 不检查内容 | 🔴 高 |
-| 7 | **忽略异常** | `try { ... } catch { }` 吞掉异常，测试依然绿 | 🔴 高 |
+用以下策略定位（按优先级尝试）：
 
-> **清单可扩展**：项目可在 `.ai/L2-rules/testing.md` 追加第 8+ 条（例：时间依赖、快照没 assert、race condition、fixture 硬编码）。前 7 条是底线，不可删除。Review 时按 “7 + 项目自定义" 全部過一遍。
+1. `traceability/<domain>.md` 中该 Scenario 对应的测试文件:行号 → 直接打开
+2. grep 测试目录中与 Scenario 关键词匹配的 test 函数名/describe 块：
+   ```bash
+   grep -rn "scenario关键词\|requirement关键词" <test-dir>
+   ```
+3. 如果 1、2 均找不到 → 该 Scenario **无测试**，"测试函数"列填 `❌ 缺失`，直接标为 🔴 打回项
 
-**对每个命中的反模式**，记录：
-- 测试文件 : 行号
-- 命中的反模式编号
-- 对应的 Spec Scenario
-- 建议修复：通常是走 `/fix-bug` 的 **Step 3B（虚假通过分支）**
+#### 2c: 逐字比对 assertion vs Spec THEN
 
-### Step 4: 输出审查报告
+打开测试函数后，**逐个 assertion** 做如下比对：
+
+| 检查项 | 方法 | 通过条件 |
+|:-------|:-----|:---------|
+| assertion 存在 | 在测试函数体内 grep `assert\|expect\|should\|verify\|check` | ≥ 1 个 assertion |
+| assertion 对齐 THEN | 逐字读 assertion 的实际比较值，与"Spec THEN"列逐条对比 | 每个 THEN 子句都有对应 assertion |
+| assertion 强度 | 看 assertion 的比较方式 | 不得仅 `toBeTruthy/toBeNotNull/>=0`；必须比对**具体预期值** |
+
+把每个 assertion 的**实际内容**写入表的"实际 assertion"列。例：
+- ✅ `expect(response.status).toBe(401)` — 对齐 THEN "返回 401"
+- ❌ `expect(response).toBeTruthy()` — 只验证有返回，不验证状态码
+
+### Step 3: 调用链验证（关键，防止 Mock 架空）
+
+对 Step 2 中有测试的每一行：
+
+#### 3a: 从测试函数反向追踪
+
+读测试函数的 setup（`beforeEach`、`beforeAll`、函数调用），找到**被测的入口函数/方法**。
+
+#### 3b: 确认被测函数是真实代码而非 Mock
+
+具体检查：
+
+```
+1. 测试 import 的模块 → 是不是从源代码目录导入的？（而不是 __mocks__/）
+2. 有没有 jest.mock()、sinon.stub()、patch() 作用在被测函数本身？
+   - mock 外部依赖（DB、HTTP）= ✅ 正常
+   - mock 被测函数本身 = 🔴 致命（反模式 #4）
+3. setup 中的 fixture/test data → 是否能触发 Spec WHEN 条件？
+   - 例：Spec 说 "WHEN 密码为空"，但 test data 用了 password="test123" → 🔴 没测到
+```
+
+填入表的"调用链验证"列：
+- `✅ 真实调用 <函数名>`
+- `⚠️ mock 了 <X>，可接受（外部依赖）`
+- `🔴 mock 了被测函数本身` 或 `🔴 test data 不触发 WHEN`
+
+### Step 4: 虚假通过狩猎（逐测试函数，强制全量）
+
+对 Step 2-3 幸存（非 ❌）的每个测试函数，用以下 **7 + N 条反模式清单逐条过**。
+
+**不允许跳过任何一条。每条必须在输出中明确标注 ✅ 通过 / 🔴 命中。**
+
+| # | 反模式 | 检测算法（AI 必须按此操作） | 风险 |
+|:--|:-------|:--------------------------|:-----|
+| 1 | **断言缺失** | 在测试函数体内 grep `assert\|expect\|should\|verify`。数量 = 0 → 命中 | 🔴 |
+| 2 | **断言太弱** | 列出所有 assertion。如果任何一个只做 `toBeTruthy()\|toBeDefined()\|toBeNotNull()\|!= null\|!= undefined\|>= 0` 而不比对具体预期值 → 命中 | 🔴 |
+| 3 | **Happy path only** | 统计该 Requirement 下所有 Scenario。如果只有 1 个正常路径 test，缺 edge case / error path → 命中。**具体**：对照 spec，看是否有 "WHEN 异常/边界输入 THEN ..." 的 Scenario 没被覆盖 | 🔴 |
+| 4 | **Mock 了要测的东西** | Step 3b 已检查。"调用链验证"列为 🔴 → 命中 | 🔴 |
+| 5 | **Assertion 绕开 Spec THEN** | Step 2c 已检查。比对"Spec THEN"列和"实际 assertion"列。如果 assertion 验证的内容和 THEN 说的不是同一件事 → 命中。**例**：THEN 说"返回 400 + 错误码 INVALID_EMAIL"，assertion 只检查 `status !== 500` | 🟡 |
+| 6 | **条件永真** | 检查是否存在：`expect(x).toBe(x)` / `expect(true).toBe(true)` / assert 在 `if(true)` 块里 / 空 snapshot 文件 / snapshot 内容为 `{}` 或 `""` | 🔴 |
+| 7 | **吞异常** | 检查测试中的 try-catch：`catch` 块是否为空 / 只有 `console.log` / 没有 `expect`。应该 `expect(error.message).toContain(...)` | 🔴 |
+
+> **项目自定义反模式**（第 8+ 条）：读取 `.ai/L2-rules/testing.md` 的"自定义反模式"区段，逐条追加检查。前 7 条是底线，不可删除。
+
+**输出格式（每个测试函数必须输出）**：
+
+```
+#### [测试文件:行] — [测试函数名]
+对应 Scenario: [Requirement / Scenario 名]
+
+| # | 反模式 | 结果 | 证据 |
+|:--|:-------|:-----|:-----|
+| 1 | 断言缺失 | ✅ 通过 | 2 个 expect |
+| 2 | 断言太弱 | 🔴 命中 | `expect(result).toBeTruthy()` 应改为 `expect(result.code).toBe('INVALID')` |
+| 3 | Happy path only | ✅ 通过 | 同 Requirement 下另有 error-path test |
+| 4 | Mock 被测函数 | ✅ 通过 | mock 的是 DB client，不是被测函数 |
+| 5 | 绕开 THEN | ✅ 通过 | assertion 检查 status=401，与 THEN 一致 |
+| 6 | 条件永真 | ✅ 通过 | 无自证循环 |
+| 7 | 吞异常 | ✅ 通过 | 无 try-catch |
+```
+
+### Step 5: 反向推理 — "删掉代码还能绿吗？"
+
+对每个**关键 assertion**（Step 2c 识别的），做以下思维实验：
+
+> 如果我把被测函数中实现这个行为的那几行代码**注释掉**（或改成 `return null`），这个测试会变红吗？
+
+| 推理结果 | 含义 |
+|:---------|:-----|
+| 会变红 | ✅ 测试有效 |
+| 不会变红 | 🔴 测试无效——assertion 没有实际检验被测行为（可能测的是 mock 返回值、默认值、或另一个函数的输出） |
+| 不确定 | ⚠️ 标记为需人工复核 |
+
+**不需要真的删代码跑测试。** 这是一个**阅读级推理**——看被测函数的实现，判断 assertion 检查的值是否来自那段实现代码。
+
+把结论填入主表的"反向推理"列。
+
+### Step 6: 覆盖缺口分析
+
+在 Scenario 层面已经逐行检查完，现在做**补充**覆盖检查：
+
+#### 6a: 没有 Scenario 的代码路径
+
+```bash
+# 列出变更涉及的源码文件
+git diff --name-only HEAD~N -- <src-dir>
+```
+
+对每个变更的源码文件，快速扫描分支（`if/else`、`switch`、`try/catch`、guard clause）。对照 Spec Scenarios，是否有代码分支没有任何 Scenario 覆盖？
+
+如果有 → 登记为"缺失 Scenario"，建议补 spec + 补测试。
+
+#### 6b: 边界值检查
+
+对每个 Scenario 的 WHEN 输入参数：
+
+| 输入 | 需要的边界值 | 已有？ |
+|:-----|:------------|:-------|
+| 字符串 | 空串 `""`、超长、特殊字符 | ? |
+| 数字 | 0、负数、最大值、小数 | ? |
+| 集合 | 空集、1 个、满/超限 | ? |
+| 可选 | null / undefined / 缺失 | ? |
+
+已有 = 对应 Scenario 的 test data 包含此边界。未有 → 登记为"缺失边界"。
+
+### Step 7: 输出审查报告
 
 ```
 ## 测试审查报告
 
 ### 执行结果
 - 测试运行: ✅ 全绿 / ❌ N 个失败（已转 /fix-bug）
+- 异常标记: [.skip/.only/pending 列表，或"无"]
 - 审查范围: [变更名 / 能力域]
+
+### 主表（每行 = 一个 Spec Scenario）
+
+| # | Req | Scenario | Spec THEN | 测试函数 | 实际 assertion | 调用链 | 反模式 | 反向推理 | 结论 |
+|:--|:----|:---------|:----------|:---------|:---------------|:-------|:-------|:---------|:-----|
+| 1 | REQ-001 | 正常登录 | 返回200+token | login.test:45 | status=200, body.token存在 | ✅ 真实调用 handleLogin | ✅ 全通过 | ✅ 删handleLogin会红 | ✅ |
+| 2 | REQ-001 | 空密码 | 返回400+PASSWORD_REQUIRED | — | — | — | — | — | 🔴 无测试 |
+| 3 | REQ-002 | Token过期 | 自动刷新 | refresh.test:12 | expect(newToken).toBeDefined() | ✅ 调用 refresh() | 🔴 #2 断言太弱 | ⚠️ 可能测的是默认值 | 🔴 |
 
 ### 覆盖概要
 
-| 能力域 | Requirement | Scenario | ✅ verified | ⚠️ gap | ❌ missing |
-|--------|-------------|----------|------------|--------|-----------|
-| auth   | 5           | 12       | 8 (67%)    | 3 (25%)| 1 (8%)    |
-| **总计** | **N**     | **N**    | **N (%)**  | **N (%)**| **N (%)** |
+| 能力域 | Requirement | Scenario | ✅ 有效 | 🔴 缺陷 | ❌ 缺失 |
+|:-------|:-----------|:---------|:--------|:--------|:--------|
+| auth | 3 | 7 | 4 (57%) | 2 (29%) | 1 (14%) |
 
-### 虚假通过检查
+### 反模式统计
 
-| 测试文件 : 行 | 反模式 | Scenario | 建议 |
-|---------------|--------|----------|------|
-| auth.test.ts:45 | #2 断言太弱 | REQ-001 空密码拒绝 | 补具体错误码断言 |
-| ... | ... | ... | ... |
+| 反模式 | 命中次数 | 涉及测试 |
+|:-------|:---------|:---------|
+| #2 断言太弱 | 2 | refresh.test:12, logout.test:8 |
+| #5 绕开 THEN | 1 | login.test:92 |
 
-### 按域明细
+### 覆盖缺口
 
-| Requirement | Scenario | 追溯状态 | 实际测试 | 问题 |
-|-------------|----------|---------|---------|------|
-| REQ-001     | 正常登录  | ✅      | ✅ auth.test.ts:45 | — |
-| REQ-001     | 空密码    | ⚠️ untested | ❌ 无测试 | 需要补写 |
+| 类型 | 描述 | 建议 |
+|:-----|:-----|:-----|
+| 缺失 Scenario | handleLogin 有 rate-limit 分支，无对应 Scenario | 补 spec + 补测试 |
+| 缺失边界 | REQ-001 空密码 无测试 | 补测试 |
 
-### 结论（必填）
+### 结论（必填，三选一）
 
-- [ ] ✅ 通过 — 可以 `/archive-change`
-- [ ] ⚠️ 有缺口但非阻塞 — 列出可延后项
-- [ ] ❌ 打回 — 列出必须修复项，走 `/fix-bug`
+- [ ] ✅ 通过 — 主表所有行结论为 ✅，无 🔴 反模式，无 ❌ 缺失 → 可以 `/archive-change`
+- [ ] ⚠️ 有缺口但非阻塞 — 有 ⚠️ 但无 🔴 → 登记到 Known Gaps，允许归档
+- [ ] ❌ 打回 — 有任何 🔴 或 ❌ → 必须 `/fix-bug` 再回来
 
 ### 打回原因（如适用）
-1. **高** — [file:line] 虚假通过：[描述] → 走 /fix-bug Step 3B
-2. **高** — [domain] 缺 Scenario: [name] → 走 /fix-bug Step 3B 补测试
+1. 🔴 [file:line] 反模式 #N：[描述] → /fix-bug Step 3B
+2. ❌ [Req/Scenario] 无测试 → /fix-bug Step 3B 补测试
 ```
 
-### Step 5: 状态回流
+**结论判定规则（不允许 AI 自由裁量）**：
 
-根据 Step 4 结论：
+| 主表中存在 | 结论 |
+|:-----------|:-----|
+| 任何 🔴（反模式命中 / 反向推理失败）| ❌ 打回 |
+| 任何 ❌（Scenario 无测试） | ❌ 打回 |
+| 只有 ⚠️（标记为需人工复核） | ⚠️ 有缺口但非阻塞 |
+| 全部 ✅ | ✅ 通过 |
+
+### Step 8: 状态回流
+
+根据 Step 7 结论：
 
 | 结论 | 变更状态流转 |
 |:-----|:-------------|
 | ✅ 通过 | 保持 `pending-review`，提示用户运行 `/archive-change` |
-| ❌ 打回 | `pending-review` → `review-failed` → `implementing`（记录在 proposal.md） |
+| ❌ 打回 | `pending-review` → `review-failed` → `implementing`（记录在 proposal.md 的 Review Feedback） |
 | ⚠️ 有缺口但非阻塞 | 保持 `pending-review`，问题登记到 proposal.md 的"Known Gaps" |
 
 更新 `.ai/L4-session/active-session.md`，记录审查结果和下一步动作。
@@ -141,6 +271,9 @@ ls .ai/L5-validation/traceability/ | grep -v _domain-template
 ## 反模式（Reviewer 禁止）
 
 - ❌ 不跑测试就签字通过
-- ❌ 只看 traceability 的 ✅，不打开测试文件
-- ❌ 发现虚假通过只记录不打回
-- ❌ 跳过虚假通过清单的某几条（清单是强制的；项目可追加，但不可删除）
+- ❌ 只看 traceability 的 ✅，不打开测试文件读 assertion
+- ❌ 发现虚假通过只记录不打回（主表有 🔴 → 必须打回）
+- ❌ 跳过虚假通过清单的某几条（7 条是底线，逐条标注结果；项目可追加，但不可删除）
+- ❌ 主表输出时省略列（"调用链验证"和"反向推理"两列最容易被跳过——不允许）
+- ❌ 对某个 Scenario 写"已覆盖"但不填写"实际 assertion"列的具体内容
+- ❌ 抽样检查（本 Skill 要求穷举审查范围内的每个 Scenario）

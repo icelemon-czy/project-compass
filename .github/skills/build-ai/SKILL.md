@@ -97,18 +97,41 @@ For the detailed logic inside each prompt, see these reference docs:
 
 ### Verify
 
-All steps done. Run through this checklist:
+All steps done. Run through this checklist. **每条必须实际执行验证命令，不允许"看了一下没问题"。**
 
-- [ ] `overview.md` is under 60 lines, only index entries (no details)
-- [ ] Each feature has README.md with a layer navigation table
-- [ ] `architecture.md` exists and covers request lifecycle / startup sequence
-- [ ] `global.md` rules are extracted from actual code patterns, not invented
-- [ ] `testing.md` exists with project-specific test conventions
-- [ ] Every line passes: "Can AI derive this from code?" If yes → delete it
-- [ ] `specs/system.md` has System Boundary and Cross-Cutting Requirements
-- [ ] Each capability domain has `specs/<domain>/spec.md` with Requirement + Scenario
-- [ ] `L3-specs/change-management.md` exists
-- [ ] `doc-sync.md` exists at `.ai/` root
-- [ ] `L5-validation/validation-rules.md` exists
-- [ ] Each spec domain has a traceability file in `L5-validation/traceability/`
-- [ ] Entrypoint file created and points to correct `.ai/` paths
+```bash
+# 1. overview.md 长度检查
+wc -l .ai/L1-codebase-map/overview.md  # 必须 ≤ 60 行
+
+# 2. feature 文档完整性
+for f in .ai/L1-codebase-map/features/*/README.md; do
+  grep -q "层.*表\|layer" "$f" || echo "❌ $f 缺少层导航表"
+done
+
+# 3. 关键文件存在性（每个都 test -f）
+test -f .ai/L1-codebase-map/architecture.md || echo "❌ architecture.md 缺失"
+test -f .ai/L2-rules/global.md || echo "❌ global.md 缺失"
+test -f .ai/L2-rules/testing.md || echo "❌ testing.md 缺失"
+test -f .ai/L3-specs/specs/system.md || echo "❌ system.md 缺失"
+test -f .ai/L3-specs/change-management.md || echo "❌ change-management.md 缺失"
+test -f .ai/doc-sync.md || echo "❌ doc-sync.md 缺失"
+test -f .ai/L5-validation/validation-rules.md || echo "❌ validation-rules.md 缺失"
+
+# 4. 至少 1 个能力域 spec
+ls .ai/L3-specs/specs/*/spec.md 2>/dev/null | wc -l  # 必须 ≥ 1
+
+# 5. 每个能力域有追溯文件
+for d in .ai/L3-specs/specs/*/; do
+  domain=$(basename "$d")
+  [[ "$domain" == "_capability-template" ]] && continue
+  test -f ".ai/L5-validation/traceability/${domain}.md" || echo "❌ 追溯文件缺失: $domain"
+done
+
+# 6. global.md 规则非空
+wc -l .ai/L2-rules/global.md  # 必须 > 5 行（排除空模板）
+
+# 7. "Can AI derive this from code?" 冗余检查
+# 对 overview.md 中每个条目，检查是否仅是文件路径列表（如果是 → 删除，AI 可以 ls 获取）
+```
+
+以上检查有任何 ❌ → **修复后再宣告完成**，不允许带着缺失项交付。

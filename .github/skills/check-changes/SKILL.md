@@ -63,7 +63,7 @@ ls .ai/L3-specs/archive/ 2>/dev/null
 
 检查是否有异常情况，主动告知用户：
 
-- ⚠️ 变更的 tasks.md 中有很久未推进的 checkbox
+- ⚠️ 变更的 tasks.md 中有超过 **7 天**未推进的 checkbox（依据：`git log --format='%ai' -1 -- .ai/L3-specs/changes/<name>/`，如最后修改距今 > 7 天则告警）
 - ⚠️ active-session.md 指向的变更与 changes/ 中的不一致
 - ⚠️ 有变更缺少 delta spec（proposal 有但 specs/ 为空）
 - ⚠️ 有变更缺少 tasks.md
