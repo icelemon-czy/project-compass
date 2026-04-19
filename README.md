@@ -126,6 +126,7 @@ Every target file has **bidirectional links** (source / related files) to preven
 │   ├── check-changes/SKILL.md     ← Show status of all in-progress changes (keyword: change status, 变更状态)
 │   ├── review-tests/SKILL.md      ← Run tests + coverage audit + false-pass hunting (keyword: review tests, 虚假通过)
 │   ├── fix-bug/SKILL.md           ← Unified bug-fix entry with automatic triage (keyword: bug, fix issue, review failed, 虚假通过)
+│   ├── ask-codebase/SKILL.md      ← Answer questions: locate features, explain architecture, analyze impact (keyword: 在哪, where is, 影响分析)
 │   ├── archive-change/SKILL.md    ← Archive a completed change, merge delta spec (keyword: 归档, archive)
 │   └── git-commit/SKILL.md        ← Stage/commit/push with conventional message + doc-sync check (keyword: commit, push)
 ├── entrypoints/              ← AI tool entry point templates
@@ -337,10 +338,10 @@ After this, every AI conversation will auto-load `.ai/` context and self-navigat
 
 ## Skills (Auto-Invoked Workflows)
 
-Project Compass ships with **12 Copilot / Claude Code custom skills** under `.github/skills/`.
+Project Compass ships with **13 Copilot / Claude Code custom skills** under `.github/skills/`.
 See the [Skill Discovery](#skill-discovery--how-copilot--claude-code-find-these-skills) section below for how your AI tool picks them up.
 
-### The 12 Skills
+### The 13 Skills
 
 | Category | Skill | When to use |
 |:---------|:------|:------------|
@@ -354,6 +355,7 @@ See the [Skill Discovery](#skill-discovery--how-copilot--claude-code-find-these-
 | | `/archive-change` | Merge delta spec and close the change |
 | | `/check-changes` | Show status of all in-progress changes |
 | **Fix (1)** | `/fix-bug` | **Unified fix entry** with automatic triage (code / test / spec-ambiguity / false-pass) |
+| **Query (1)** | `/ask-codebase` | Ask anything about the code: locate features, explain architecture, analyze change impact |
 | **Docs & Ship (2)** | `/update-ai` | Refresh `.ai/` after code changes |
 | | `/git-commit` | Commit + doc-sync check + push |
 
@@ -368,16 +370,124 @@ AI runs autonomously **except** at two decision points. (A few skills — `/arch
 
 ### Skill-Driven Workflow
 
+#### Complete State Machine
+
+```mermaid
+stateDiagram-v2
+    [*] --> drafting : /new-change creates proposal
+    drafting --> implementing : ✋ Gate 1 — Human confirms proposal
+    implementing --> pending_review : Code done + tests green
+    pending_review --> approved : ✋ Gate 2 — /review-tests passes
+    pending_review --> review_failed : /review-tests finds issues
+    review_failed --> implementing : /fix-bug auto-triage
+    approved --> archived : /archive-change merges delta spec
+    archived --> [*]
+
+    note right of drafting : Human reviews scope,\nalternatives, and spec
+    note right of review_failed : Loops until all 🔴\nare resolved
+    note right of approved : Delta spec → main spec\nTraceability updated
+```
+
+#### Skill Flow — Full Development Cycle
+
 ```mermaid
 flowchart TD
-    A[/new-change] -->|✔️ gate 1| B[implementing]
-    B --> C[pending-review]
-    C --> D[/review-tests]
-    D -->|❌ failing| E[/fix-bug auto triage]
-    D -->|⚠️ false-pass| E
-    D -->|✔️ all green + gate 2| F[/archive-change]
-    E --> C
+    subgraph Bootstrap["🏗️ Bootstrap (one-time)"]
+        GI["/git-init"] --> IP["/init-project"]
+        IP --> BA["/build-ai"]
+        BA --> ST["/setup-testing"]
+    end
+
+    subgraph DevLoop["🔄 Development Loop (repeats per feature)"]
+        NC["/new-change<br/>proposal + delta spec"]
+        NC -->|"✋ Gate 1<br/>Human confirms"| IMPL["implementing<br/>(TDD: red → green)"]
+        IMPL --> PR["pending-review"]
+        PR --> RT["/review-tests<br/>9-step deep verification"]
+
+        RT -->|"✅ All green<br/>✋ Gate 2"| AC["/archive-change"]
+        RT -->|"❌ Test failures"| FB1["/fix-bug<br/>auto-triage → code fix"]
+        RT -->|"⚠️ False-pass<br/>detected"| FB2["/fix-bug<br/>strengthen tests"]
+        RT -->|"🔴 Missing<br/>scenarios"| FB3["/fix-bug<br/>add spec + tests"]
+
+        FB1 --> PR
+        FB2 --> PR
+        FB3 --> PR
+
+        AC --> UA["/update-ai"]
+        UA --> GC["/git-commit<br/>doc-sync check"]
+    end
+
+    subgraph Utility["🛠️ Available Anytime"]
+        CC["/continue-change<br/>resume yesterday's work"]
+        CK["/check-changes<br/>status dashboard"]
+        AQ["/ask-codebase<br/>locate · explain · impact"]
+    end
+
+    Bootstrap --> NC
+    GC --> NC
+
+    style NC fill:#4CAF50,color:#fff
+    style RT fill:#FF9800,color:#fff
+    style AC fill:#2196F3,color:#fff
+    style FB1 fill:#f44336,color:#fff
+    style FB2 fill:#f44336,color:#fff
+    style FB3 fill:#f44336,color:#fff
 ```
+
+#### Gate 1 — Proposal Confirmation (Business Decision)
+
+```mermaid
+flowchart LR
+    subgraph "/new-change internal flow"
+        A["Read .ai/ context<br/>overview + specs + rules"] --> B["Generate proposal<br/>Why · What · Alternatives"]
+        B --> C["Ask clarifying questions<br/>(from 6 dimensions)"]
+        C --> D["Write delta spec<br/>ADDED/MODIFIED Requirements"]
+        D --> E{"✋ Human reviews<br/>proposal + spec"}
+        E -->|"Approve"| F["Write red tests<br/>from WHEN/THEN"]
+        E -->|"Reject / Modify"| C
+        F --> G["Implement code<br/>make tests green"]
+        G --> H["L2 compliance<br/>self-check table"]
+        H --> I["→ pending-review"]
+    end
+
+    style E fill:#FF9800,color:#fff,stroke:#E65100,stroke-width:3px
+```
+
+#### Gate 2 — Review Approval (Quality Decision)
+
+```mermaid
+flowchart TD
+    subgraph "/review-tests 9-step verification"
+        S0["Step 0: Read testing.md<br/>+ run full test suite"] --> S0b{"All green?"}
+        S0b -->|"❌ Failures"| FAIL["→ /fix-bug immediately"]
+        S0b -->|"✅ Green"| S1["Step 1: Enumerate ALL<br/>Spec Scenarios"]
+        S1 --> S2["Step 2: Per-scenario<br/>locate test + compare<br/>assertion vs THEN"]
+        S2 --> S3["Step 3: Call-chain<br/>verification<br/>(is real code tested?)"]
+        S3 --> S4["Step 4: 7-point<br/>false-pass checklist<br/>(per test function)"]
+        S4 --> S5["Step 5: Reverse reasoning<br/>(delete code → still green?)"]
+        S5 --> S6["Step 6: Coverage gap<br/>analysis (branches +<br/>boundary values)"]
+        S6 --> S7["Step 7: Generate<br/>审查报告 (audit report)"]
+        S7 --> JUDGE{"Any 🔴 or ❌<br/>in the table?"}
+        JUDGE -->|"Yes"| REJECT["❌ Reject<br/>→ /fix-bug"]
+        JUDGE -->|"Only ⚠️"| WARN["⚠️ Non-blocking<br/>log to Known Gaps"]
+        JUDGE -->|"All ✅"| PASS["✅ Pass<br/>→ /archive-change"]
+    end
+
+    style JUDGE fill:#FF9800,color:#fff,stroke:#E65100,stroke-width:3px
+    style REJECT fill:#f44336,color:#fff
+    style PASS fill:#4CAF50,color:#fff
+```
+
+#### Per-Skill Step Summary
+
+| Skill | Steps | Key checkpoints |
+|:------|:------|:----------------|
+| `/new-change` | 8 steps | S1: Read context → S2: Propose → S3: Clarify (6 dims) → S4: Delta spec → **S5: ✋ Gate 1** → S6: Red tests → S7: Green code + L2 check → S8: Status update |
+| `/review-tests` | 9 steps | S0: Run tests → S1: Enum scenarios → S2: Match assertions → S3: Call-chain → S4: 7-point anti-pattern → S5: Reverse reasoning → S6: Coverage gaps → **S7: ✋ Gate 2** → S8: Status flow |
+| `/fix-bug` | 4 steps | S0: Context → S1: Find spec → S2: Run + Q1→Q6 triage tree → S3: Fix (A: code / B: test / C: spec) → S4: Update traceability |
+| `/archive-change` | 6 steps | S1: Locate change → **S2: ✋ Confirm** → S3: Merge delta → S4: Update traceability → S5: Move to archive → S6: Structural check |
+| `/continue-change` | 8 steps | S1: Find active change → S2: Check code exists → S3: Read session → S4: Read specs → S5: Read tasks → S6: Plan → S7: Inject L2 rules → S8: Execute |
+| `/ask-codebase` | 4 steps | S1: Classify (locate/explain/impact/rules/trace) → S2: Read .ai/ docs → S3: Supplement with grep → S4: Structured answer |
 
 ### Skill Discovery — How Copilot / Claude Code Find These Skills
 

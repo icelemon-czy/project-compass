@@ -126,6 +126,7 @@ AI 每次对话**只读 `overview.md`**（< 60 行），然后根据任务类型
 │   ├── check-changes/SKILL.md     ← 查看所有变更状态（关键词：变更状态、进度、change status）
 │   ├── review-tests/SKILL.md      ← 跑测试 + 覆盖审查 + 虚假通过狩猎（关键词：审查测试、虚假通过）
 │   ├── fix-bug/SKILL.md           ← 统一修复入口，自动分诊根因（关键词：bug、修bug、review 打回、虚假通过）
+│   ├── ask-codebase/SKILL.md      ← 代码库问答：定位功能、解释架构、影响分析（关键词：在哪、为什么、改了会影响什么）
 │   ├── archive-change/SKILL.md    ← 归档已完成变更，合并 delta spec（关键词：归档、archive）
 │   └── git-commit/SKILL.md        ← 生成 commit message + doc-sync 检查 + push（关键词：commit、提交）
 ├── entrypoints/              ← AI 工具入口文件模板
@@ -339,10 +340,10 @@ cp -r /path/to/project-compass /path/to/your-project/.ai/
 
 ## Skills — 自动触发的工作流
 
-Project Compass 自带 **12 个 Copilot / Claude Code 自定义技能**（`.github/skills/`）。
+Project Compass 自带 **13 个 Copilot / Claude Code 自定义技能**（`.github/skills/`）。
 见下方 [Skill 发现机制](#skill-发现机制-copilot--claude-code-怎么找到它们) 了解 AI 工具如何识别这些技能。
 
-### 12 个 Skill
+### 13 个 Skill
 
 | 分类 | Skill | 何时用 |
 |:-----|:------|:-------|
@@ -356,6 +357,7 @@ Project Compass 自带 **12 个 Copilot / Claude Code 自定义技能**（`.gith
 | | `/archive-change` | 合并 delta spec，归档 |
 | | `/check-changes` | 查看所有进行中变更 |
 | **修复（1）** | `/fix-bug` | **统一修复入口**，自动分诊（代码/测试/spec 歧义/虚假通过） |
+| **查询（1）** | `/ask-codebase` | 代码定位、架构解释、变更影响分析 |
 | **文档发布（2）** | `/update-ai` | 代码改了后刷新 `.ai/` |
 | | `/git-commit` | 提交 + doc-sync 检查 + push |
 
@@ -368,19 +370,124 @@ Project Compass 自带 **12 个 Copilot / Claude Code 自定义技能**（`.gith
 
 ### Skill 驱动的完整工作流
 
+#### 完整状态机
+
+```mermaid
+stateDiagram-v2
+    [*] --> drafting : /new-change 创建 proposal
+    drafting --> implementing : ✋ 门槛 1 — 人确认 proposal
+    implementing --> pending_review : 代码完成 + 测试绿灯
+    pending_review --> approved : ✋ 门槛 2 — /review-tests 通过
+    pending_review --> review_failed : /review-tests 发现问题
+    review_failed --> implementing : /fix-bug 自动分诊
+    approved --> archived : /archive-change 合并 delta spec
+    archived --> [*]
+
+    note right of drafting : 人审查范围、\n替代方案和 spec
+    note right of review_failed : 循环直到所有 🔴\n被解决
+    note right of approved : Delta spec → 主 spec\n追溯矩阵更新
 ```
-/new-change --✔️ 门槛 1--> implementing --> pending-review
-                                                    ↓
-                                              /review-tests
-                           ┌─────────────────┼─────────────────┐
-                           ↓                 ↓                 ↓
-                       ❌ 红灯             ⚠️ 虚假通过      ✔️ 全绿齐全
-                           ↓                 ↓                 ↓
-                       /fix-bug          /fix-bug          --✔️ 门槛 2-->
-                    (自动分诊)         (自动分诊)              ↓
-                           ↓                 ↓            /archive-change
-                           └──── 回到 pending-review
+
+#### Skill 流转 — 完整开发周期
+
+```mermaid
+flowchart TD
+    subgraph Bootstrap["🏗️ 启动（一次性）"]
+        GI["/git-init"] --> IP["/init-project"]
+        IP --> BA["/build-ai"]
+        BA --> ST["/setup-testing"]
+    end
+
+    subgraph DevLoop["🔄 开发循环（每个功能重复）"]
+        NC["/new-change<br/>proposal + delta spec"]
+        NC -->|"✋ 门槛 1<br/>人确认"| IMPL["implementing<br/>（TDD：红 → 绿）"]
+        IMPL --> PR["pending-review"]
+        PR --> RT["/review-tests<br/>9 步深度验证"]
+
+        RT -->|"✅ 全绿齐全<br/>✋ 门槛 2"| AC["/archive-change"]
+        RT -->|"❌ 测试失败"| FB1["/fix-bug<br/>自动分诊 → 改代码"]
+        RT -->|"⚠️ 虚假通过"| FB2["/fix-bug<br/>加强测试"]
+        RT -->|"🔴 缺失场景"| FB3["/fix-bug<br/>补 spec + 补测试"]
+
+        FB1 --> PR
+        FB2 --> PR
+        FB3 --> PR
+
+        AC --> UA["/update-ai"]
+        UA --> GC["/git-commit<br/>doc-sync 检查"]
+    end
+
+    subgraph Utility["🛠️ 随时可用"]
+        CC["/continue-change<br/>接续昨天的工作"]
+        CK["/check-changes<br/>变更状态面板"]
+        AQ["/ask-codebase<br/>定位 · 解释 · 影响分析"]
+    end
+
+    Bootstrap --> NC
+    GC --> NC
+
+    style NC fill:#4CAF50,color:#fff
+    style RT fill:#FF9800,color:#fff
+    style AC fill:#2196F3,color:#fff
+    style FB1 fill:#f44336,color:#fff
+    style FB2 fill:#f44336,color:#fff
+    style FB3 fill:#f44336,color:#fff
 ```
+
+#### 门槛 1 — Proposal 确认（业务决策）
+
+```mermaid
+flowchart LR
+    subgraph "/new-change 内部流程"
+        A["读取 .ai/ 上下文<br/>overview + specs + rules"] --> B["生成 proposal<br/>Why · What · 替代方案"]
+        B --> C["澄清问题<br/>（6 个维度）"]
+        C --> D["编写 delta spec<br/>ADDED/MODIFIED Requirements"]
+        D --> E{"✋ 人审查<br/>proposal + spec"}
+        E -->|"通过"| F["写红灯测试<br/>from WHEN/THEN"]
+        E -->|"驳回 / 修改"| C
+        F --> G["实现代码<br/>测试变绿"]
+        G --> H["L2 合规<br/>自检表"]
+        H --> I["→ pending-review"]
+    end
+
+    style E fill:#FF9800,color:#fff,stroke:#E65100,stroke-width:3px
+```
+
+#### 门槛 2 — Review 批准（质量决策）
+
+```mermaid
+flowchart TD
+    subgraph "/review-tests 9 步验证"
+        S0["Step 0: 读 testing.md<br/>+ 跑完整测试"] --> S0b{"全绿？"}
+        S0b -->|"❌ 有失败"| FAIL["→ /fix-bug"]
+        S0b -->|"✅ 全绿"| S1["Step 1: 穷举所有<br/>Spec Scenario"]
+        S1 --> S2["Step 2: 逐 Scenario<br/>定位测试 + 比对<br/>assertion vs THEN"]
+        S2 --> S3["Step 3: 调用链验证<br/>（测的是真实代码吗？）"]
+        S3 --> S4["Step 4: 7 条反模式<br/>逐条过<br/>（每个测试函数）"]
+        S4 --> S5["Step 5: 反向推理<br/>（删代码还能绿吗？）"]
+        S5 --> S6["Step 6: 覆盖缺口<br/>（分支 + 边界值）"]
+        S6 --> S7["Step 7: 生成审查报告"]
+        S7 --> JUDGE{"主表中有<br/>🔴 或 ❌？"}
+        JUDGE -->|"有"| REJECT["❌ 打回<br/>→ /fix-bug"]
+        JUDGE -->|"只有 ⚠️"| WARN["⚠️ 非阻塞<br/>登记 Known Gaps"]
+        JUDGE -->|"全 ✅"| PASS["✅ 通过<br/>→ /archive-change"]
+    end
+
+    style JUDGE fill:#FF9800,color:#fff,stroke:#E65100,stroke-width:3px
+    style REJECT fill:#f44336,color:#fff
+    style PASS fill:#4CAF50,color:#fff
+```
+
+#### 各 Skill 步骤摘要
+
+| Skill | 步骤数 | 关键检查点 |
+|:------|:------|:-----------|
+| `/new-change` | 8 步 | S1:读上下文 → S2:提案 → S3:澄清(6维度) → S4:Delta spec → **S5:✋门槛1** → S6:红灯测试 → S7:绿灯代码+L2检查 → S8:状态更新 |
+| `/review-tests` | 9 步 | S0:跑测试 → S1:枚举场景 → S2:比对断言 → S3:调用链 → S4:7条反模式 → S5:反向推理 → S6:覆盖缺口 → **S7:✋门槛2** → S8:状态回流 |
+| `/fix-bug` | 4 步 | S0:场景识别 → S1:找spec → S2:跑测试+Q1→Q6决策树 → S3:修复(A:代码/B:测试/C:spec) → S4:更新追溯 |
+| `/archive-change` | 6 步 | S1:定位 → **S2:✋确认** → S3:合并delta → S4:更新追溯 → S5:移动归档 → S6:结构检查 |
+| `/continue-change` | 8 步 | S1:找活跃变更 → S2:检查代码 → S3:读会话 → S4:读spec → S5:读任务 → S6:计划 → S7:注入L2规则 → S8:执行 |
+| `/ask-codebase` | 4 步 | S1:分类(定位/解释/影响/规则/追溯) → S2:读.ai/文档 → S3:补充grep → S4:结构化回答 |
 
 每个 skill 的内部 workflow + 虚假通过反模式清单，见 [WORKFLOW-ANALYSIS.md](WORKFLOW-ANALYSIS.md)。
 
