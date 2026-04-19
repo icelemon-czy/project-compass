@@ -52,6 +52,8 @@ cp -r /path/to/project-compass /path/to/your-project/.ai/
 
 选择与用户 AI 工具匹配的 builder（`builders/claude/` 或 `builders/cline/`），**按顺序**执行 prompt。
 
+**先读取 builder prompt 文件（不可跳过）**：读取对应目录下的所有 `prompt-*.md`（如 `builders/claude/prompt-L1a.md`），确认文件存在且内容完整。如果文件不存在或目录为空 → 告知用户并停止，不要自己编造 builder 逻辑。
+
 每个 prompt 是独立的完整指令。复制到 AI 新对话中，填入 `[占位符]`，让 AI 执行。
 
 | Order | Builder Prompt | What it builds | External input |
@@ -86,7 +88,7 @@ For the detailed logic inside each prompt, see these reference docs:
 
 ### Step 3: Deploy entrypoint
 
-将对应的 entrypoint 模板复制到项目根目录：
+读取对应的 entrypoint 模板文件内容，然后复制到项目根目录：
 
 | AI Tool | Source | Target |
 |---------|--------|--------|

@@ -24,12 +24,23 @@ argument-hint: "Optional: specific domain or change name (e.g., 'auth', 'add-csv
 
 ### Step 0: 跑测试 + 检查异常标记
 
-```bash
-# 1. 先运行项目的完整测试套件，捕获结果
-<项目测试命令，读 L2-rules/testing.md 获取>
+**0a: 读取测试配置（必做，不可跳过）**
 
-# 2. 扫描测试异常标记（必做）
-grep -rn "\.skip\|\.only\|xit(\|xdescribe(\|xtest(\|@Disabled\|@Ignore\|pytest\.mark\.skip\|@unittest\.skip\|pending(" <test-dir>
+读取 `.ai/L2-rules/testing.md` — 获取以下信息并记录到工作区：
+- **测试运行命令**（如 `npm test`、`pytest`、`go test ./...`）
+- **测试目录**（如 `__tests__/`、`tests/`、`*_test.go`）
+- **测试框架**（如 Jest、pytest、Go testing）
+
+> 如果 `.ai/L2-rules/testing.md` 不存在，告知用户"测试规范缺失，建议先运行 `/setup-testing`"并停止。
+
+**0b: 运行测试**
+
+```bash
+# 1. 用 0a 中获取的命令运行完整测试套件
+<0a 中读到的测试运行命令>
+
+# 2. 扫描测试异常标记（必做，用 0a 中获取的测试目录）
+grep -rn "\.skip\|\.only\|xit(\|xdescribe(\|xtest(\|@Disabled\|@Ignore\|pytest\.mark\.skip\|@unittest\.skip\|pending(" <0a 中的测试目录>
 ```
 
 根据结果分支：

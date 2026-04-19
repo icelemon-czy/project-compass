@@ -42,7 +42,7 @@ cat Makefile 2>/dev/null | grep -A 2 'test'
 cat .ai/L2-rules/testing.md 2>/dev/null
 ```
 
-如不存在，从模板创建（模板位于项目模板库的 `L2-rules/testing.md`）。
+如不存在，读取项目模板库中的 `L2-rules/testing.md` 模板（路径：`.ai/L2-rules/_module-template.md` 或 project-compass 仓库的 `L2-rules/testing.md`），了解期望的章节结构，然后基于此格式创建。
 
 ### Step 3: 生成初稿 / 更新
 

@@ -44,7 +44,12 @@ ls .ai/L3-specs/changes/ | grep -v _change-template
 
 ### Step 2: 展示变更摘要 → 等人确认
 
-读取变更的完整内容，展示归档预览：
+读取变更的完整内容（**逐个文件读取，不可跳过**）：
+1. 读取 `.ai/L3-specs/changes/<name>/proposal.md` — 确认状态和变更目的
+2. 读取 `.ai/L3-specs/changes/<name>/specs/` 下所有 delta spec — 了解新增/修改/删除了哪些 Requirement
+3. 读取 `.ai/L3-specs/changes/<name>/tasks.md`（如存在）— 确认任务完成状态
+
+展示归档预览：
 
 ```
 ## 归档预览: <change-name>
@@ -132,7 +137,7 @@ The system SHALL authenticate users by username and password,
 
 ### Step 4: 更新追溯
 
-更新 `.ai/L5-validation/traceability/<domain>.md`：
+读取 `.ai/L5-validation/traceability/<domain>.md`（对每个涉及的能力域），然后更新：
 
 - ADDED Requirement 的 Scenario → 确认标为 ✅ verified。**确认方法**：检查该变更是否已通过 `/review-tests` 且报告结论为 ✅ 或 ⚠️；如果没有（例如在归档前未运行 review-tests），**必须先运行 `/review-tests`** 再回来归档
 - MODIFIED Requirement 的 Scenario → 确认状态仍正确（按同样方法检查 review-tests 报告）

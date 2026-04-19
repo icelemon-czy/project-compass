@@ -118,7 +118,7 @@ cp -r /path/to/project-compass /path/to/project/.ai/
 
 #### Step 6: 构建 L1 — 代码导航
 
-基于刚创建的项目结构，填写：
+读取 `.ai/L1-codebase-map/` 下的模板文件（`overview.md`、`features/_feature-template.md`、`module-map.md`、`key-files.md`），了解期望格式，然后基于刚创建的项目结构填写：
 
 - `L1-codebase-map/overview.md` — 功能索引（< 60 行）
 - `L1-codebase-map/features/` — 按核心功能创建 feature 文档
@@ -132,6 +132,8 @@ cp -r /path/to/project-compass /path/to/project/.ai/
 - `L2-rules/templates.md` — 代码模板（基于项目约定）
 
 #### Step 8: 构建 L3 — 需求 Spec
+
+读取 `.ai/L3-specs/specs/_capability-template/spec.md` — 了解 Requirement + Scenario 的格式要求。然后：
 
 - `L3-specs/specs/system.md` — 系统级需求（TOR），从 Step 1 的需求澄清直接映射
 - 为每个核心功能创建能力域 spec：`L3-specs/specs/<domain>/spec.md`
