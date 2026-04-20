@@ -1,12 +1,14 @@
 ---
 name: review-tests
-description: "Review test quality by running tests, cross-referencing specs, and hunting false-pass anti-patterns. Use when: review tests, 审查测试, test coverage, 测试覆盖, 测试够吗, are tests sufficient, 缺什么测试, missing tests, 测试质量, 虚假通过, false pass"
-argument-hint: "Optional: specific domain or change name (e.g., 'auth', 'add-csv-export'). Defaults to the change currently in pending-review."
+description: "Review test quality by running tests, cross-referencing specs, and hunting false-pass anti-patterns. Designed for loop usage: each invocation reviews ONE target (change or spec domain). Use when: review tests, 审查测试, test coverage, 测试覆盖, 测试够吗, are tests sufficient, 缺什么测试, missing tests, 测试质量, 虚假通过, false pass, 定时审查, scheduled review"
+argument-hint: "Optional: specific domain or change name (e.g., 'auth', 'add-csv-export'). If omitted, picks the next target automatically (L3 changes first, then specs)."
 ---
 
 # Review Tests — 跑测试 + 逐个验证 + 虚假通过狩猎
 
 > 这是工作流中的 **人工门槛 2（Review 批准）** 所在环节。Reviewer 在此决定能不能归档。
+>
+> **循环使用设计**：本 Skill 每次调用**只审查一个目标**（一个变更 或 一个能力域 spec）。在定时任务 / 外层循环中重复调用，直到队列清空。
 
 ## 核心原则
 
@@ -18,11 +20,10 @@ argument-hint: "Optional: specific domain or change name (e.g., 'auth', 'add-csv
 
 - `.ai/` 目录已存在且有 L3 + L5 结构
 - 项目有测试代码
-- 目标变更处于 `pending-review` 状态（或用户显式指定审查范围）
 
 ## Procedure
 
-### Step 0: 确定审查范围 + 收集 Scenario 清单
+### Step 0: 选择本次审查目标（单次只选一个）
 
 **0a: 读取测试配置（必做，不可跳过）**
 
@@ -33,19 +34,55 @@ argument-hint: "Optional: specific domain or change name (e.g., 'auth', 'add-csv
 
 > 如果 `.ai/L2-rules/testing.md` 不存在，告知用户"测试规范缺失，建议先运行 `/setup-testing`"并停止。
 
-**0b: 确定审查范围**
+**0b: 构建候选队列（按优先级排序）**
+
+按以下**优先级顺序**枚举候选，先到者先审：
 
 ```bash
-ls .ai/L3-specs/specs/ | grep -v _capability-template | grep -v system.md
+# 优先级 1：L3 变更中 pending-review 状态的变更（按 proposal.md 的创建时间升序）
 ls .ai/L3-specs/changes/ | grep -v _change-template
+# 对每个变更，读取 proposal.md 中的 status 字段，保留 status == pending-review 的
+
+# 优先级 2：L3 已有 spec（archived 能力域），按能力域字母顺序
+ls .ai/L3-specs/specs/ | grep -v _capability-template | grep -v system.md
 ```
 
-- 参数指定了域/变更名 → 只审查该范围
-- 无参数 → 优先审查所有 `pending-review` 状态的变更
+**队列规则**：
+1. **P1 优先**：所有 `pending-review` 状态的变更，按创建时间（proposal.md 的 `created` 字段或文件 mtime）升序
+2. **P2 兜底**：当 P1 为空时，按能力域字母顺序遍历 `.ai/L3-specs/specs/` 中的所有 spec
 
-**0c: 收集 Scenario 清单**
+**0c: 选择本次目标（单个）**
 
-读取范围内所有 `spec.md` + `changes/*/specs/*/spec.md`（delta），枚举每一个 Requirement 和 Scenario。填入下表（后续步骤逐列填充）：
+| 用户参数 | 动作 |
+|:---------|:-----|
+| 指定了变更名/域名 | 目标 = 该指定项 |
+| 未指定 | 目标 = 候选队列中的**第一项**（P1 优先，P1 空则 P2 首项） |
+
+**0d: 去重（避免循环重复审查）**
+
+读取 `.ai/L5-validation/reports/` 下最近的 review 报告（如存在）。如果 P2 队列（spec 类目标）最近一次审查时间 < 配置的冷却期（默认 7 天）且无代码变更 → 跳到下一项。
+
+> 冷却规则：可在 `.ai/L2-rules/global.md` 的 `review-tests.cooldown-days` 字段配置。
+
+**输出本次目标**（必填，后续所有 Step 围绕该单一目标展开）：
+
+```
+## 本次审查目标
+- 类型: [change | spec-domain]
+- 名称: [e.g., add-csv-export / auth]
+- 优先级来源: [P1 pending-review / P2 routine sweep]
+- 队列剩余: [N 项未审，下次调用将审查 <下一项名称>]
+```
+
+如果候选队列为空 → 输出 `队列空，无需审查`，结束。
+
+**0e: 收集本次目标的 Scenario 清单**
+
+只读取 0c 选定的**单个目标**的 spec：
+- 目标是 change → `.ai/L3-specs/changes/<change-name>/specs/*/spec.md`（delta spec）
+- 目标是 spec-domain → `.ai/L3-specs/specs/<domain>/spec.md`
+
+枚举该目标下的每一个 Requirement 和 Scenario。填入下表（后续步骤逐列填充）：
 
 ```
 | # | Requirement | Scenario | Spec THEN（逐字摘抄） | 测试函数 | 测试文件:行 | 实际 assertion | 调用链验证 | 反模式命中 | 反向推理 | 结论 |
@@ -284,12 +321,30 @@ git diff --name-only HEAD~N -- <src-dir>
 
 更新 `.ai/L4-session/active-session.md`，记录审查结果和下一步动作。
 
+**生成审查报告文件**：将完整报告写入 `.ai/L5-validation/reports/review-<target-name>-<YYYYMMDD>.md`，供冷却期判断（Step 0d）复用。
+
+### Step 9: 循环出口提示（单次结束）
+
+本次调用到此结束。**不要自动继续审查下一项**。输出如下循环提示供外层调度器使用：
+
+```
+## 循环状态
+- 本次已审查: [目标类型/名称]
+- 本次结论: [✅ 通过 / ⚠️ 非阻塞 / ❌ 打回]
+- 队列剩余: [N 项]
+- 下次调用将审查: [下一项名称，或"队列空"]
+```
+
+> **定时任务接入**：外层 scheduler 每次调用本 Skill，读取"下次调用将审查"字段作为下次 argument；当输出"队列空"时停止循环。
+
 ## 反模式（Reviewer 禁止）
 
+- ❌ 单次调用审查多个目标（违反循环设计；每次只审一个）
 - ❌ 不跑对应测试就签字通过
 - ❌ 只看 traceability 的 ✅，不打开测试文件读 assertion
 - ❌ 发现虚假通过只记录不打回（主表有 🔴 → 必须打回）
 - ❌ 跳过虚假通过清单的某几条（7 条是底线，逐条标注结果；项目可追加，但不可删除）
 - ❌ 主表输出时省略列（"调用链验证"和"反向推理"两列最容易被跳过——不允许）
 - ❌ 对某个 Scenario 写"已覆盖"但不填写"实际 assertion"列的具体内容
-- ❌ 抽样检查（本 Skill 要求穷举审查范围内的每个 Scenario）
+- ❌ 抽样检查（本 Skill 要求穷举当次目标内的每个 Scenario）
+
