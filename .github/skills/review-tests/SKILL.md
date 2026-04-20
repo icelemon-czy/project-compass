@@ -22,7 +22,7 @@ argument-hint: "Optional: specific domain or change name (e.g., 'auth', 'add-csv
 
 ## Procedure
 
-### Step 0: 跑测试 + 检查异常标记
+### Step 0: 确定审查范围 + 收集 Scenario 清单
 
 **0a: 读取测试配置（必做，不可跳过）**
 
@@ -33,25 +33,7 @@ argument-hint: "Optional: specific domain or change name (e.g., 'auth', 'add-csv
 
 > 如果 `.ai/L2-rules/testing.md` 不存在，告知用户"测试规范缺失，建议先运行 `/setup-testing`"并停止。
 
-**0b: 运行测试**
-
-```bash
-# 1. 用 0a 中获取的命令运行完整测试套件
-<0a 中读到的测试运行命令>
-
-# 2. 扫描测试异常标记（必做，用 0a 中获取的测试目录）
-grep -rn "\.skip\|\.only\|xit(\|xdescribe(\|xtest(\|@Disabled\|@Ignore\|pytest\.mark\.skip\|@unittest\.skip\|pending(" <0a 中的测试目录>
-```
-
-根据结果分支：
-
-| 测试结果 | 处理 |
-|:---------|:-----|
-| ❌ 有测试失败 | **立即转 `/fix-bug`**，把失败输出作为输入。本 Skill 到此结束 |
-| ⚠️ 有 skip/only/pending 标记 | **记录到报告的"异常标记"区段**，每个 skip 必须有 reason，否则标为问题。`.only` 一律标为 🔴 高风险（说明其他测试被静默跳过） |
-| ✅ 全绿且无异常标记 | 继续 Step 1 |
-
-### Step 1: 确定审查范围 + 收集 Scenario 清单
+**0b: 确定审查范围**
 
 ```bash
 ls .ai/L3-specs/specs/ | grep -v _capability-template | grep -v system.md
@@ -61,7 +43,7 @@ ls .ai/L3-specs/changes/ | grep -v _change-template
 - 参数指定了域/变更名 → 只审查该范围
 - 无参数 → 优先审查所有 `pending-review` 状态的变更
 
-**输出：完整的 Scenario 清单**
+**0c: 收集 Scenario 清单**
 
 读取范围内所有 `spec.md` + `changes/*/specs/*/spec.md`（delta），枚举每一个 Requirement 和 Scenario。填入下表（后续步骤逐列填充）：
 
@@ -71,15 +53,15 @@ ls .ai/L3-specs/changes/ | grep -v _change-template
 
 **此表是本 Skill 的核心输出。每一行必须填满所有列，空列 = 缺陷。**
 
-### Step 2: 逐 Scenario 定位测试（穷举，非抽样）
+### Step 1: 逐 Scenario 定位测试（穷举，非抽样）
 
-对 Step 1 表中的**每一行**：
+对 Step 0 表中的**每一行**：
 
-#### 2a: 从 Spec Scenario 逐字摘抄 THEN
+#### 1a: 从 Spec Scenario 逐字摘抄 THEN
 
 打开对应 `spec.md`，找到该 Scenario 的 THEN 子句，**逐字复制**到表的"Spec THEN"列。不要改写、概括或省略。
 
-#### 2b: 定位对应测试函数
+#### 1b: 定位对应测试函数
 
 用以下策略定位（按优先级尝试）：
 
@@ -90,7 +72,7 @@ ls .ai/L3-specs/changes/ | grep -v _change-template
    ```
 3. 如果 1、2 均找不到 → 该 Scenario **无测试**，"测试函数"列填 `❌ 缺失`，直接标为 🔴 打回项
 
-#### 2c: 逐字比对 assertion vs Spec THEN
+#### 1c: 逐字比对 assertion vs Spec THEN
 
 打开测试函数后，**逐个 assertion** 做如下比对：
 
@@ -104,15 +86,15 @@ ls .ai/L3-specs/changes/ | grep -v _change-template
 - ✅ `expect(response.status).toBe(401)` — 对齐 THEN "返回 401"
 - ❌ `expect(response).toBeTruthy()` — 只验证有返回，不验证状态码
 
-### Step 3: 调用链验证（关键，防止 Mock 架空）
+### Step 2: 调用链验证（关键，防止 Mock 架空）
 
-对 Step 2 中有测试的每一行：
+对 Step 1 中有测试的每一行：
 
-#### 3a: 从测试函数反向追踪
+#### 2a: 从测试函数反向追踪
 
 读测试函数的 setup（`beforeEach`、`beforeAll`、函数调用），找到**被测的入口函数/方法**。
 
-#### 3b: 确认被测函数是真实代码而非 Mock
+#### 2b: 确认被测函数是真实代码而非 Mock
 
 具体检查：
 
@@ -130,9 +112,9 @@ ls .ai/L3-specs/changes/ | grep -v _change-template
 - `⚠️ mock 了 <X>，可接受（外部依赖）`
 - `🔴 mock 了被测函数本身` 或 `🔴 test data 不触发 WHEN`
 
-### Step 4: 虚假通过狩猎（逐测试函数，强制全量）
+### Step 3: 虚假通过狩猎（逐测试函数，强制全量）
 
-对 Step 2-3 幸存（非 ❌）的每个测试函数，用以下 **7 + N 条反模式清单逐条过**。
+对 Step 1-2 幸存（非 ❌）的每个测试函数，用以下 **7 + N 条反模式清单逐条过**。
 
 **不允许跳过任何一条。每条必须在输出中明确标注 ✅ 通过 / 🔴 命中。**
 
@@ -165,9 +147,32 @@ ls .ai/L3-specs/changes/ | grep -v _change-template
 | 7 | 吞异常 | ✅ 通过 | 无 try-catch |
 ```
 
+### Step 4: 跑对应测试 + 检查异常标记
+
+基于 Step 1 中定位到的测试文件，运行**对应的测试**（非全量）：
+
+```bash
+# 只运行审查范围内的相关测试文件（按框架调整）：
+# Jest:   npx jest <相关测试文件1> <相关测试文件2>
+# pytest: pytest <相关测试文件1> <相关测试文件2>
+# Go:     go test ./pkg/... -run "TestA|TestB"
+<0a 中读到的测试运行命令> <Step 1b 中定位到的测试文件>
+
+# 扫描测试异常标记（只在相关文件中）
+grep -rn "\.skip\|\.only\|xit(\|xdescribe(\|xtest(\|@Disabled\|@Ignore\|pytest\.mark\.skip\|@unittest\.skip\|pending(" <Step 1b 定位到的测试文件>
+```
+
+根据结果分支：
+
+| 测试结果 | 处理 |
+|:---------|:-----|
+| ❌ 有测试失败 | **立即转 `/fix-bug`**，把失败输出作为输入。本 Skill 到此结束 |
+| ⚠️ 有 skip/only/pending 标记 | **记录到报告的"异常标记"区段**，每个 skip 必须有 reason，否则标为问题。`.only` 一律标为 🔴 高风险（说明其他测试被静默跳过） |
+| ✅ 全绿且无异常标记 | 继续 Step 5 |
+
 ### Step 5: 反向推理 — "删掉代码还能绿吗？"
 
-对每个**关键 assertion**（Step 2c 识别的），做以下思维实验：
+对每个**关键 assertion**（Step 1c 识别的），做以下思维实验：
 
 > 如果我把被测函数中实现这个行为的那几行代码**注释掉**（或改成 `return null`），这个测试会变红吗？
 
@@ -281,7 +286,7 @@ git diff --name-only HEAD~N -- <src-dir>
 
 ## 反模式（Reviewer 禁止）
 
-- ❌ 不跑测试就签字通过
+- ❌ 不跑对应测试就签字通过
 - ❌ 只看 traceability 的 ✅，不打开测试文件读 assertion
 - ❌ 发现虚假通过只记录不打回（主表有 🔴 → 必须打回）
 - ❌ 跳过虚假通过清单的某几条（7 条是底线，逐条标注结果；项目可追加，但不可删除）
