@@ -354,7 +354,7 @@ Project Compass 自带 **13 个 Copilot / Claude Code 自定义技能**（`.gith
 | **开发（2）** | `/new-change` | 新功能 / 新需求 |
 | | `/continue-change` | 接续昨天的工作 |
 | **审核归档（3）** | `/review-tests` | 跑测试 + 覆盖审查 + **虚假通过狩猎** |
-| | `/archive-change` | 合并 delta spec，归档 |
+| | `/archive-change` | 归档已批准变更，并合并 delta spec |
 | | `/check-changes` | 查看所有进行中变更 |
 | **修复（1）** | `/fix-bug` | **统一修复入口**，自动分诊（代码/测试/spec 歧义/虚假通过） |
 | **查询（1）** | `/ask-codebase` | 代码定位、架构解释、变更影响分析 |
@@ -403,8 +403,9 @@ flowchart TD
         NC -->|"✋ 门槛 1<br/>人确认"| IMPL["implementing<br/>（TDD：红 → 绿）"]
         IMPL --> PR["pending-review"]
         PR --> RT["/review-tests<br/>9 步深度验证"]
+        AP["approved"]
 
-        RT -->|"✅ 全绿齐全<br/>✋ 门槛 2"| AC["/archive-change"]
+        RT -->|"✅ 全绿齐全<br/>✋ 门槛 2"| AP
         RT -->|"❌ 测试失败"| FB1["/fix-bug<br/>自动分诊 → 改代码"]
         RT -->|"⚠️ 虚假通过"| FB2["/fix-bug<br/>加强测试"]
         RT -->|"🔴 缺失场景"| FB3["/fix-bug<br/>补 spec + 补测试"]
@@ -412,6 +413,8 @@ flowchart TD
         FB1 --> PR
         FB2 --> PR
         FB3 --> PR
+
+        AP --> AC["/archive-change"]
 
         AC --> UA["/update-ai"]
         UA --> GC["/git-commit<br/>doc-sync 检查"]
@@ -469,8 +472,8 @@ flowchart TD
         S6 --> S7["Step 7: 生成审查报告"]
         S7 --> JUDGE{"主表中有<br/>🔴 或 ❌？"}
         JUDGE -->|"有"| REJECT["❌ 打回<br/>→ /fix-bug"]
-        JUDGE -->|"只有 ⚠️"| WARN["⚠️ 非阻塞<br/>登记 Known Gaps"]
-        JUDGE -->|"全 ✅"| PASS["✅ 通过<br/>→ /archive-change"]
+        JUDGE -->|"只有 ⚠️"| WARN["⚠️ 非阻塞<br/>登记 Known Gaps<br/>→ approved"]
+        JUDGE -->|"全 ✅"| PASS["✅ 通过<br/>→ approved"]
     end
 
     style JUDGE fill:#FF9800,color:#fff,stroke:#E65100,stroke-width:3px

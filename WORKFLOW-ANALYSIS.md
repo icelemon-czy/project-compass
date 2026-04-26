@@ -35,7 +35,7 @@
 
 ---
 
-## 一、Skill 全景（12 个）
+## 一、Skill 全景（13 个）
 
 ### 1. 项目初始化（4）
 
@@ -172,7 +172,8 @@ Step 8: 更新 L5 追溯 → 状态改为 pending-review
   drafting → 继续 /new-change
   implementing → 继续 TDD
   review-failed → 读 Review Feedback → 转 /fix-bug
-  pending-review → 提示用户 /review-tests 或 /archive-change
+  pending-review → 提示用户 /review-tests
+  approved → 提示用户 /archive-change
 ```
 
 ### 2.7 `/review-tests`（已改造 — 深度重写版）
@@ -220,9 +221,9 @@ Step 7: 输出审查报告
      全部 ✅ → 通过
   ↓
 Step 8: 状态回流
-   ✅ → 提示 /archive-change
-   ❌ → pending-review → review-failed → implementing，提示 /fix-bug
-   ⚠️ → 登记到 Known Gaps，保持 pending-review
+  ✅ → pending-review → approved，提示 /archive-change
+  ❌ → pending-review → review-failed，提示 /fix-bug
+  ⚠️ → 登记到 Known Gaps，并推进到 approved
 ```
 
 ### 2.8 `/fix-bug`（新，替换 /spec-fix）
@@ -256,7 +257,7 @@ Step 5: 输出报告（触发场景 / 根因分类 / 变更状态）
 ### 2.9 `/archive-change`
 
 ```
-前置检查: 变更状态 == pending-review 或 approved
+前置检查: 变更状态 == approved
   ↓
 合并 Delta Spec 到 specs/<domain>/spec.md
   ├─ ADDED → 追加
@@ -369,10 +370,10 @@ drafting ──→ implementing ──→ pending-review ──→ approved ─�
         ❌ 测试红      ✅ 全绿齐全    ⚠️ 覆盖不足    ⚠️ 虚假通过
            ↓             ↓             ↓              ↓
        /fix-bug     ✋ 门槛 2      登记 Known     /fix-bug
-      (自动分诊)   Review 批准     Gaps 或打回     (Step 3B)
-           ↓             ↓
-     修完回到          /archive-change
-   pending-review           ↓
+                (自动分诊)   → approved      Gaps → approved  (Step 3B)
+                     ↓             ↓
+                   修完回到       /archive-change
+                 pending-review           ↓
                    /update-ai + /git-commit
                             ↓
                     → 下一个 /new-change
@@ -395,9 +396,9 @@ drafting ──→ implementing ──→ pending-review ──→ approved ─�
                                       │
                          ┌────────────┼────────────┐
                          ↓            ↓            ↓
-                   ✅ /archive-change  ❌ /fix-bug  ⚠️ /fix-bug
-                                          │            │
-                                          └──→ 回到 pending-review ←──┘
+         ✅ approved        ❌ /fix-bug   ⚠️ approved
+          │                 │
+       /archive-change          └──→ 回到 pending-review
 
 /continue-change 会读状态机 → 自动判断该调 /new-change 还是 /fix-bug 还是 /review-tests
 

@@ -13,7 +13,7 @@ argument-hint: "Optional: change name (e.g., 'add-csv-export'). Omit to list all
 ## Prerequisites
 
 - `.ai/L3-specs/changes/` 下有至少一个变更（不含 `_change-template`）
-- 变更已有 proposal.md（状态为 `implementing`）
+- 变更已有 proposal.md（状态可为 `drafting` / `implementing` / `review-failed` / `pending-review` / `approved`）
 
 ## Procedure
 
@@ -23,7 +23,7 @@ argument-hint: "Optional: change name (e.g., 'add-csv-export'). Omit to list all
 
 **有参数** → 直接读取 `.ai/L3-specs/changes/<name>/proposal.md`，如不存在则报错。
 
-**无参数** → 列出所有 pending 变更：
+**无参数** → 列出所有未归档变更：
 
 ```bash
 ls .ai/L3-specs/changes/ | grep -v _change-template
@@ -32,12 +32,12 @@ ls .ai/L3-specs/changes/ | grep -v _change-template
 对每个变更读取 proposal.md 的 Why + 状态，以及 tasks.md 的完成率，展示：
 
 ```
-## 可继续的变更
+## 可处理的变更
 
 | # | 变更名 | 目的 | 进度 | 状态 |
 |---|--------|------|------|------|
 | 1 | add-csv-export | 报表支持 CSV 导出 | 2/8 | implementing |
-| 2 | fix-login-chars | 登录支持特殊字符 | 0/5 | implementing |
+| 2 | fix-login-chars | 登录支持特殊字符 | 0/5 | review-failed |
 
 请选择一个编号继续开发：
 ```
@@ -71,11 +71,11 @@ L4 session 内容和实际文件状态可能不一致（上个会话崩了、手
 
 | 变更状态 | 操作 |
 |---------|------|
-| 有 proposal 但无 delta spec | 执行 Step 4（生成 spec） |
-| 有 delta spec 但无 tasks.md | 执行 Step 5（生成 tasks） |
-| 有 tasks 但 Tests 组未完成 | 执行 Step 6（写测试） |
-| Tests 通过但实现未完成 | 执行 Step 7（实现代码） |
-| 全部完成 | 执行 Step 8（收尾） |
+| `drafting` | 回到 proposal / spec 准备阶段，补齐后继续 |
+| `implementing` | 按 Step 4-8 继续 TDD 执行 |
+| `review-failed` | 先读取 Review Feedback，按 Step 7 修复问题，再回到 `pending-review` |
+| `pending-review` | 停止继续实现，提示用户先运行 `/review-tests` |
+| `approved` | 停止继续实现，提示用户运行 `/archive-change` |
 
 ---
 

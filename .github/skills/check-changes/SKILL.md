@@ -29,7 +29,7 @@ ls .ai/L3-specs/archive/ 2>/dev/null
 
 对 `changes/` 下的**每个变更文件夹**：
 
-1. 读取 `proposal.md` — 提取状态（implementing / pending-review）、Why、What Changes
+1. 读取 `proposal.md` — 提取状态（drafting / implementing / review-failed / pending-review / approved）、Why、What Changes
 2. 读取 `tasks.md` — 统计 checkbox 完成率：`已完成 / 总数`
 3. 检查 `specs/` — 列出受影响的能力域
 
@@ -39,6 +39,9 @@ ls .ai/L3-specs/archive/ 2>/dev/null
 
 ```
 ## 变更状态总览
+
+### 草稿中 (N)
+[状态为 drafting 的变更]
 
 ### 进行中 (N)
 
@@ -52,8 +55,14 @@ ls .ai/L3-specs/archive/ 2>/dev/null
 #### 2. <change-name>
 ...
 
+### 打回待修复 (N)
+[状态为 review-failed 的变更]
+
 ### 待审核 (N)
 [状态为 pending-review 的变更]
+
+### 待归档 (N)
+[状态为 approved 的变更]
 
 ### 最近归档 (N)
 [archive/ 下最近 5 个，显示名称 + 状态 + 归档时间]

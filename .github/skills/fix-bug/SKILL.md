@@ -17,10 +17,10 @@ Skill 内部**自动分诊**，分辨是 **代码 Bug / 测试 Bug / Spec 歧义
 
 | 触发场景 | 所处变更状态 | 修完后回到 |
 |:---------|:------------|:-----------|
-| `/review-tests` 红灯 / review 打回 | `pending-review` → `implementing` | `pending-review` |
+| `/review-tests` 红灯 / review 打回 | `review-failed` → `implementing` | `pending-review` |
 | 开发中测试突然挂了 | `implementing` | 继续 `implementing` |
 | 已归档功能出现 bug（原 `/spec-fix` 用例） | `archived` | 新建 fix 变更 |
-| Reviewer 发现"虚假通过"（测试绿但行为错） | `pending-review` → `implementing` | `pending-review` |
+| Reviewer 发现"虚假通过"（测试绿但行为错） | `review-failed` → `implementing` | `pending-review` |
 
 ## Prerequisites
 
@@ -67,7 +67,7 @@ P3 — 已归档功能的新 bug 报告
 
 根据 Step 0 选中的 bug 和上下文自动判断所处场景：
 
-1. `ls .ai/L3-specs/changes/` — 是否有 `pending-review` 或 `implementing` 状态的变更涉及相关功能？
+1. `ls .ai/L3-specs/changes/` — 是否有 `review-failed` 或 `implementing` 状态的变更涉及相关功能？
    - 有 → 这是 "开发中修复" 或 "review 打回"，记下变更名
    - 无 → 这是 "已归档功能 bug"，稍后需要新建 fix 变更
 2. 记录"当前变更上下文"供后续步骤使用
@@ -206,10 +206,10 @@ Q1: 有测试失败吗？
 
 | Step 1 场景 | proposal.md 状态 |
 |:-----------|:-----------------|
-| Review 打回 | `implementing` → 修完 → `pending-review` |
-| 虚假通过 | `pending-review` → `implementing` → 修完 → `pending-review` |
+| Review 打回 | `review-failed` → `implementing` → 修完 → `pending-review` |
+| 虚假通过 | `review-failed` → `implementing` → 修完 → `pending-review` |
 | 开发中挂了 | 保持 `implementing` |
-| 已归档功能 bug | 新建 fix 变更，状态 `pending-review` |
+| 已归档功能 bug | 新建 fix 变更；如仅修代码可直接进入 `implementing`，如需补 spec 则先走 `drafting` → `implementing` |
 
 3. 更新 `.ai/L4-session/active-session.md`
 

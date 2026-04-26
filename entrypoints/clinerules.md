@@ -35,15 +35,19 @@
 ## 对话结束时
 
 更新 `.ai/L4-session/active-session.md`：
+
 - 当前做到哪一步
 - 涉及文件的状态
 - 测试运行结果
 - 下一步具体动作
 
 同步变更状态：
+
 - 执行中 → proposal.md 状态为 `implementing`
-- 代码完成 + 测试通过 → proposal.md 状态改为 `pending-review`，等待人类确认
-- 人类确认后 → 归档：合并 delta spec 到 `specs/`，移动变更到 `archive/`
+- 代码完成 + 测试通过 → proposal.md 状态改为 `pending-review`，等待 `/review-tests`
+- `/review-tests` 打回 → proposal.md 状态改为 `review-failed`，记录 Review Feedback
+- `/review-tests` 通过（含非阻塞 Known Gaps）→ proposal.md 状态改为 `approved`
+- `/archive-change` 完成 → proposal.md 状态改为 `archived`，并移动变更到 `archive/`
 
 L1/L2 文档同步由 git commit 流程处理，对话中不需要手动同步。
 

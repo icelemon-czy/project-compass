@@ -7,7 +7,7 @@
 
 ## L3 目录结构
 
-```
+```text
 .ai/L3-specs/
 ├── specs/                          ← 当前系统需求（truth）
 │   ├── system.md                   ← TOR（系统级顶层需求）
@@ -99,7 +99,7 @@
 
 ## 归档变更
 
-变更完成并通过确认后：
+变更完成并通过 `/review-tests` 批准后：
 
 ### 1. 合并 delta spec 到主 spec
 
@@ -112,8 +112,9 @@
 
 ### 2. 更新状态并移动
 
-1. proposal.md 状态改为 `approved`
-2. 移动 `changes/<name>/` → `archive/<name>/`
+1. 确认 proposal.md 当前状态为 `approved`
+2. proposal.md 状态改为 `archived`
+3. 移动 `changes/<name>/` → `archive/<name>/`
 
 ### 3. 确认
 
@@ -130,10 +131,12 @@
 
 ## 状态流转
 
-```
+```text
 changes/<name>/ (implementing)
     ↓ 代码完成 + 测试通过
 changes/<name>/ (pending-review)
-    ↓ 人类确认
-archive/<name>/ (approved) + delta spec 合并到 specs/
+    ↓ /review-tests
+changes/<name>/ (approved)
+    ↓ /archive-change
+archive/<name>/ (archived) + delta spec 合并到 specs/
 ```

@@ -11,7 +11,7 @@
    - `/git-init`、`/git-commit`
    - `/init-project`、`/build-ai`、`/update-ai`、`/setup-testing`
    - `/new-change`、`/continue-change`、`/check-changes`
-   - `/review-tests`、`/fix-bug`、`/archive-change`
+   - `/review-tests`、`/fix-bug`、`/archive-change`、`/ask-codebase`
 2. 当用户未输入斐命令，但描述命中某 SKILL.md `description:` 里的关键词（中英任一）→ 先提示用户：“这看起来是 `/xxx` 的场景，需要按该流程走吗？”，确认后再执行。
 3. 多个斐命令只能串行，不得并行触发。
 4. SKILL 中的 “等待用户确认” 步骤必须停下来等，不得自行后续。
@@ -53,8 +53,10 @@
 
 同步变更状态：
 - 执行中 → proposal.md 状态为 `implementing`
-- 代码完成 + 测试通过 → proposal.md 状态改为 `pending-review`，等待人类确认
-- 人类确认后 → 归档：合并 delta spec 到 `specs/`，移动变更到 `archive/`
+- 代码完成 + 测试通过 → proposal.md 状态改为 `pending-review`，等待 `/review-tests`
+- `/review-tests` 打回 → proposal.md 状态改为 `review-failed`，记录 Review Feedback
+- `/review-tests` 通过（含非阻塞 Known Gaps）→ proposal.md 状态改为 `approved`
+- `/archive-change` 完成 → proposal.md 状态改为 `archived`，并移动变更到 `archive/`
 
 L1/L2 文档同步由 git commit 流程处理，对话中不需要手动同步。
 

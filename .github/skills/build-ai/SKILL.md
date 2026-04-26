@@ -8,9 +8,11 @@ argument-hint: "Optional: target project path or specific layers (e.g., 'L1 only
 
 为项目搭建完整的 `.ai/` AI 上下文目录。
 
-> **依赖的 Builder Prompts**：本 Skill 的 L1/L2 生成步骤依赖仓库根目录的 `builders/*.md`。运行前请确认 `builders/` 的 commit 与本 Skill 同一仓库同一版本。如果 builders 被单独更新过，可能与本 Skill 的接口不兼容。期望导航：
-> - L1 builder：`builders/build-l1.md`（或此目录下等效文件）
-> - L2 builder：`builders/build-l2.md`
+> **依赖的 Builder Prompts**：本 Skill 的生成步骤依赖仓库根目录实际存在的 builder prompt 文件。运行前请确认 `builders/` 的 commit 与本 Skill 同一仓库同一版本。如果 builders 被单独更新过，可能与本 Skill 的接口不兼容。期望导航：
+> - L1 builder 分为两段：`prompt-L1a.md` + `prompt-L1b.md`
+> - L2 builder：`prompt-L2.md`
+> - L3 builder：`prompt-L3.md`
+> - L5 builder：`prompt-L5.md`
 > - 查找不到时：告知用户并停止，不要自己编造 builder 逻辑。
 
 ## Five-Layer Architecture
@@ -42,7 +44,7 @@ Three steps. Execute in order.
 cp -r /path/to/project-compass /path/to/your-project/.ai/
 ```
 
-复制后，目录结构、模板文件、`change-management.md`、`doc-sync.md`、`L4-session/active-session.md` 等已就位。
+复制后，目录结构、模板文件、`L3-specs/change-management.md`、`L4-session/active-session.md` 等已就位；`.ai/doc-sync.md` 需要从 `.ai/entrypoints/doc-sync.md` 额外部署一次。
 
 > 如果 `.ai/` 已存在且用户想重建，先确认是否备份。
 
@@ -50,7 +52,7 @@ cp -r /path/to/project-compass /path/to/your-project/.ai/
 
 ### Step 2: Build L1 → L2 → L3 → L5
 
-选择与用户 AI 工具匹配的 builder（`builders/claude/` 或 `builders/cline/`），**按顺序**执行 prompt。
+选择与用户 AI 工具匹配的 builder（`builders/claude/`、`builders/copilot/` 或 `builders/cline/`），**按顺序**执行 prompt。
 
 **先读取 builder prompt 文件（不可跳过）**：读取对应目录下的所有 `prompt-*.md`（如 `builders/claude/prompt-L1a.md`），确认文件存在且内容完整。如果文件不存在或目录为空 → 告知用户并停止，不要自己编造 builder 逻辑。
 
@@ -75,14 +77,15 @@ cp -r /path/to/project-compass /path/to/your-project/.ai/
 
 #### Builder prompt details (reference)
 
-For the detailed logic inside each prompt, see these reference docs:
+There is no separate `references/` directory for this skill. The authoritative build logic lives in the actual builder prompt files under the selected tool directory:
 
-- [L1 discovery (Phase 1-3)](./references/l1-discovery.md) — scan project, identify features, write overview
-- [L1 deep analysis (Phase 4-5)](./references/l1-deep-analysis.md) — feature deep dive, module-map, key-files, architecture
-- [L2 coding rules (Phase 6)](./references/l2-rules.md) — extract patterns from actual code
-- [L3 spec bootstrap (Phase 7)](./references/l3-specs.md) — build initial specs from code + optional user docs
+- `prompt-L1a.md` — L1 Phase 1-3: scan project, identify features, write overview and `_handoff.md`
+- `prompt-L1b.md` — L1 Phase 4-5: deep analysis for feature docs, architecture, module-map, key-files
+- `prompt-L2.md` — extract coding rules and templates from actual code
+- `prompt-L3.md` — build initial specs from code and optional external docs
+- `prompt-L5.md` — build traceability, test specs, and validation output
 
-> These references are for understanding the build logic. Users interact with the builder prompts directly, not these files.
+> 读取方式：先选工具目录（如 `builders/copilot/`），再按顺序读取其中的 `prompt-L1a.md`、`prompt-L1b.md`、`prompt-L2.md`、`prompt-L3.md`、`prompt-L5.md`。不要再查找不存在的 `./references/*.md`。
 
 ---
 
@@ -94,6 +97,13 @@ For the detailed logic inside each prompt, see these reference docs:
 |---------|--------|--------|
 | Claude Code | `.ai/entrypoints/claude.md` | Project root `CLAUDE.md` (if `CLAUDE.md` already exists, append content) |
 | Cline | `.ai/entrypoints/clinerules.md` | Project root `.clinerules` |
+| GitHub Copilot | `.ai/entrypoints/copilot-instructions.md` | Project root `.github/copilot-instructions.md` |
+
+另外，部署 `.ai/` 内部工作流参考文件：
+
+| Workflow Doc | Source | Target |
+|--------------|--------|--------|
+| Doc sync | `.ai/entrypoints/doc-sync.md` | `.ai/doc-sync.md` |
 
 ---
 

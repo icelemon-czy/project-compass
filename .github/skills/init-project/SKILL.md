@@ -118,7 +118,7 @@ cp -r /path/to/project-compass /path/to/project/.ai/
 
 #### Step 6: 构建 L1 — 代码导航
 
-读取 `.ai/L1-codebase-map/` 下的模板文件（`overview.md`、`features/_feature-template.md`、`module-map.md`、`key-files.md`），了解期望格式，然后基于刚创建的项目结构填写：
+读取 `.ai/L1-codebase-map/` 下的模板文件（`overview.md`、`features/_feature-template/README.md`、`module-map.md`、`key-files.md`），了解期望格式，然后基于刚创建的项目结构填写：
 
 - `L1-codebase-map/overview.md` — 功能索引（< 60 行）
 - `L1-codebase-map/features/` — 按核心功能创建 feature 文档
@@ -151,7 +151,7 @@ cp -r /path/to/project-compass /path/to/project/.ai/
 |:-----|:-----|
 | Claude Code | `cp .ai/entrypoints/claude.md ./CLAUDE.md` |
 | Cline | `cp .ai/entrypoints/clinerules.md ./.clinerules` |
-| GitHub Copilot | `cp .ai/entrypoints/copilot-instructions.md ./.github/copilot-instructions.md` |
+| GitHub Copilot | `mkdir -p .github && cp .ai/entrypoints/copilot-instructions.md ./.github/copilot-instructions.md` |
 
 ---
 

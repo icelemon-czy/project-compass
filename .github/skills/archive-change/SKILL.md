@@ -1,14 +1,14 @@
 ---
 name: archive-change
 description: "Archive a completed change: merge delta spec into main specs, move to archive, update traceability. Use when: 归档, archive, 合并spec, merge spec, 变更完成, change done, 审核通过, approved"
-argument-hint: "Optional: change name (e.g., 'add-csv-export'). Omit to list pending-review changes."
+argument-hint: "Optional: change name (e.g., 'add-csv-export'). Omit to list approved changes."
 ---
 
 # Archive Change
 
 变更完成后，将 delta spec 合并到主 spec，移动到 archive，更新追溯。
 
-> **前置条件**：变更的 proposal.md 状态为 `pending-review`，且所有测试通过。
+> **前置条件**：变更的 proposal.md 状态为 `approved`，且所有测试通过。
 
 ## Procedure
 
@@ -16,15 +16,15 @@ argument-hint: "Optional: change name (e.g., 'add-csv-export'). Omit to list pen
 
 ### Step 1: 定位变更
 
-**有参数** → 直接读取 `.ai/L3-specs/changes/<name>/proposal.md`，确认状态为 `pending-review`。
+**有参数** → 直接读取 `.ai/L3-specs/changes/<name>/proposal.md`，确认状态为 `approved`。
 
-**无参数** → 扫描所有 `pending-review` 状态的变更：
+**无参数** → 扫描所有 `approved` 状态的变更：
 
 ```bash
 ls .ai/L3-specs/changes/ | grep -v _change-template
 ```
 
-对每个变更读取 proposal.md 的状态，只展示 `pending-review` 的：
+对每个变更读取 proposal.md 的状态，只展示 `approved` 的：
 
 ```
 ## 待归档变更
@@ -36,7 +36,7 @@ ls .ai/L3-specs/changes/ | grep -v _change-template
 请选择一个编号进行归档：
 ```
 
-如无 `pending-review` 的变更，告知用户"没有待归档的变更"并停止。
+如无 `approved` 的变更，告知用户"没有待归档的变更"并停止。
 
 **等用户选择后继续。**
 
@@ -147,7 +147,7 @@ The system SHALL authenticate users by username and password,
 
 ### Step 5: 移动到 archive
 
-1. proposal.md 状态改为 `approved`
+1. proposal.md 状态改为 `archived`
 2. 移动整个目录：`changes/<name>/` → `archive/<name>/`
 3. 如果 `.ai/L4-session/active-session.md` 指向该变更 → 清除引用
 

@@ -203,7 +203,7 @@ grep -rn "\.skip\|\.only\|xit(\|xdescribe(\|xtest(\|@Disabled\|@Ignore\|pytest\.
 
 | 测试结果 | 处理 |
 |:---------|:-----|
-| ❌ 有测试失败 | **立即转 `/fix-bug`**，把失败输出作为输入。本 Skill 到此结束 |
+| ❌ 有测试失败 | **如果本次目标是 change，先将 proposal.md 状态改为 `review-failed`，追加 Review Feedback，再转 `/fix-bug`；如果本次目标是 spec-domain，则直接带失败输出转 `/fix-bug`**。本 Skill 到此结束 |
 | ⚠️ 有 skip/only/pending 标记 | **记录到报告的"异常标记"区段**，每个 skip 必须有 reason，否则标为问题。`.only` 一律标为 🔴 高风险（说明其他测试被静默跳过） |
 | ✅ 全绿且无异常标记 | 继续 Step 5 |
 
@@ -311,13 +311,15 @@ git diff --name-only HEAD~N -- <src-dir>
 
 ### Step 8: 状态回流
 
+> 以下状态回流仅适用于 **change** 目标。若本次审查目标是 `spec-domain`，则不改 proposal.md 状态，只更新报告和 `.ai/L4-session/active-session.md`。
+
 根据 Step 7 结论：
 
 | 结论 | 变更状态流转 |
 |:-----|:-------------|
-| ✅ 通过 | 保持 `pending-review`，提示用户运行 `/archive-change` |
-| ❌ 打回 | `pending-review` → `review-failed` → `implementing`（记录在 proposal.md 的 Review Feedback） |
-| ⚠️ 有缺口但非阻塞 | 保持 `pending-review`，问题登记到 proposal.md 的"Known Gaps" |
+| ✅ 通过 | `pending-review` → `approved`，提示用户运行 `/archive-change` |
+| ❌ 打回 | `pending-review` → `review-failed`（记录在 proposal.md 的 Review Feedback），提示用户运行 `/fix-bug`；由 `/fix-bug` 再推进到 `implementing` |
+| ⚠️ 有缺口但非阻塞 | `pending-review` → `approved`，问题登记到 proposal.md 的"Known Gaps" |
 
 更新 `.ai/L4-session/active-session.md`，记录审查结果和下一步动作。
 

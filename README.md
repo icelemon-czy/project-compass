@@ -352,7 +352,7 @@ See the [Skill Discovery](#skill-discovery--how-copilot--claude-code-find-these-
 | **Develop (2)** | `/new-change` | Any new feature or requirement |
 | | `/continue-change` | Resume yesterday's work |
 | **Review & Archive (3)** | `/review-tests` | Run tests + coverage audit + **false-pass hunting** |
-| | `/archive-change` | Merge delta spec and close the change |
+| | `/archive-change` | Archive an approved change and merge delta spec |
 | | `/check-changes` | Show status of all in-progress changes |
 | **Fix (1)** | `/fix-bug` | **Unified fix entry** with automatic triage (code / test / spec-ambiguity / false-pass) |
 | **Query (1)** | `/ask-codebase` | Ask anything about the code: locate features, explain architecture, analyze change impact |
@@ -403,8 +403,9 @@ flowchart TD
         NC -->|"✋ Gate 1<br/>Human confirms"| IMPL["implementing<br/>(TDD: red → green)"]
         IMPL --> PR["pending-review"]
         PR --> RT["/review-tests<br/>9-step deep verification"]
+        AP["approved"]
 
-        RT -->|"✅ All green<br/>✋ Gate 2"| AC["/archive-change"]
+        RT -->|"✅ All green<br/>✋ Gate 2"| AP
         RT -->|"❌ Test failures"| FB1["/fix-bug<br/>auto-triage → code fix"]
         RT -->|"⚠️ False-pass<br/>detected"| FB2["/fix-bug<br/>strengthen tests"]
         RT -->|"🔴 Missing<br/>scenarios"| FB3["/fix-bug<br/>add spec + tests"]
@@ -412,6 +413,8 @@ flowchart TD
         FB1 --> PR
         FB2 --> PR
         FB3 --> PR
+
+        AP --> AC["/archive-change"]
 
         AC --> UA["/update-ai"]
         UA --> GC["/git-commit<br/>doc-sync check"]
@@ -469,8 +472,8 @@ flowchart TD
         S6 --> S7["Step 7: Generate<br/>审查报告 (audit report)"]
         S7 --> JUDGE{"Any 🔴 or ❌<br/>in the table?"}
         JUDGE -->|"Yes"| REJECT["❌ Reject<br/>→ /fix-bug"]
-        JUDGE -->|"Only ⚠️"| WARN["⚠️ Non-blocking<br/>log to Known Gaps"]
-        JUDGE -->|"All ✅"| PASS["✅ Pass<br/>→ /archive-change"]
+        JUDGE -->|"Only ⚠️"| WARN["⚠️ Non-blocking<br/>log to Known Gaps<br/>→ approved"]
+        JUDGE -->|"All ✅"| PASS["✅ Pass<br/>→ approved"]
     end
 
     style JUDGE fill:#FF9800,color:#fff,stroke:#E65100,stroke-width:3px
