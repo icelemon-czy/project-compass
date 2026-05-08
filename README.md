@@ -135,6 +135,9 @@ Every target file has **bidirectional links** (source / related files) to preven
 │   ├── copilot-instructions.md ← GitHub Copilot entry template
 │   ├── change-management.md  ← Change management workflow reference (→ .ai/L3-specs/)
 │   └── doc-sync.md           ← Doc sync workflow reference (→ .ai/doc-sync.md)
+├── roadmap/                  ← Product roadmap & research
+│   ├── README.md             ← Prioritized roadmap organized by level
+│   └── multi-agent-collaboration-research.md ← Multi-agent collaboration research
 └── README.md                 ← This file
 ```
 

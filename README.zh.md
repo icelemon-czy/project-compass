@@ -136,6 +136,7 @@ AI 每次对话**只读 `overview.md`**（< 60 行），然后根据任务类型
 │   ├── change-management.md  ← 变更管理流程参考（→ .ai/L3-specs/）
 │   └── doc-sync.md           ← 文档同步流程参考（→ .ai/doc-sync.md）
 ├── roadmap/                  ← 路线图与调研
+│   ├── README.md             ← 按级别整理的正式路线图
 │   └── multi-agent-collaboration-research.md ← 多 Agent 并行协作调研
 └── README.md                 ← 本文件
 ```
