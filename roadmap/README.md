@@ -1,160 +1,32 @@
 # Project Compass Roadmap
 
-> Updated: 2026-05-08
-> Positioning: evolve Project Compass from an AI context template into an executable AI workflow harness.
+> 更新日期：2026-05-09
+> 说明：正文保留中文，按层分目录；每个路线方向单独一个 Markdown 文件。
 
-## North Star
+## 如何阅读
 
-Project Compass already has the right building blocks: five layers of context, spec-driven workflows, validation artifacts, and reusable skills. The next stage is to make those pieces more executable, observable, and scalable.
+- 先读每一层的 `README.md`，理解该层的定位和优先级。
+- 再进入单个方向文档，查看问题定义、范围、依赖和里程碑建议。
+- `research/` 只放支撑判断的调研资料，不直接承载路线优先级结论。
 
-The long-term goal is not "more Markdown". The goal is a lightweight harness that can:
+## 分层目录
 
-- scaffold AI context for real projects
-- route work to the right rules, specs, and validation surfaces
-- make AI workflows executable instead of purely prompt-driven
-- support multi-agent collaboration without losing traceability
-- measure quality over time instead of relying on intuition
+- [基础层 / 01-foundation](01-foundation/README.md)：近期最值得落地的基础能力。
+- [扩展层 / 02-scale](02-scale/README.md)：面向多 Agent、跨工具和长期运行的扩展能力。
+- [平台层 / 03-platform](03-platform/README.md)：面向组织、生态和平台化的长期能力。
+- [研究资料 / research](research/README.md)：路线判断的背景研究和方案比对。
 
-## Level Definitions
+## 当前优先顺序
 
-- **Level 1 — Foundation**: must-have capabilities for making Compass easier to run, validate, and adopt.
-- **Level 2 — Scale**: capabilities that expand Compass across agents, tools, and longer-running workflows.
-- **Level 3 — Platform**: strategic capabilities that make Compass team-grade and defensible as infrastructure.
+1. [Compass Harness CLI](01-foundation/compass-harness-cli.md)
+2. [Multi-Agent Worktree Mode](02-scale/multi-agent-worktree-mode.md)
+3. [Validation Analytics Dashboard](02-scale/validation-analytics-dashboard.md)
+4. [Brownfield Onboarding Analyzer](01-foundation/brownfield-onboarding-analyzer.md)
+5. [Cross-Tool Adapter Layer](02-scale/cross-tool-adapter-layer.md)
 
-## Level 1 — Foundation
+## 路线图原则
 
-### 1. Compass Harness CLI
-
-**Why now**: today many Compass rules live in docs and depend on the agent to follow them correctly.
-
-**What to build**:
-- `compass doctor` to validate structure, missing files, and public-interface drift
-- `compass validate` for change/spec/task/session state checks
-- `compass generate` for entrypoints and tool-specific skill scaffolding
-- deterministic checks for proposal/task/status transitions
-
-**Outcome**: Compass becomes runnable infrastructure instead of a prompt bundle.
-
-### 2. Workflow Macros
-
-**Why now**: the current skills are strong but still relatively atomic.
-
-**What to build**:
-- reusable macro flows such as `hotfix`, `feature`, `qa-sweep`, and `release-readiness`
-- persisted state handoff between `new-change`, `fix-bug`, `review-tests`, `archive-change`, and `git-commit`
-- a small contract for preconditions, checkpoints, and failure recovery
-
-**Outcome**: users choose a workflow shape, not a manual sequence of chat commands.
-
-### 3. Brownfield Onboarding Analyzer
-
-**Why now**: initial Compass adoption for existing repositories is still high-friction.
-
-**What to build**:
-- scan existing code, tests, lint config, and git history
-- draft L1/L2/L3/L5 artifacts with confidence labels
-- highlight low-confidence sections that require human review
-- preserve migrated legacy docs instead of overwriting them
-
-**Outcome**: Compass becomes materially easier to adopt on real brownfield codebases.
-
-## Level 2 — Scale
-
-### 4. Multi-Agent Worktree Mode
-
-**Why now**: Project Compass is still fundamentally single-agent, while real engineering teams are moving toward parallel agent workflows.
-
-**What to build**:
-- Lead/Teammate operating model with one board and per-agent sessions
-- git worktree-based local isolation as the first supported mode
-- merge rules for L3 and L4 to avoid session and task-board conflicts
-- task claim, status handoff, and completion conventions carried via git metadata
-
-**Outcome**: Compass supports parallel AI execution without breaking its traceability model.
-
-**Research basis**: see [multi-agent-collaboration-research.md](multi-agent-collaboration-research.md).
-
-### 5. Validation Analytics Dashboard
-
-**Why now**: L5 already captures reports, but Compass does not yet show trend lines or operational quality signals.
-
-**What to build**:
-- aggregate L5 reports into spec coverage, scenario coverage, false-pass findings, and archive latency
-- compare model/tool performance over time
-- track recurring review failures and high-risk modules
-- generate summary dashboards for active changes and release readiness
-
-**Outcome**: Compass can improve based on measured quality, not anecdotal experience.
-
-### 6. Cross-Tool Adapter Layer
-
-**Why now**: builders exist per tool, but the core workflow knowledge is still duplicated across prompt sets.
-
-**What to build**:
-- one canonical workflow schema for skills, entrypoints, and validation hooks
-- generators for Claude Code, Copilot, Cline, Cursor, Codex, and adjacent tools
-- compatibility tests that detect instruction drift across tool adapters
-- a stable contract between Compass workflow definitions and generated tool assets
-
-**Outcome**: Compass becomes portable infrastructure rather than a collection of parallel prompt forks.
-
-## Level 3 — Platform
-
-### 7. Agent QA Harness
-
-**Why now**: if Compass claims to detect weak tests and workflow regressions, it should test that claim directly.
-
-**What to build**:
-- mutation-style probes that deliberately inject false-pass patterns
-- checks that remove assertions, mock the wrong layer, or break spec alignment on purpose
-- scorecards for how well `review-tests` and related workflows catch planted failures
-- benchmark suites for evaluating workflow reliability across models and tools
-
-**Outcome**: Compass gains its own harness engineering loop for verifying AI workflow quality.
-
-### 8. Stack And Domain Packs
-
-**Why now**: many projects repeat the same L1/L2/L3/L5 setup work per stack or domain.
-
-**What to build**:
-- reusable packs for common stacks such as React + Node, Django, FastAPI, and Go services
-- domain packs for auth, billing, background jobs, audit logging, and regulated workflows
-- pack-level rules, testing conventions, and anti-pattern catalogs
-- versioned pack composition on top of the core Compass skeleton
-
-**Outcome**: Compass starts with domain knowledge instead of an empty template.
-
-### 9. Team And Enterprise Governance
-
-**Why now**: Compass already behaves like a public interface, but it does not yet provide organizational controls.
-
-**What to build**:
-- audit trail for proposal, review, archive, and release decisions
-- policy hooks for rollback plans, compliance checks, and risk acknowledgment
-- role gates for who can approve, archive, or bypass validation
-- plugin surface for organization-specific rules without forking the whole repo
-
-**Outcome**: Compass becomes viable as shared engineering infrastructure, not just an individual workflow kit.
-
-## Suggested Sequencing
-
-| Milestone | Focus |
-|-----------|-------|
-| `v0.4` | Harness CLI MVP, structure validation, entrypoint generation |
-| `v0.5` | Workflow macros, multi-agent worktree MVP |
-| `v0.6` | Validation analytics, cross-tool adapter alpha |
-| `v0.7` | Brownfield analyzer, agent QA harness, first stack packs |
-| `v1.0` | Governance model, stable plugin surface, compatibility contract |
-
-## Guardrails
-
-- Keep Compass differentiated from OpenSpec by focusing on context navigation, workflow harnessing, and validation rigor.
-- Prefer executable guardrails over additional prose whenever possible.
-- Treat `L*` templates, `entrypoints/`, and `.github/skills/` as public interfaces.
-- Let multi-agent support start with simple local isolation before chasing large-scale orchestration.
-
-## Inputs
-
-- [multi-agent-collaboration-research.md](multi-agent-collaboration-research.md)
-- `README.md`, `README.zh.md`, and `WORKFLOW-ANALYSIS.md`
-- OpenSpec references under `OpenSpec-1.2.0/`
+- Project Compass 要从“文档模板”演进为“可执行的 AI workflow harness”。
+- 优先补执行层、验证层和协作层，不优先堆更多说明性文档。
+- 保持和 OpenSpec 的差异化：更强调上下文导航、验证严谨性和多 Agent 协作。
+- 把 `.github/skills/`、`entrypoints/`、`L*` 模板继续视为公共接口来设计。

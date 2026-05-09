@@ -135,9 +135,12 @@ AI 每次对话**只读 `overview.md`**（< 60 行），然后根据任务类型
 │   ├── copilot-instructions.md ← GitHub Copilot 入口模板
 │   ├── change-management.md  ← 变更管理流程参考（→ .ai/L3-specs/）
 │   └── doc-sync.md           ← 文档同步流程参考（→ .ai/doc-sync.md）
-├── roadmap/                  ← 路线图与调研
-│   ├── README.md             ← 按级别整理的正式路线图
-│   └── multi-agent-collaboration-research.md ← 多 Agent 并行协作调研
+├── roadmap/                  ← 路线图与支撑调研
+│   ├── README.md             ← 路线图索引（分层 + 优先级）
+│   ├── research/             ← 支撑路线判断的调研资料
+│   ├── 01-foundation/        ← 基础层路线方向
+│   ├── 02-scale/             ← 扩展层路线方向
+│   └── 03-platform/          ← 平台层路线方向
 └── README.md                 ← 本文件
 ```
 
