@@ -6,7 +6,7 @@
 
 ## 要解决的问题
 
-- 现在 builders 和 entrypoints 按工具分目录，但核心知识存在重复维护。
+- 工具要求不同的根入口、Skill 发现目录和 Subagent 格式，若直接维护容易出现知识重复。
 - 同一个 workflow 在不同工具上容易逐渐漂移，最终出现行为不一致。
 - 新增工具支持时，维护成本会随工具数量线性上升。
 
@@ -19,9 +19,9 @@
 ## 规划范围
 
 - 定义 Compass workflow 的 canonical schema。
-- 为 Claude Code、Copilot、Cline、Cursor、Codex 等生成对应的 instructions/skills。
+- 为 Codex、Claude Code 和 OpenCode 生成对应的 instructions/skills。
 - 建立适配器测试，检查不同工具资产是否跟 canonical schema 保持同步。
-- 让 entrypoint、builder、skill 尽可能共享结构而不是共享文案片段。
+- 让 `.compass-harness/` 成为唯一权威源，平台入口和发现目录全部由它生成。
 
 ## 非目标
 

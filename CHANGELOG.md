@@ -1,6 +1,6 @@
 # Changelog
 
-Compass Harness 对 `.github/skills/`、`entrypoints/`、`L*` 模板都视为**公共接口**。fork 使用者请按本文件判断是否需要 rebase。
+Compass Harness 将 `.agents/skills/` 与 `templates/compass-harness/` 视为当前的**公共接口**。fork 使用者请按本文件判断是否需要 rebase。
 
 版本号采用 [Semantic Versioning](https://semver.org/)：
 
@@ -16,12 +16,32 @@ Compass Harness 对 `.github/skills/`、`entrypoints/`、`L*` 模板都视为**�
 - 统一 README、路线图、工作流分析、演示文稿和 CLI 展示名称。
 - 明确产品定位为面向上下文、代理、Skills、Specs、工作流与验证的 AI engineering harness。
 - 更新模板复制示例中的仓库目录名为 `compass-harness`。
+- 将原有 13 个 Skill 从 `.github/skills/` 迁移到跨工具权威目录 `.agents/skills/`，保留 Skill 名称和主要工作流。
+- 将原根目录 L1–L5 上下文模板集中到 `templates/compass-harness/context/`。
+- 将当前支持平台收敛为 Codex、Claude Code 与 OpenCode。
+- 将目标项目的可编辑 Harness 内容集中到 `.compass-harness/`；上下文位于 `context/`，安装后的权威 Skills 位于 `skills/`，角色定义位于 `subagents/`。
+- 将根规则文件、平台 Skill 目录和平台 agents 目录定义为可重建的生成适配层。
+
+### Added
+
+- 新增 `templates/compass-harness/manifest.yaml`，登记模板组件、占位符、安装目标和适配器。
+- 新增目标项目的 installed manifest 与 `.compass-harness/config.yaml` 模板。
+- 新增全局/项目 AGENTS、Skill、Subagent 角色与三平台适配模板。
+- 新增四个仅供复制修改的 Subagent 角色示例，不在仓库中安装真实 Subagent。
+- 新增 `scripts/validate-phase2.rb`，对 Skill、模板、占位符、引用和旧平台路径执行可重复的静态检查。
+
+### Removed
+
+- 移除 GitHub Copilot 与 Cline 的 builders、entrypoints 和当前支持说明。
+- 移除迁移后的旧 `.github/skills/` 权威目录；`.github/workflows/` 中的 GitHub Actions CI 保留。
+- 移除分散的 `entrypoints/`，将仍有价值的上下文说明并入统一模板目录。
 
 ### Compatibility
 
 - CLI 命令继续使用 `compass`。
-- 项目上下文目录继续使用 `.ai/`。
-- Skill 名称、L1–L5 结构和现有公共接口均保持不变。
+- 13 个 Skill 名称保持不变；L1–L5 语义结构保持不变，但模板路径已经迁移。
+- `.ai/` 迁移为 `.compass-harness/context/`；目标项目中平台发现目录不再是可编辑权威源。
+- `.github/skills/`、根目录 `L1-*` 至 `L5-*`、`.ai/`、`entrypoints/` 属于本版本已迁移或移除的旧接口。
 - 本次版本不自动重命名 GitHub 仓库、本地目录或 Git remote。
 
 ## [0.3.0] — 2026-04-18
