@@ -112,21 +112,19 @@ description: "Initialize a new project from scratch: requirements → tech stack
 #### Step 5: 安装 Compass Harness 权威目录
 
 ```bash
-mkdir -p /path/to/project/.compass-harness/rules
 mkdir -p /path/to/project/.compass-harness/context
 mkdir -p /path/to/project/.compass-harness/skills
 mkdir -p /path/to/project/.compass-harness/subagents
 
 cp /path/to/compass-harness/templates/compass-harness/installed-manifest.yaml.template /path/to/project/.compass-harness/manifest.yaml
 cp /path/to/compass-harness/templates/compass-harness/config.yaml /path/to/project/.compass-harness/config.yaml
-cp /path/to/compass-harness/templates/compass-harness/agent-rules/AGENTS.global.md /path/to/project/.compass-harness/rules/global.md
-cp /path/to/compass-harness/templates/compass-harness/agent-rules/AGENTS.project.md /path/to/project/.compass-harness/rules/project.md
+cp /path/to/compass-harness/templates/compass-harness/AGENTS.md /path/to/project/AGENTS.md
 cp -R /path/to/compass-harness/templates/compass-harness/context/. /path/to/project/.compass-harness/context/
 cp -R /path/to/compass-harness/.agents/skills/. /path/to/project/.compass-harness/skills/
 cp -R /path/to/compass-harness/templates/compass-harness/subagents/. /path/to/project/.compass-harness/subagents/
 ```
 
-渲染 `.compass-harness/manifest.yaml`、`.compass-harness/config.yaml` 和 `.compass-harness/rules/project.md` 中的项目占位符。安装后只编辑 `.compass-harness/` 内的权威内容。
+渲染根 `AGENTS.md`、`.compass-harness/manifest.yaml` 和 `.compass-harness/config.yaml` 中的项目占位符。项目规则直接维护在 `AGENTS.md`，其他 Harness 内容维护在 `.compass-harness/`。
 
 #### Step 6: 构建 L1 — 代码导航
 
@@ -161,13 +159,13 @@ cp -R /path/to/compass-harness/templates/compass-harness/subagents/. /path/to/pr
 
 | 工具 | 操作 |
 |:-----|:-----|
-| Codex | 渲染 `adapters/codex/AGENTS.md.template` 到 `AGENTS.md` |
+| Codex | 渲染 `templates/compass-harness/AGENTS.md` 到根 `AGENTS.md` |
 | Claude Code | 渲染 `adapters/claude-code/CLAUDE.md.template` 到 `CLAUDE.md` |
-| OpenCode | 渲染 `adapters/opencode/AGENTS.md.template` 到 `AGENTS.md`；需要时再安装 `opencode.json` |
+| OpenCode | 直接使用根 `AGENTS.md`；需要时再安装 `opencode.json` |
 
 如果目标文件已存在，先合并用户规则，不要直接覆盖。不要自动安装 Subagent 模板。
 
-入口文件只导航到 `.compass-harness/`，不复制项目知识正文。同时从 `.compass-harness/skills/` 生成平台发现镜像：Codex/OpenCode 使用 `.agents/skills/`，Claude Code 使用 `.claude/skills/`。生成目录不得手工维护。
+Codex/OpenCode 直接读取根 `AGENTS.md`；Claude Code 的 `CLAUDE.md` 引用它，不复制规则正文。同时从 `.compass-harness/skills/` 生成平台发现镜像：Codex/OpenCode 使用 `.agents/skills/`，Claude Code 使用 `.claude/skills/`。生成目录不得手工维护。
 
 `.compass-harness/subagents/` 只保存角色定义和示例；除非用户明确选择角色，否则不生成平台私有 Subagent 实例。
 
@@ -216,13 +214,13 @@ cp -R /path/to/compass-harness/templates/compass-harness/subagents/. /path/to/pr
 
 ### 已创建
 - [x] 项目脚手架 + 依赖安装
-- [x] .compass-harness/ 权威目录（rules + context + skills + subagents）
+- [x] 根 AGENTS.md + .compass-harness/（context + skills + subagents + config）
 - [x] 平台薄适配层
 - [x] 基于 Spec 的测试（红灯 → 绿灯）
 - [x] 追溯矩阵已更新
 
-### .compass-harness/ 概览
-- rules: 全局规则 + 项目规则
+### Compass Harness 概览
+- AGENTS.md: 唯一项目规则
 - skills: 13 个权威 Skill
 - subagents: 通用角色定义（未自动生成实例）
 - L1: overview.md + N 个 feature 文档

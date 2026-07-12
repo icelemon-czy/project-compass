@@ -12,7 +12,7 @@ Phase 2 separates existing working assets from newly introduced templates:
 
 - The repository's 13 existing workflows are maintained as real Skills under `.agents/skills/`.
 - AGENTS guidance, project context, new-Skill scaffolding, Subagent roles, and platform adapters live under `templates/compass-harness/`.
-- Installed projects keep every editable Harness asset under `.compass-harness/`; tool-native files are generated discovery adapters.
+- Installed projects use root `AGENTS.md` as the project-rule source and keep context, Skills, Subagent roles, and configuration under `.compass-harness/`.
 - Subagents are examples only. Phase 2 does not install `.codex/agents/`, `.claude/agents/`, or `.opencode/agents/` into this repository.
 - Validation is deterministic and structural. It does not claim to prove model behavior or cross-platform reasoning quality.
 
@@ -25,7 +25,7 @@ project-compass/
 │   ├── manifest.yaml                 # Components, placeholders, and install targets
 │   ├── installed-manifest.yaml.template
 │   ├── config.yaml                   # Installed project configuration template
-│   ├── agent-rules/                  # Global and project AGENTS templates
+│   ├── AGENTS.md                     # Single project-rule template
 │   ├── context/                      # L1–L5 context templates
 │   ├── skills/_skill-template/       # Template for future Skills
 │   ├── subagents/                    # Canonical role template + four examples
@@ -45,18 +45,18 @@ project-compass/
 .compass-harness/
 ├── manifest.yaml                    # Installed version and managed paths
 ├── config.yaml                      # Project values and enabled platforms
-├── rules/                           # Shared and project guidance
 ├── context/                         # L1–L5 project context
 ├── skills/                          # Installed canonical Skills
 └── subagents/                       # Canonical role definitions and examples
 
-AGENTS.md / CLAUDE.md                # Generated thin entry points
+AGENTS.md                            # Native Codex/OpenCode project rules
+CLAUDE.md                            # Claude Code adapter to AGENTS.md
 .agents/skills/                      # Generated Codex/OpenCode discovery mirror
 .claude/skills/                      # Generated Claude Code discovery mirror
 tool-specific agent directories      # Generated only for selected roles
 ```
 
-Only `.compass-harness/` is edited as Harness source in an installed project. Generated files outside it must be reproducible and must not contain the only copy of project knowledge.
+Edit project rules in root `AGENTS.md`. Edit context, Skills, Subagent roles, and configuration under `.compass-harness/`. Generated discovery mirrors must be reproducible and must not contain the only copy of project knowledge.
 
 ## Context Model
 
@@ -89,10 +89,9 @@ Each Skill has a `SKILL.md` with only `name` and `description` in its canonical 
 
 ## Templates
 
-### AGENTS guidance
+### AGENTS.md
 
-- `agent-rules/AGENTS.global.md` contains cross-project working principles.
-- `agent-rules/AGENTS.project.md` contains project placeholders, commands, and `.compass-harness/context/` navigation.
+`AGENTS.md` is the only project-rule template. It contains the necessary working principles, project commands, and `.compass-harness/context/` navigation without a global/project split.
 
 ### Skill template
 
@@ -113,23 +112,23 @@ They define responsibilities, permissions, forbidden actions, and output contrac
 
 | Platform | Generated discovery adapters |
 |:---------|:-----------------------------|
-| Codex | `AGENTS.md`, `.agents/skills/`, optional `.codex/agents/*.toml` |
+| Codex | Native root `AGENTS.md`, `.agents/skills/`, optional `.codex/agents/*.toml` |
 | Claude Code | `CLAUDE.md`, `.claude/skills/`, optional `.claude/agents/*.md` |
-| OpenCode | `AGENTS.md`, `.agents/skills/`, optional `opencode.json` and `.opencode/agents/*.md` |
+| OpenCode | Native root `AGENTS.md`, `.agents/skills/`, optional `opencode.json` and `.opencode/agents/*.md` |
 
-All adapters point back to `.compass-harness/`. Phase 2 provides their formats; automated installation and regeneration belong to the Phase 3 CLI.
+Codex and OpenCode use `AGENTS.md` directly. Claude Code's adapter references `AGENTS.md` instead of duplicating it. Automated installation and discovery-mirror generation belong to the Phase 3 CLI.
 
 ## Manual Use
 
 Until the generator is implemented:
 
-1. Create `.compass-harness/{rules,context,skills,subagents}` in the target project.
+1. Create `.compass-harness/{context,skills,subagents}` in the target project.
 2. Render `installed-manifest.yaml.template` and `config.yaml` into `.compass-harness/`.
-3. Copy the AGENTS rule templates, context templates, 13 Skills, and Subagent role templates into their canonical `.compass-harness/` paths.
-4. Render the matching root entry point and generate the platform's Skill discovery mirror.
+3. Render the single `AGENTS.md` template to project-root `AGENTS.md`; merge existing project rules instead of overwriting them.
+4. Copy context templates, 13 Skills, and Subagent role templates into `.compass-harness/`, then generate the platform's Skill discovery mirror.
 5. Generate a platform-specific Subagent only when the project explicitly selects that role.
 
-Do not overwrite existing project guidance. Merge it with the thin adapter, and never edit generated mirrors as canonical content.
+Claude Code may add a `CLAUDE.md` adapter that references `AGENTS.md`. Never edit generated Skill or Subagent mirrors as canonical content.
 
 ## Static Validation
 
@@ -144,11 +143,11 @@ The validator checks:
 - exactly 13 canonical Skills;
 - Skill names, directories, and frontmatter;
 - manifest parsing and declared sources;
-- the `.compass-harness/` canonical installation contract and generated-adapter policy;
+- the root `AGENTS.md` plus `.compass-harness/` installation contract;
 - required AGENTS, Skill, Subagent, and adapter templates;
 - registered placeholders and relative Markdown links;
 - OpenCode JSON syntax;
-- absence of installed root Agent/Subagent instances.
+- absence of installed root Agent/Subagent instances;
 - absence of current `.ai/` dependencies in Skills and templates.
 
 These checks validate repository structure only, not model behavior.

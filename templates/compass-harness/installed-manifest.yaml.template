@@ -8,15 +8,14 @@ project:
   name: "{{PROJECT_NAME}}"
 
 canonical_root: .compass-harness
+project_rules: AGENTS.md
 canonical_paths:
   config: .compass-harness/config.yaml
-  rules: .compass-harness/rules
   context: .compass-harness/context
   skills: .compass-harness/skills
   subagents: .compass-harness/subagents
 
 generated_adapters:
-  - AGENTS.md
   - CLAUDE.md
   - opencode.json
   - .agents/skills

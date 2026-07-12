@@ -5,7 +5,7 @@ description: "Install Compass Harness and build project context for AI-assisted 
 
 # Build Compass Harness Project Context
 
-在目标项目的 `.compass-harness/` 权威目录中安装规则、上下文、Skills 和 Subagent 角色模板，再生成所选平台需要的薄适配入口。
+在目标项目安装根 `AGENTS.md` 项目规则，以及 `.compass-harness/` 中的上下文、Skills、Subagent 角色模板和配置，再生成所选平台需要的发现适配。
 
 > **模板依赖**：使用 `templates/compass-harness/manifest.yaml` 声明的模板与 `.agents/skills/` 原始 Skill。找不到任何必需源文件时告知用户并停止，不要自行编造另一套目录或格式。
 
@@ -32,24 +32,22 @@ Four steps. Execute in order.
 
 ### Step 1: Install the canonical `.compass-harness/` tree
 
-从 Compass Harness 模板仓库复制权威内容。目标项目中只编辑 `.compass-harness/`，不得把平台生成目录当作权威源：
+从 Compass Harness 模板仓库复制权威内容。项目规则直接使用根 `AGENTS.md`，不设置 global/project 分层：
 
 ```bash
-mkdir -p /path/to/your-project/.compass-harness/rules
 mkdir -p /path/to/your-project/.compass-harness/context
 mkdir -p /path/to/your-project/.compass-harness/skills
 mkdir -p /path/to/your-project/.compass-harness/subagents
 
 cp /path/to/compass-harness/templates/compass-harness/installed-manifest.yaml.template /path/to/your-project/.compass-harness/manifest.yaml
 cp /path/to/compass-harness/templates/compass-harness/config.yaml /path/to/your-project/.compass-harness/config.yaml
-cp /path/to/compass-harness/templates/compass-harness/agent-rules/AGENTS.global.md /path/to/your-project/.compass-harness/rules/global.md
-cp /path/to/compass-harness/templates/compass-harness/agent-rules/AGENTS.project.md /path/to/your-project/.compass-harness/rules/project.md
+cp /path/to/compass-harness/templates/compass-harness/AGENTS.md /path/to/your-project/AGENTS.md
 cp -R /path/to/compass-harness/templates/compass-harness/context/. /path/to/your-project/.compass-harness/context/
 cp -R /path/to/compass-harness/.agents/skills/. /path/to/your-project/.compass-harness/skills/
 cp -R /path/to/compass-harness/templates/compass-harness/subagents/. /path/to/your-project/.compass-harness/subagents/
 ```
 
-渲染 `.compass-harness/manifest.yaml`、`.compass-harness/config.yaml` 和 `.compass-harness/rules/project.md` 中的项目占位符。复制后，L1–L5 结构和必要模板已就位；不要强制一次性填满所有层。
+渲染根 `AGENTS.md`、`.compass-harness/manifest.yaml` 和 `.compass-harness/config.yaml` 中的项目占位符。复制后，L1–L5 结构和必要模板已就位；不要强制一次性填满所有层。
 
 > 如果 `.compass-harness/` 已存在且用户想重建，先确认备份或增量合并，不得覆盖项目自定义内容。
 
@@ -77,11 +75,11 @@ cp -R /path/to/compass-harness/templates/compass-harness/subagents/. /path/to/yo
 
 | AI Tool | Template directory | Project target |
 |---------|--------------------|----------------|
-| Codex | `adapters/codex/` | `AGENTS.md` |
+| Codex | `AGENTS.md` | project-root `AGENTS.md` |
 | Claude Code | `adapters/claude-code/` | `CLAUDE.md` |
-| OpenCode | `adapters/opencode/` | `AGENTS.md` + optional `opencode.json` |
+| OpenCode | `AGENTS.md` + `adapters/opencode/` | project-root `AGENTS.md` + optional `opencode.json` |
 
-入口文件只导航到 `.compass-harness/rules/`、`.compass-harness/context/` 和 `.compass-harness/skills/`，不得复制项目知识正文。
+`AGENTS.md` 是 Codex/OpenCode 直接读取的项目规则本体，并导航到 `.compass-harness/context/` 和 `.compass-harness/skills/`。Claude Code 的 `CLAUDE.md` 只引用 `AGENTS.md`，不复制规则正文。
 
 按所选平台生成 Skill 发现镜像：Codex/OpenCode 使用 `.agents/skills/`，Claude Code 使用 `.claude/skills/`。这些目录由 `.compass-harness/skills/` 生成，不允许手工维护。如果项目已有入口文件，先合并用户规则，不要覆盖。
 
@@ -97,8 +95,7 @@ All steps done. Run through this checklist. **每条必须实际执行验证命�
 # 1. 权威安装树
 test -f .compass-harness/manifest.yaml || echo "❌ manifest.yaml 缺失"
 test -f .compass-harness/config.yaml || echo "❌ config.yaml 缺失"
-test -f .compass-harness/rules/global.md || echo "❌ global rules 缺失"
-test -f .compass-harness/rules/project.md || echo "❌ project rules 缺失"
+test -f AGENTS.md || echo "❌ AGENTS.md 项目规则缺失"
 test "$(find .compass-harness/skills -mindepth 2 -maxdepth 2 -name SKILL.md | wc -l | tr -d ' ')" = "13" || echo "❌ Skill 数量不是 13"
 
 # 2. overview.md 长度检查

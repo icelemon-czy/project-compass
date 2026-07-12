@@ -61,8 +61,7 @@ cmd_status() {
     for f in \
         "$HARNESS_DIR/manifest.yaml" \
         "$HARNESS_DIR/config.yaml" \
-        "$HARNESS_DIR/rules/global.md" \
-        "$HARNESS_DIR/rules/project.md" \
+        "AGENTS.md" \
         "$CONTEXT_DIR/L1-codebase-map/overview.md" \
         "$CONTEXT_DIR/L2-rules/global.md" \
         "$TESTING_FILE" \

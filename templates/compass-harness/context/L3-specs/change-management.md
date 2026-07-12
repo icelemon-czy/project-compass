@@ -3,7 +3,7 @@
 > 本文件是 AI 进行变更管理的完整参考。
 > 部署位置：`.compass-harness/context/L3-specs/change-management.md`
 >
-> 平台薄入口（AGENTS.md / CLAUDE.md）通过 `.compass-harness/rules/` 导航到本文件。
+> 根 `AGENTS.md` 直接导航到本文件；Claude Code 的 `CLAUDE.md` 引用根 `AGENTS.md`。
 
 ## L3 目录结构
 

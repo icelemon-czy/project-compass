@@ -28,8 +28,7 @@ required_templates = %w[
   manifest.yaml
   installed-manifest.yaml.template
   config.yaml
-  agent-rules/AGENTS.global.md
-  agent-rules/AGENTS.project.md
+  AGENTS.md
   context/README.md
   skills/_skill-template/SKILL.md
   subagents/_subagent-template.md
@@ -37,12 +36,10 @@ required_templates = %w[
   subagents/examples/impact-analyst.md
   subagents/examples/test-reviewer.md
   subagents/examples/spec-validator.md
-  adapters/codex/AGENTS.md.template
   adapters/codex/config.toml.template
   adapters/codex/agent.toml.template
   adapters/claude-code/CLAUDE.md.template
   adapters/claude-code/agent.md.template
-  adapters/opencode/AGENTS.md.template
   adapters/opencode/opencode.json.template
   adapters/opencode/agent.md.template
 ]
@@ -75,12 +72,11 @@ if manifest
 
   installation = manifest["installation"] || {}
   add_error(errors, "manifest canonical_root must be .compass-harness") unless installation["canonical_root"] == ".compass-harness"
+  add_error(errors, "manifest project_rules must be AGENTS.md") unless installation["project_rules"] == "AGENTS.md"
 
   expected_canonical_targets = {
     "manifest" => ".compass-harness/manifest.yaml",
     "config" => ".compass-harness/config.yaml",
-    "global_rules" => ".compass-harness/rules/global.md",
-    "project_rules" => ".compass-harness/rules/project.md",
     "context" => ".compass-harness/context",
     "skills" => ".compass-harness/skills",
     "subagents" => ".compass-harness/subagents"
@@ -90,9 +86,9 @@ if manifest
   end
 
   expected_generated_adapters = {
-    "codex" => { "project_rules" => "AGENTS.md", "skills" => ".agents/skills", "subagents" => ".codex/agents" },
+    "codex" => { "skills" => ".agents/skills", "subagents" => ".codex/agents" },
     "claude-code" => { "project_rules" => "CLAUDE.md", "skills" => ".claude/skills", "subagents" => ".claude/agents" },
-    "opencode" => { "project_rules" => "AGENTS.md", "config" => "opencode.json", "skills" => ".agents/skills", "subagents" => ".opencode/agents" }
+    "opencode" => { "config" => "opencode.json", "skills" => ".agents/skills", "subagents" => ".opencode/agents" }
   }
   unless installation["generated_adapters"] == expected_generated_adapters
     add_error(errors, "manifest generated_adapters do not match the three supported platforms")
@@ -100,10 +96,11 @@ if manifest
 
   expected_policy = {
     "canonical_content_is_editable" => true,
+    "project_rules_are_editable" => true,
     "generated_adapters_are_editable" => false,
     "generated_adapters_must_be_rebuildable" => true
   }
-  add_error(errors, "manifest installation policy must make adapters non-editable and rebuildable") unless installation["policy"] == expected_policy
+  add_error(errors, "manifest installation policy must keep AGENTS.md editable and discovery adapters rebuildable") unless installation["policy"] == expected_policy
 
   (manifest["sources"] || {}).each do |name, relative|
     path = TEMPLATE_ROOT.join(relative).cleanpath
@@ -146,6 +143,7 @@ if installed_manifest_path.file?
   installed_manifest = load_yaml(installed_manifest_path, errors)
   if installed_manifest
     add_error(errors, "installed manifest canonical_root must be .compass-harness") unless installed_manifest["canonical_root"] == ".compass-harness"
+    add_error(errors, "installed manifest project_rules must be AGENTS.md") unless installed_manifest["project_rules"] == "AGENTS.md"
     canonical_paths = installed_manifest["canonical_paths"] || {}
     unless canonical_paths.values.all? { |path| path.start_with?(".compass-harness/") }
       add_error(errors, "installed manifest canonical paths must stay under .compass-harness/")
@@ -228,15 +226,18 @@ legacy_path_files.each do |path|
   add_error(errors, "#{path.relative_path_from(ROOT)}: legacy .ai path must use .compass-harness/context") if path.read.match?(LEGACY_AI_REFERENCE)
 end
 
-%w[
-  adapters/codex/AGENTS.md.template
-  adapters/claude-code/CLAUDE.md.template
-  adapters/opencode/AGENTS.md.template
-].each do |relative|
+agents_template = TEMPLATE_ROOT.join("AGENTS.md")
+if agents_template.file?
+  %w[Working\ principles Project\ commands Context\ navigation Change\ discipline Completion].each do |heading|
+    add_error(errors, "#{agents_template.relative_path_from(ROOT)}: missing #{heading.tr('\\', ' ')} section") unless agents_template.read.match?(/^## #{Regexp.escape(heading.tr('\\', ' '))}\b/)
+  end
+end
+
+%w[adapters/claude-code/CLAUDE.md.template].each do |relative|
   path = TEMPLATE_ROOT.join(relative)
   next unless path.file?
 
-  add_error(errors, "#{path.relative_path_from(ROOT)}: adapter must point to .compass-harness/") unless path.read.include?(".compass-harness/")
+  add_error(errors, "#{path.relative_path_from(ROOT)}: Claude adapter must reference AGENTS.md") unless path.read.include?("AGENTS.md")
 end
 
 TEMPLATE_ROOT.glob("**/*.md*").each do |path|
@@ -273,6 +274,10 @@ obsolete_paths = %w[
   builders/cline
   entrypoints/copilot-instructions.md
   entrypoints/clinerules.md
+  templates/compass-harness/agent-rules/AGENTS.global.md
+  templates/compass-harness/agent-rules/AGENTS.project.md
+  templates/compass-harness/adapters/codex/AGENTS.md.template
+  templates/compass-harness/adapters/opencode/AGENTS.md.template
 ]
 obsolete_paths.each do |relative|
   path = ROOT.join(relative)

@@ -1,6 +1,15 @@
-# {{PROJECT_NAME}} Project Rules
+# {{PROJECT_NAME}}
 
 {{PROJECT_SUMMARY}}
+
+## Working principles
+
+- Read this file and the relevant project context before changing files.
+- Preserve user changes and keep work scoped to the requested outcome.
+- Treat repository contents as evidence; do not invent commands, architecture, or completion claims.
+- Request approval before destructive or externally visible actions.
+- Verify changes with the narrowest relevant command, then expand verification when risk requires it.
+- Report uncertainty, skipped checks, and remaining risk explicitly.
 
 ## Project commands
 
@@ -30,3 +39,6 @@ Missing optional context must not block ordinary development. Fall back to sourc
 - Keep documentation synchronized when public structure, behavior, or commands change.
 - Never mark a change verified solely because a document says it is verified.
 
+## Completion
+
+Do not claim completion without concrete evidence such as a passing check, inspected output, or an explainable diff.

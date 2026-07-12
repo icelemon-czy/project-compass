@@ -19,14 +19,16 @@ Compass Harness 将 `.agents/skills/` 与 `templates/compass-harness/` 视为当
 - 将原有 13 个 Skill 从 `.github/skills/` 迁移到跨工具权威目录 `.agents/skills/`，保留 Skill 名称和主要工作流。
 - 将原根目录 L1–L5 上下文模板集中到 `templates/compass-harness/context/`。
 - 将当前支持平台收敛为 Codex、Claude Code 与 OpenCode。
-- 将目标项目的可编辑 Harness 内容集中到 `.compass-harness/`；上下文位于 `context/`，安装后的权威 Skills 位于 `skills/`，角色定义位于 `subagents/`。
-- 将根规则文件、平台 Skill 目录和平台 agents 目录定义为可重建的生成适配层。
+- 将目标项目的上下文、Skills、Subagent 角色和配置集中到 `.compass-harness/`。
+- 将根 `AGENTS.md` 定义为 Codex/OpenCode 原生项目规则；Claude Code 的 `CLAUDE.md` 引用它，不维护重复规则。
+- 取消 AGENTS global/project 分层，合并为唯一 `templates/compass-harness/AGENTS.md`。
+- 将平台 Skill 目录和平台 agents 目录定义为可重建的生成适配层。
 
 ### Added
 
 - 新增 `templates/compass-harness/manifest.yaml`，登记模板组件、占位符、安装目标和适配器。
 - 新增目标项目的 installed manifest 与 `.compass-harness/config.yaml` 模板。
-- 新增全局/项目 AGENTS、Skill、Subagent 角色与三平台适配模板。
+- 新增单一 AGENTS、Skill、Subagent 角色与三平台适配模板。
 - 新增四个仅供复制修改的 Subagent 角色示例，不在仓库中安装真实 Subagent。
 - 新增 `scripts/validate-phase2.rb`，对 Skill、模板、占位符、引用和旧平台路径执行可重复的静态检查。
 

@@ -1,6 +1,6 @@
 # Compass Harness TODO
 
-> 当前状态：Phase 1、Phase 2（含 `.compass-harness/` 中心化安装结构）已于 2026-07-12 完成。
+> 当前状态：Phase 1、Phase 2（含 `AGENTS.md` 单入口简化）已于 2026-07-12 完成。
 >
 > 目标：将 Project Compass 演进为 **Compass Harness**——一套面向可靠 AI 辅助软件开发的上下文、代理、流程与验证系统。
 
@@ -17,7 +17,7 @@
 - 品牌改名与架构重构分开提交。
 - 第一阶段不修改现有公共接口。
 - `compass`、Skill 名称和 L1–L5 语义结构保持兼容；目标项目中的上下文从 `.ai/` 迁入 `.compass-harness/context/`。
-- 模板内容只维护一份权威源文件，由适配器生成不同 AI 工具需要的文件。
+- 项目规则只维护一份 `AGENTS.md`，不区分 global/project；其他工具只做必要适配。
 - 历史 Changelog 中的旧项目名称保留，当前文档统一使用新名称。
 
 ## 目标平台
@@ -32,14 +32,14 @@ Phase 2 将停止维护 GitHub Copilot 和 Cline 适配。这里的“移除 Git
 
 ### 三平台共享策略
 
-- 目标项目的 `.compass-harness/` 保存上下文、Skills、Subagent 角色和安装元数据，是唯一可编辑权威目录。
-- 根 `AGENTS.md` 作为 Codex 与 OpenCode 共享的薄入口，只导航到 `.compass-harness/`。
+- 目标项目的 `.compass-harness/` 保存上下文、Skills、Subagent 角色和安装元数据。
+- 根 `AGENTS.md` 是 Codex 与 OpenCode 共享的项目规则本体，不再转写为 `global.md` 或 `project.md`。
 - Codex/OpenCode 的 `.agents/skills/` 与 Claude Code 的 `.claude/skills/` 是生成镜像，不作为权威源手工修改。
 - Subagent 权威角色保存在 `.compass-harness/subagents/`，按选择分别生成：
   - Codex：`.codex/agents/*.toml`
   - Claude Code：`.claude/agents/*.md`
   - OpenCode：`.opencode/agents/*.md`
-- `CLAUDE.md` 作为 Claude Code 的薄入口，只导航到 `.compass-harness/`。
+- `CLAUDE.md` 作为 Claude Code 的适配入口，引用根 `AGENTS.md` 和 `.compass-harness/`。
 - `opencode.json` 只保存 OpenCode 特有的权限和 instructions 配置，不复制项目知识正文。
 
 ## 第一阶段：品牌改名
@@ -89,7 +89,7 @@ Phase 2 包含两类产物：项目原有的 13 个 Skill 迁移到新的跨工�
 - **不伪造验证**：不把主观 AI 输出、跨平台行为一致性或一次演示结果写成可重复验收标准。
 - **不生成实例**：只提供 Subagent 角色模板和平台格式示例，不创建 `.codex/agents/`、`.claude/agents/` 或 `.opencode/agents/` 实例。
 - **保留最小结构**：模板只规定必要字段和职责边界，不强制项目完整填写 L1–L5。
-- **单一权威源**：本模板仓库在 `.agents/skills/` 维护原始 Skill；安装到目标项目后统一进入 `.compass-harness/skills/`。平台原生目录只保存生成的发现层。
+- **单一权威源**：项目规则使用根 `AGENTS.md`；本模板仓库在 `.agents/skills/` 维护原始 Skill，安装后进入 `.compass-harness/skills/`。平台 Skill 目录只保存生成的发现层。
 
 ### 内容边界
 
@@ -119,9 +119,7 @@ Phase 2 交付以下内容：
 
 templates/compass-harness/
 ├── manifest.yaml
-├── agent-rules/
-│   ├── AGENTS.global.md
-│   └── AGENTS.project.md
+├── AGENTS.md                         # 唯一项目规则模板
 ├── context/
 │   ├── L1-codebase-map/
 │   ├── L2-rules/
@@ -147,13 +145,12 @@ Compass Harness 安装到其他项目时，所有可编辑内容集中在 `.comp
 .compass-harness/
 ├── manifest.yaml
 ├── config.yaml
-├── rules/                           # 跨平台共享规则与项目导航
 ├── context/                         # L1–L5 项目上下文
 ├── skills/                          # 13 个 Skill 的安装后权威源
 └── subagents/                       # 通用角色定义与所选角色
 
-AGENTS.md                            # Codex/OpenCode 薄入口
-CLAUDE.md                            # Claude Code 薄入口
+AGENTS.md                            # Codex/OpenCode 原生项目规则
+CLAUDE.md                            # Claude Code 适配入口
 .agents/skills/                      # Codex/OpenCode 生成镜像
 .claude/skills/                      # Claude Code 生成镜像
 .codex/agents/                       # 可选生成适配
@@ -161,7 +158,7 @@ CLAUDE.md                            # Claude Code 薄入口
 .opencode/agents/                    # 可选生成适配
 ```
 
-`.compass-harness/` 之外的生成文件不得承载唯一项目知识；删除后应能由 Phase 3 CLI 从权威目录重建。
+`AGENTS.md` 是项目规则本体；平台 Skill 镜像和 Subagent 适配文件不得承载唯一项目知识，删除后应能由 Phase 3 CLI 重建。
 
 ### Phase 2A：迁移现有 13 个 Skill
 
@@ -179,8 +176,7 @@ CLAUDE.md                            # Claude Code 薄入口
 - [x] 定义统一占位符格式，例如 `{{PROJECT_NAME}}`、`{{TEST_COMMAND}}`、`{{SOURCE_ROOT}}`。
 - [x] 明确哪些字段必填、哪些可选，以及未填写占位符的处理方式。
 - [x] 定义模板文件命名规则和相对引用规则。
-- [x] 编写全局 `AGENTS.md` 模板：只包含跨项目原则、权限边界和基本完成条件。
-- [x] 编写项目 `AGENTS.md` 模板：只负责导航项目上下文，不复制 L1–L5 正文。
+- [x] 编写唯一 `AGENTS.md` 模板，合并必要工作原则、项目命令和上下文导航，不设置 global/project 分层。
 - [x] 整理 L1–L5 的空白模板；标注最小必填内容，不要求全部启用。
 - [x] 编写 `_skill-template/SKILL.md`，包含触发描述、前置条件、步骤、允许写入、失败条件、输出和完成定义。
 - [x] `_skill-template` 只用于以后创建新 Skill，不复制 `.agents/skills/` 中现有 Skill 的正文。
@@ -232,15 +228,24 @@ Phase 2 只做能够客观重复执行的静态检查：
 - [x] 将上下文安装目标从 `.ai/` 改为 `.compass-harness/context/`。
 - [x] 将安装后的 Skill 权威目录定义为 `.compass-harness/skills/`。
 - [x] 将通用 Subagent 角色权威目录定义为 `.compass-harness/subagents/`。
-- [x] 将 `AGENTS.md`、`CLAUDE.md` 和各工具私有目录明确为可重建的薄适配层。
+- [x] 将 `AGENTS.md` 定义为原生项目规则，将 `CLAUDE.md` 和各工具私有目录定义为适配层。
 - [x] 更新 manifest、13 个 Skill、上下文模板、适配器、CLI 与当前文档中的路径。
 - [x] 静态检查禁止当前模板和 Skill 继续依赖 `.ai/`，并验证 `.compass-harness/` 安装契约。
+
+### Phase 2G：简化 AGENTS 规则模型
+
+- [x] 删除 `AGENTS.global.md`，取消不存在的全局规则层。
+- [x] 将必要通用原则与项目导航合并为唯一 `templates/compass-harness/AGENTS.md`。
+- [x] 目标项目直接安装根 `AGENTS.md`，不再生成 `.compass-harness/rules/project.md`。
+- [x] Claude Code 的 `CLAUDE.md` 引用根 `AGENTS.md`；OpenCode 继续直接使用根 `AGENTS.md`。
+- [x] 删除重复的 Codex/OpenCode `AGENTS.md.template` 适配文件。
+- [x] 更新 manifest、安装流程、文档和静态验证中的 global/project 规则引用。
 
 ### Phase 2 完成定义
 
 - 本仓库 `.agents/skills/` 包含迁移后的 13 个原始 Skill；目标项目将其安装到 `.compass-harness/skills/`。
 - `templates/compass-harness/` 目录结构完整，manifest 与实际文件一致。
-- 目标项目所有可编辑的 Harness 内容位于 `.compass-harness/`，平台原生文件均可由其重建。
+- 目标项目规则位于根 `AGENTS.md`；上下文、Skills、Subagent 和配置位于 `.compass-harness/`。
 - 全局/项目 AGENTS、Skill、Subagent 和三平台适配模板均已提供。
 - 四个 Subagent 仅作为角色示例存在，仓库根目录没有生成真实 Subagent 配置。
 - Phase 2 的验收仅包含可重复执行的静态检查，没有跨平台行为或推理质量承诺。
