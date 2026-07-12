@@ -2,7 +2,7 @@
 
 > 级别：基础层
 > 优先级：P1
-> 一句话：把 Project Compass 从一套文档和 prompt，升级为可执行的 workflow harness。
+> 一句话：把 Compass Harness 从一套文档和 prompt，升级为可执行的 workflow harness。
 
 ## 要解决的问题
 

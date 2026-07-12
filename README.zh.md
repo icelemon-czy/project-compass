@@ -1,7 +1,9 @@
-# Project Compass
+# Compass Harness
 
 > **[English Version](README.md)** · 版本见 [VERSION](VERSION) · [CHANGELOG](CHANGELOG.md)
 
+> 面向可靠 AI 辅助软件开发的上下文、代理、流程与验证系统。
+>
 > 通用 AI 上下文模板 — 适用于任意语言、任意框架、任意规模的项目
 > 将本模板复制到你的项目根目录（重命名为 `.ai/`），按 `[填写]` 提示填入具体内容即可
 
@@ -195,8 +197,8 @@ L1 features/user-auth/              L2 rules/
 ### 第一步：复制模板到项目
 
 ```bash
-# 将整个 project-compass 复制到你的项目的 .ai/ 目录下
-cp -r /path/to/project-compass /path/to/your-project/.ai/
+# 将整个 compass-harness 仓库复制到你的项目的 .ai/ 目录下
+cp -r /path/to/compass-harness /path/to/your-project/.ai/
 ```
 
 ### 第二步：用 builder prompt 依次构建 L1 → L2 → L3
@@ -344,7 +346,7 @@ cp -r /path/to/project-compass /path/to/your-project/.ai/
 
 ## Skills — 自动触发的工作流
 
-Project Compass 自带 **13 个 Copilot / Claude Code 自定义技能**（`.github/skills/`）。
+Compass Harness 自带 **13 个 Copilot / Claude Code 自定义技能**（`.github/skills/`）。
 见下方 [Skill 发现机制](#skill-发现机制-copilot--claude-code-怎么找到它们) 了解 AI 工具如何识别这些技能。
 
 ### 13 个 Skill

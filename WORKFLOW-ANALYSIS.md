@@ -1,4 +1,4 @@
-# Project Compass Skill 工作流分析
+# Compass Harness Skill 工作流分析
 
 > 盘点全部 Skill + 逐个展开 workflow + 全局工作流 + 已修缺口记录。
 
@@ -21,7 +21,7 @@
 | # | 原缺口 | 补丁 | 落地文件 |
 |:--|:-------|:-----|:---------|
 | 6 | `/review-tests` "抽样验证"导致虚假通过漏检 | 完全重写：穷举主表、调用链验证、反向推理、覆盖缺口分析、确定性判定规则（9 步流程） | `review-tests/SKILL.md` |
-| 7 | 所有 Skill 的检查步骤只描述 WHAT 不描述 HOW | 11 个 Skill 全部加入具体检测算法/操作命令/判定条件 | 见下方明细 |
+| 7 | 所有 Skill 的检查步骤只描述 WHAT 不描述 HOW | 当时已有的全部 Skill 均加入具体检测算法/操作命令/判定条件 | 见下方明细 |
 | 8 | `/git-commit` doc-sync 判断无具体规则 | 新增 5 条命中规则表（按变更类型→需同步文档映射） | `git-commit/SKILL.md` |
 | 9 | `/check-changes` "很久未推进"无量化 | 量化为 > 7 天 + git log 检测命令 | `check-changes/SKILL.md` |
 | 10 | `/setup-testing` "取最常见的"无算法 | 三级优先级（config > 依赖 > grep 统计）；[待确认]限 3 个且附原因 | `setup-testing/SKILL.md` |

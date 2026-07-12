@@ -1,12 +1,28 @@
 # Changelog
 
-本项目对 `.github/skills/`、`entrypoints/`、`L*` 模板都视为**公共接口**。fork 使用者请按本文件判断是否需要 rebase。
+Compass Harness 对 `.github/skills/`、`entrypoints/`、`L*` 模板都视为**公共接口**。fork 使用者请按本文件判断是否需要 rebase。
 
 版本号采用 [Semantic Versioning](https://semver.org/)：
 
 - **MAJOR** — skill 改名、状态机不兼容变更、模板字段重命名
 - **MINOR** — 新增 skill / 新增字段 / 可选能力
 - **PATCH** — 措辞修订、拼写、语义不变的澄清
+
+## [0.4.0] — 2026-07-12
+
+### Changed
+
+- 项目品牌从 **Project Compass** 更新为 **Compass Harness**。
+- 统一 README、路线图、工作流分析、演示文稿和 CLI 展示名称。
+- 明确产品定位为面向上下文、代理、Skills、Specs、工作流与验证的 AI engineering harness。
+- 更新模板复制示例中的仓库目录名为 `compass-harness`。
+
+### Compatibility
+
+- CLI 命令继续使用 `compass`。
+- 项目上下文目录继续使用 `.ai/`。
+- Skill 名称、L1–L5 结构和现有公共接口均保持不变。
+- 本次版本不自动重命名 GitHub 仓库、本地目录或 Git remote。
 
 ## [0.3.0] — 2026-04-18
 

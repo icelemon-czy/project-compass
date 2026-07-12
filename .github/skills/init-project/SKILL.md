@@ -13,7 +13,7 @@ argument-hint: "Describe what you want to build (e.g., 'a TODO app with React', 
 ## Prerequisites
 
 - 用户描述了想做什么（可以很粗略，如"我想做一个 XX"）
-- project-compass 模板可用
+- Compass Harness 模板可用
 
 ## Procedure
 
@@ -110,10 +110,10 @@ argument-hint: "Describe what you want to build (e.g., 'a TODO app with React', 
 
 ### Phase C: 构建 `.ai/` 上下文 + Spec（自动）
 
-#### Step 5: 复制 project-compass 模板
+#### Step 5: 复制 Compass Harness 模板
 
 ```bash
-cp -r /path/to/project-compass /path/to/project/.ai/
+cp -r /path/to/compass-harness /path/to/project/.ai/
 ```
 
 #### Step 6: 构建 L1 — 代码导航

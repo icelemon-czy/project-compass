@@ -1,7 +1,9 @@
-# Project Compass
+# Compass Harness
 
 > **[中文版 / Chinese Version](README.zh.md)** · Version: see [VERSION](VERSION) · [CHANGELOG](CHANGELOG.md)
 
+> An open AI engineering harness for context, agents, skills, specs, workflows, and verification.
+>
 > Universal AI context template — works with any language, any framework, any scale.
 > Copy this template to your project root (rename to `.ai/`), fill in the `[fill in]` placeholders.
 
@@ -195,8 +197,8 @@ L1 features/user-auth/              L2 rules/
 ### Step 1: Copy template to your project
 
 ```bash
-# Copy the entire project-compass into your project's .ai/ directory
-cp -r /path/to/project-compass /path/to/your-project/.ai/
+# Copy the entire compass-harness repository into your project's .ai/ directory
+cp -r /path/to/compass-harness /path/to/your-project/.ai/
 ```
 
 ### Step 2: Build L1 → L2 → L3 using builder prompts
@@ -344,7 +346,7 @@ After this, every AI conversation will auto-load `.ai/` context and self-navigat
 
 ## Skills (Auto-Invoked Workflows)
 
-Project Compass ships with **13 Copilot / Claude Code custom skills** under `.github/skills/`.
+Compass Harness ships with **13 Copilot / Claude Code custom skills** under `.github/skills/`.
 See the [Skill Discovery](#skill-discovery--how-copilot--claude-code-find-these-skills) section below for how your AI tool picks them up.
 
 ### The 13 Skills

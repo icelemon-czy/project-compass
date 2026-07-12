@@ -36,12 +36,12 @@ Three steps. Execute in order.
 
 ---
 
-### Step 1: Copy project-compass to `.ai/`
+### Step 1: Copy Compass Harness to `.ai/`
 
-将 project-compass 模板复制到目标项目下：
+将 Compass Harness 模板复制到目标项目下：
 
 ```bash
-cp -r /path/to/project-compass /path/to/your-project/.ai/
+cp -r /path/to/compass-harness /path/to/your-project/.ai/
 ```
 
 复制后，目录结构、模板文件、`L3-specs/change-management.md`、`L4-session/active-session.md` 等已就位；`.ai/doc-sync.md` 需要从 `.ai/entrypoints/doc-sync.md` 额外部署一次。

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# compass — Project Compass 中控台
+# compass — Compass Harness 中控台
 # 用法: compass [command] [args...]
 #
 # 在一个终端里查看全局状态、分发 skill 到不同 agent/terminal。
@@ -51,7 +51,7 @@ cmd_status() {
     check_ai_dir
     echo ""
     echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════╗${NC}"
-    echo -e "${BOLD}${CYAN}║       🧭 Project Compass — 状态总览         ║${NC}"
+    echo -e "${BOLD}${CYAN}║       🧭 Compass Harness — 状态总览         ║${NC}"
     echo -e "${BOLD}${CYAN}╚══════════════════════════════════════════════╝${NC}"
 
     # ── .ai/ 完整性
@@ -337,7 +337,7 @@ cmd_watch() {
 # ─── help ─────────────────────────────────────────────────────────────
 cmd_help() {
     echo ""
-    echo -e "${BOLD}🧭 compass — Project Compass 中控台${NC}"
+    echo -e "${BOLD}🧭 compass — Compass Harness 中控台${NC}"
     echo ""
     echo "用法: compass <command> [args...]"
     echo ""
