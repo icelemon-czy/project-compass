@@ -1,6 +1,6 @@
 # Claude Code 构建 L1 代码导航文档 — Phase 4-5（深入分析阶段）
 
-> **前置条件**：已完成 `prompt-L1a.md`，且 `.ai/L1-codebase-map/_handoff.md` 已存在。
+> **前置条件**：已完成 `prompt-L1a.md`，且 `.compass-harness/context/L1-codebase-map/_handoff.md` 已存在。
 > **本文件产出**：features/[name]/ 完整文档 + architecture.md + module-map.md + key-files.md
 
 ---
@@ -14,7 +14,7 @@
 
 首先执行：
 ```bash
-cat .ai/L1-codebase-map/_handoff.md
+cat .compass-harness/context/L1-codebase-map/_handoff.md
 ```
 
 读取后，你将获得：功能清单、基础设施层（如有）、跨功能通用模式、补充上下文（如有）、overview.md 全文。这是本对话的全部背景。
@@ -29,7 +29,7 @@ cat .ai/L1-codebase-map/_handoff.md
 > 基础设施由主 agent 直接分析，不需要派发 subagent（它们是跨功能的，subagent 的独立 context 不适合）。
 > ⚠️ **必须在 Phase 4b（功能分析）之前完成**，因为 subagent 需要基础设施上下文。
 
-根据 `_handoff.md` 中的基础设施组件表，填写 `.ai/L1-codebase-map/infrastructure/`：
+根据 `_handoff.md` 中的基础设施组件表，填写 `.compass-harness/context/L1-codebase-map/infrastructure/`：
 
 #### Step 1 — 组件发现（先看代码，再输出清单）
 
@@ -55,8 +55,8 @@ cat .ai/L1-codebase-map/_handoff.md
 
 #### Step 3 — 创建文档文件
 
-1. 读取模板：`cat .ai/L1-codebase-map/infrastructure/_infrastructure-template/README.md`
-2. 参照模板格式，在 `.ai/L1-codebase-map/infrastructure/` 下创建实际文件：
+1. 读取模板：`cat .compass-harness/context/L1-codebase-map/infrastructure/_infrastructure-template/README.md`
+2. 参照模板格式，在 `.compass-harness/context/L1-codebase-map/infrastructure/` 下创建实际文件：
    - 先更新 `README.md` — 填入组件索引表、架构全景、变更影响、已知陷阱
    - 为每个组件创建子文件夹 `[组件名]/`：
      - `README.md` — 组件概览 + 分层导航 + 关键文件 + 核心机制 + 对外接口
@@ -79,7 +79,7 @@ cat .ai/L1-codebase-map/_handoff.md
 ## 项目背景
 <!-- 将 _handoff.md 中 "overview.md 全文" 部分粘贴到这里。不要附带其他文件。 -->
 
-[粘贴 .ai/L1-codebase-map/overview.md 的完整内容]
+[粘贴 .compass-harness/context/L1-codebase-map/overview.md 的完整内容]
 
 ## 基础设施上下文
 <!-- 如果 Phase 4a 已完成基础设施文档，将 infrastructure/README.md 的「组件索引」表和「架构全景」粘贴到这里。
@@ -94,7 +94,7 @@ cat .ai/L1-codebase-map/_handoff.md
 
 ## 你的任务
 为「[功能名]」生成完整的上下文文档，存放到：
-.ai/L1-codebase-map/features/[功能名]/
+.compass-harness/context/L1-codebase-map/features/[功能名]/
 
 ## 执行步骤
 
@@ -126,7 +126,7 @@ cat .ai/L1-codebase-map/_handoff.md
 
 根据 Step 1 的层次清单，直接创建目录和文件：
 
-在 `.ai/L1-codebase-map/features/[功能名]/` 下创建：
+在 `.compass-harness/context/L1-codebase-map/features/[功能名]/` 下创建：
 
 - `README.md` — **必须包含「分层导航」表**（每行对应一个层文件，写明加载时机和内容摘要），然后是数据流、变更影响表、已知陷阱
 - `[层名].md` — 每层一个文件，详细记录该层的职责、关键文件、API、陷阱
@@ -140,7 +140,7 @@ README.md 中的「分层导航」表格式：
 | service.md | 改业务逻辑 / 加新规则时 | 核心规则、状态机 |
 ```
 
-内容格式参考 `.ai/L1-codebase-map/features/_feature-template/README.md` 中的 section 结构和「层文件格式参考」部分，但文件名和文件数量完全由 Step 1 决定。
+内容格式参考 `.compass-harness/context/L1-codebase-map/features/_feature-template/README.md` 中的 section 结构和「层文件格式参考」部分，但文件名和文件数量完全由 Step 1 决定。
 
 ## 约束
 - 每个文件自包含

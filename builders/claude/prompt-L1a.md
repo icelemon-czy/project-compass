@@ -19,7 +19,7 @@
 
 文件结构：
 ```
-.ai/L1-codebase-map/
+.compass-harness/context/L1-codebase-map/
 ├── overview.md              ← 轻量索引（< 60 行），每次对话必读
 ├── architecture.md          ← 运行时架构（请求生命周期、启动顺序、运行时协作）
 ├── module-map.md            ← 模块合约与耦合，跨模块修改时加载
@@ -147,7 +147,7 @@ git branch -a 2>/dev/null | head -20
 
 ### Phase 3: 填写 overview.md（轻量索引）
 
-读取 `.ai/L1-codebase-map/overview.md` 模板，填写：
+读取 `.compass-harness/context/L1-codebase-map/overview.md` 模板，填写：
 - 项目身份（3 行）
 - 架构约束（只写禁止的方向）
 - **功能索引表**：每行一个功能，只有功能名 + 一句话 + 指向 feature 文件 + 入口文件
@@ -161,7 +161,7 @@ git branch -a 2>/dev/null | head -20
 ### Phase 4（交接）: 写入 _handoff.md
 
 > ⚠️ **这是本文件的最后一步**，必须在 Phase 3 的 overview.md 写好后执行。
-> 将以下信息写入 `.ai/L1-codebase-map/_handoff.md`，供下一个对话（Phase 4-5）使用。
+> 将以下信息写入 `.compass-harness/context/L1-codebase-map/_handoff.md`，供下一个对话（Phase 4-5）使用。
 
 文件内容格式：
 
@@ -194,7 +194,7 @@ git branch -a 2>/dev/null | head -20
 ```
 
 写完后，提示用户：
-**"Phase 1-3 完成。请开新对话，使用 `prompt-L1b.md`，并告知模型读取 `.ai/L1-codebase-map/_handoff.md`。"**
+**"Phase 1-3 完成。请开新对话，使用 `prompt-L1b.md`，并告知模型读取 `.compass-harness/context/L1-codebase-map/_handoff.md`。"**
 
 ## 约束
 - overview.md < 60 行，只做索引

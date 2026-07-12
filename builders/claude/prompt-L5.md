@@ -27,21 +27,21 @@
 
 ```bash
 # 项目总览和功能列表
-cat [项目目录]/.ai/L1-codebase-map/overview.md
-ls [项目目录]/.ai/L1-codebase-map/features/
+cat [项目目录]/.compass-harness/context/L1-codebase-map/overview.md
+ls [项目目录]/.compass-harness/context/L1-codebase-map/features/
 
 # 当前 spec 状态
-cat [项目目录]/.ai/L3-specs/specs/system.md
-ls [项目目录]/.ai/L3-specs/specs/
+cat [项目目录]/.compass-harness/context/L3-specs/specs/system.md
+ls [项目目录]/.compass-harness/context/L3-specs/specs/
 
 # 验证规则和模板
-cat [项目目录]/.ai/L5-validation/validation-rules.md
-cat [项目目录]/.ai/L5-validation/traceability/_domain-template.md
-cat [项目目录]/.ai/L5-validation/test-specs/_domain-template.md
+cat [项目目录]/.compass-harness/context/L5-validation/validation-rules.md
+cat [项目目录]/.compass-harness/context/L5-validation/traceability/_domain-template.md
+cat [项目目录]/.compass-harness/context/L5-validation/test-specs/_domain-template.md
 
 # 已有追溯和测试用例（如有）
-ls [项目目录]/.ai/L5-validation/traceability/
-ls [项目目录]/.ai/L5-validation/test-specs/
+ls [项目目录]/.compass-harness/context/L5-validation/traceability/
+ls [项目目录]/.compass-harness/context/L5-validation/test-specs/
 
 # 检查项目是否已有测试
 find [项目目录] -name '*.test.*' -o -name '*.spec.*' -o -name 'test_*' -o -name '*_test.*' | head -20
@@ -55,8 +55,8 @@ find [项目目录] -name '*.test.*' -o -name '*.spec.*' -o -name 'test_*' -o -n
 
 ```bash
 # 逐个读取 spec
-cat [项目目录]/.ai/L3-specs/specs/system.md
-cat [项目目录]/.ai/L3-specs/specs/[域名]/spec.md
+cat [项目目录]/.compass-harness/context/L3-specs/specs/system.md
+cat [项目目录]/.compass-harness/context/L3-specs/specs/[域名]/spec.md
 ```
 
 检查项（来自 validation-rules.md）：
@@ -73,12 +73,12 @@ cat [项目目录]/.ai/L3-specs/specs/[域名]/spec.md
 
 1. **读取 spec**：
    ```bash
-   cat [项目目录]/.ai/L3-specs/specs/[域名]/spec.md
+   cat [项目目录]/.compass-harness/context/L3-specs/specs/[域名]/spec.md
    ```
 
 2. **读取对应的 L1 feature 文档**：
    ```bash
-   cat [项目目录]/.ai/L1-codebase-map/features/[功能名]/README.md
+   cat [项目目录]/.compass-harness/context/L1-codebase-map/features/[功能名]/README.md
    # 按需深入各层文件
    ```
 
@@ -109,7 +109,7 @@ cat [项目目录]/.ai/L3-specs/specs/[域名]/spec.md
 
 ```bash
 # 参考模板
-cat [项目目录]/.ai/L5-validation/traceability/_domain-template.md
+cat [项目目录]/.compass-harness/context/L5-validation/traceability/_domain-template.md
 ```
 
 填写追溯表和反向追溯部分。
@@ -120,7 +120,7 @@ cat [项目目录]/.ai/L5-validation/traceability/_domain-template.md
 
 ```bash
 # 参考模板
-cat [项目目录]/.ai/L5-validation/test-specs/_domain-template.md
+cat [项目目录]/.compass-harness/context/L5-validation/test-specs/_domain-template.md
 ```
 
 **项目无测试（情况 1）**：

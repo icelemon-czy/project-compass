@@ -35,23 +35,23 @@
 
 ```bash
 # 项目总览
-cat [项目目录]/.ai/L1-codebase-map/overview.md
+cat [项目目录]/.compass-harness/context/L1-codebase-map/overview.md
 
 # 运行时架构
-cat [项目目录]/.ai/L1-codebase-map/architecture.md
+cat [项目目录]/.compass-harness/context/L1-codebase-map/architecture.md
 
 # 功能列表
-ls [项目目录]/.ai/L1-codebase-map/features/
+ls [项目目录]/.compass-harness/context/L1-codebase-map/features/
 
 # 全局编码规则（可能包含跨域约束）
-cat [项目目录]/.ai/L2-rules/global.md
+cat [项目目录]/.compass-harness/context/L2-rules/global.md
 
 # 当前 spec 状态
-cat [项目目录]/.ai/L3-specs/specs/system.md
-ls [项目目录]/.ai/L3-specs/specs/
+cat [项目目录]/.compass-harness/context/L3-specs/specs/system.md
+ls [项目目录]/.compass-harness/context/L3-specs/specs/
 
 # 读取模板
-cat [项目目录]/.ai/L3-specs/specs/_capability-template/spec.md
+cat [项目目录]/.compass-harness/context/L3-specs/specs/_capability-template/spec.md
 ```
 
 如果用户提供了需求文档，先读取并摘要：
@@ -109,7 +109,7 @@ cat [文档路径]
 
 1. **读取相关 feature 文档**：
    ```bash
-   cat [项目目录]/.ai/L1-codebase-map/features/[功能名]/README.md
+   cat [项目目录]/.compass-harness/context/L1-codebase-map/features/[功能名]/README.md
    # 按需深入各层文件
    ```
 

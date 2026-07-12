@@ -3,19 +3,20 @@
 # 用法: compass [command] [args...]
 #
 # 在一个终端里查看全局状态、分发 skill 到不同 agent/terminal。
-# 每个 skill 由独立的 agent（Claude Code / Copilot / Cline）在独立终端执行。
+# Skill 由 Codex、Claude Code 或 OpenCode 等当前支持工具执行。
 # 本脚本负责：状态总览、下一步建议、启动提示词生成。
 
 set -euo pipefail
 
 # ─── 配置 ────────────────────────────────────────────────────────────
-AI_DIR=".ai"
-SPECS_DIR="$AI_DIR/L3-specs"
+HARNESS_DIR=".compass-harness"
+CONTEXT_DIR="$HARNESS_DIR/context"
+SPECS_DIR="$CONTEXT_DIR/L3-specs"
 CHANGES_DIR="$SPECS_DIR/changes"
 ARCHIVE_DIR="$SPECS_DIR/archive"
-SESSION_FILE="$AI_DIR/L4-session/active-session.md"
-TESTING_FILE="$AI_DIR/L2-rules/testing.md"
-SKILLS_DIR=".github/skills"  # or "$AI_DIR/../.github/skills" depending on layout
+SESSION_FILE="$CONTEXT_DIR/L4-session/active-session.md"
+TESTING_FILE="$CONTEXT_DIR/L2-rules/testing.md"
+SKILLS_DIR="$HARNESS_DIR/skills"
 
 # ─── 颜色 ────────────────────────────────────────────────────────────
 RED='\033[0;31m'
@@ -38,32 +39,36 @@ success() { echo -e "  ${GREEN}✅${NC} $1"; }
 warn()    { echo -e "  ${YELLOW}⚠️${NC}  $1"; }
 error()   { echo -e "  ${RED}❌${NC} $1"; }
 
-# ─── 检查 .ai/ 是否存在 ──────────────────────────────────────────────
-check_ai_dir() {
-    if [[ ! -d "$AI_DIR" ]]; then
-        error "当前目录没有 .ai/ — 请先运行 /build-ai 或 /init-project"
+# ─── 检查 Compass Harness 是否存在 ───────────────────────────────────
+check_harness_dir() {
+    if [[ ! -d "$HARNESS_DIR" || ! -d "$CONTEXT_DIR" ]]; then
+        error "当前目录没有完整的 .compass-harness/ — 请先运行 /build-ai 或 /init-project"
         exit 1
     fi
 }
 
 # ─── status: 全局状态总览 ─────────────────────────────────────────────
 cmd_status() {
-    check_ai_dir
+    check_harness_dir
     echo ""
     echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════╗${NC}"
     echo -e "${BOLD}${CYAN}║       🧭 Compass Harness — 状态总览         ║${NC}"
     echo -e "${BOLD}${CYAN}╚══════════════════════════════════════════════╝${NC}"
 
-    # ── .ai/ 完整性
-    header "📁 .ai/ 完整性"
+    # ── .compass-harness/ 完整性
+    header "📁 .compass-harness/ 完整性"
     local missing=0
     for f in \
-        "$AI_DIR/L1-codebase-map/overview.md" \
-        "$AI_DIR/L2-rules/global.md" \
+        "$HARNESS_DIR/manifest.yaml" \
+        "$HARNESS_DIR/config.yaml" \
+        "$HARNESS_DIR/rules/global.md" \
+        "$HARNESS_DIR/rules/project.md" \
+        "$CONTEXT_DIR/L1-codebase-map/overview.md" \
+        "$CONTEXT_DIR/L2-rules/global.md" \
         "$TESTING_FILE" \
-        "$AI_DIR/L3-specs/specs/system.md" \
+        "$CONTEXT_DIR/L3-specs/specs/system.md" \
         "$SESSION_FILE" \
-        "$AI_DIR/L5-validation/validation-rules.md"; do
+        "$CONTEXT_DIR/L5-validation/validation-rules.md"; do
         if [[ -f "$f" ]]; then
             success "$f"
         else
@@ -71,6 +76,18 @@ cmd_status() {
             ((missing++)) || true
         fi
     done
+
+    local skill_count=0
+    if [[ -d "$SKILLS_DIR" ]]; then
+        skill_count=$(find "$SKILLS_DIR" -mindepth 2 -maxdepth 2 -name SKILL.md 2>/dev/null | wc -l | tr -d ' ')
+    fi
+    if [[ "$skill_count" == "13" ]]; then
+        success "$SKILLS_DIR (13 Skills)"
+    else
+        error "$SKILLS_DIR (${skill_count}/13 Skills)"
+        ((missing++)) || true
+    fi
+
     [[ $missing -eq 0 ]] && success "全部核心文件就位" || warn "$missing 个核心文件缺失"
 
     # ── 变更状态
@@ -235,8 +252,8 @@ cmd_dispatch() {
     echo ""
     echo "─────────────── 复制结束 ───────────────"
     echo ""
-    info "提示: 在 Claude Code / Cline / Copilot 的新对话中粘贴即可"
-    info "agent 会自动读取 .github/skills/$skill/SKILL.md 并按流程执行"
+    info "提示: 在 Codex、Claude Code 或 OpenCode 的对话中使用该请求"
+    info "agent 应读取 .compass-harness/skills/$skill/SKILL.md 并按流程执行"
 }
 
 # ─── skills: 列出所有可用 skill ──────────────────────────────────────
@@ -265,7 +282,7 @@ list_skills() {
 
 # ─── test: 触发远端测试 ──────────────────────────────────────────────
 cmd_test() {
-    check_ai_dir
+    check_harness_dir
 
     header "🧪 远端测试"
 
@@ -284,7 +301,7 @@ cmd_test() {
     fi
 
     # 检查远端配置
-    local remote_config="$AI_DIR/test-remote.conf"
+    local remote_config="$HARNESS_DIR/test-remote.conf"
     if [[ -f "$remote_config" ]]; then
         info "读取远端配置: $remote_config"
         # shellcheck source=/dev/null
@@ -345,7 +362,7 @@ cmd_help() {
     echo -e "  ${BOLD}status${NC}              全局状态总览（变更、会话、下一步建议）"
     echo -e "  ${BOLD}skills${NC}              列出所有可用 skill"
     echo -e "  ${BOLD}dispatch${NC} <skill>    生成 agent 执行提示词（复制到新终端）"
-    echo -e "  ${BOLD}test${NC}                触发远端测试（需配置 .ai/test-remote.conf）"
+    echo -e "  ${BOLD}test${NC}                触发远端测试（需配置 .compass-harness/test-remote.conf）"
     echo -e "  ${BOLD}watch${NC} [interval]    持续监控模式（默认 10s 刷新）"
     echo -e "  ${BOLD}help${NC}                显示此帮助"
     echo ""

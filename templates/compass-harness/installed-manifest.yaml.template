@@ -1,0 +1,26 @@
+schema_version: 1
+
+harness:
+  name: compass-harness
+  version: 0.4.0
+
+project:
+  name: "{{PROJECT_NAME}}"
+
+canonical_root: .compass-harness
+canonical_paths:
+  config: .compass-harness/config.yaml
+  rules: .compass-harness/rules
+  context: .compass-harness/context
+  skills: .compass-harness/skills
+  subagents: .compass-harness/subagents
+
+generated_adapters:
+  - AGENTS.md
+  - CLAUDE.md
+  - opencode.json
+  - .agents/skills
+  - .claude/skills
+  - .codex/agents
+  - .claude/agents
+  - .opencode/agents

@@ -16,11 +16,11 @@
 
 ## 背景
 我需要为本项目构建 AI 上下文文档中的 **L2 编码规则层**。模板在：
-- `.ai/L2-rules/global.md` — 全局规则（命名、错误处理、反模式等）
-- `.ai/L2-rules/templates.md` — 新建文件的代码模板
-- `.ai/L2-rules/_module-template.md` — 模块规则模板（复制为 `[模块名].md`）
+- `.compass-harness/context/L2-rules/global.md` — 全局规则（命名、错误处理、反模式等）
+- `.compass-harness/context/L2-rules/templates.md` — 新建文件的代码模板
+- `.compass-harness/context/L2-rules/_module-template.md` — 模块规则模板（复制为 `[模块名].md`）
 
-L1 导航文档已经完成，在 `.ai/L1-codebase-map/` 下。
+L1 导航文档已经完成，在 `.compass-harness/context/L1-codebase-map/` 下。
 
 ## 核心原则
 - ✅ L2 规则要从代码中的**实际模式**提取，不要编造项目没在用的规范
@@ -39,8 +39,8 @@ L1 导航文档已经完成，在 `.ai/L1-codebase-map/` 下。
 find . -maxdepth 3 -not -path '*/node_modules/*' -not -path '*/.git/*' -not -path '*/dist/*' -not -path '*/__pycache__/*' -not -path '*/venv/*' -not -path '*/.venv/*' -not -path '*/build/*' -not -path '*/target/*' | head -120 | sort
 
 # 读取已完成的 L1 文档（了解模块划分和数据流）
-cat [项目目录]/.ai/L1-codebase-map/overview.md
-cat [项目目录]/.ai/L1-codebase-map/module-map.md
+cat [项目目录]/.compass-harness/context/L1-codebase-map/overview.md
+cat [项目目录]/.compass-harness/context/L1-codebase-map/module-map.md
 
 # 重新收集 import 关系（L2 需要用
 grep -rn "import\|from\|require" --include='*.ts' --include='*.py' --include='*.java' --include='*.go' | head -100
@@ -57,7 +57,7 @@ grep -rn "TODO\|FIXME\|HACK\|WARN\|DEPRECATED\|LEGACY" --include='*.ts' --includ
 
 ### Phase 4: 提取全局规则（→ L2-rules/global.md）
 
-读取 `.ai/L2-rules/global.md` 模板，然后从代码中提取以下信息来填写：
+读取 `.compass-harness/context/L2-rules/global.md` 模板，然后从代码中提取以下信息来填写：
 
 #### 4a: 技术栈与构建命令
 - 从 `package.json` / `pyproject.toml` / `go.mod` / `pom.xml` 提取语言版本、框架、依赖
@@ -142,7 +142,7 @@ cat jest.config* vitest.config* pytest.ini conftest.py 2>/dev/null | head -60
 head -30 src/**/*.test.ts tests/*.py 2>/dev/null
 ```
 
-读取 `.ai/L2-rules/testing.md` 模板，根据扫描结果填写：
+读取 `.compass-harness/context/L2-rules/testing.md` 模板，根据扫描结果填写：
 - 测试框架 + 运行命令
 - 文件命名和位置约定
 - 单元测试：隔离策略、mock 工具、断言风格、数据构造
@@ -159,7 +159,7 @@ head -30 src/**/*.test.ts tests/*.py 2>/dev/null
 
 ### Phase 5: 为每个模块生成规则文件（→ L2-rules/[module].md）
 
-对 L1 module-map.md 中识别出的每个主要模块，复制 `.ai/L2-rules/_module-template.md`，重命名为模块名，填写以下内容：
+对 L1 module-map.md 中识别出的每个主要模块，复制 `.compass-harness/context/L2-rules/_module-template.md`，重命名为模块名，填写以下内容：
 
 > 💡 如果项目较大（模块 > 5 个），可以分批处理：本次对话处理 2-3 个模块，剩余的开新对话。
 

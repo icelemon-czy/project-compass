@@ -1,0 +1,5 @@
+# Generated from one canonical role under `.compass-harness/subagents/`.
+developer_instructions = """
+{{SUBAGENT_INSTRUCTIONS}}
+"""
+sandbox_mode = "read-only"
