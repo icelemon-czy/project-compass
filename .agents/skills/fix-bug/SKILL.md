@@ -1,7 +1,6 @@
 ---
 name: fix-bug
 description: "Unified bug-fix entry: triage root cause (code / test / spec) then fix with spec-first discipline. Designed for loop usage: each invocation fixes ONE bug. Use when: bug, 有bug, 行为不对, unexpected behavior, fix issue, 修bug, 不符合预期, something broken, 测试失败, test failed, review 打回, review failed, 虚假通过, false pass, 定时修复, scheduled fix"
-argument-hint: "Describe the specific bug to fix (e.g., 'review 打回：登录用例没覆盖空密码', '导出的 CSV 缺少 header'). If omitted, picks the next bug from the queue automatically."
 ---
 
 # Fix Bug — 统一修复入口（含分诊）
@@ -24,7 +23,7 @@ Skill 内部**自动分诊**，分辨是 **代码 Bug / 测试 Bug / Spec 歧义
 
 ## Prerequisites
 
-- `.ai/` 目录已存在且有 L1 + L3 + L5 结构
+- `.compass-harness/context/` 目录已存在且有 L1 + L3 + L5 结构
 
 ## Procedure
 
@@ -36,7 +35,7 @@ Skill 内部**自动分诊**，分辨是 **代码 Bug / 测试 Bug / Spec 歧义
 
 ```
 P1 — review 打回（阻塞归档，最高优先）
-   来源：.ai/L5-validation/reports/ 下最近报告中结论为 ❌ 打回 的条目
+   来源：.compass-harness/context/L5-validation/reports/ 下最近报告中结论为 ❌ 打回 的条目
    来源：proposal.md 中 status == review-failed 的变更的 "Review Feedback" 列表
 P2 — 开发中失败的测试
    来源：当前 implementing 状态变更中 tasks.md 标记为失败 / 未完成验证的项
@@ -67,33 +66,33 @@ P3 — 已归档功能的新 bug 报告
 
 根据 Step 0 选中的 bug 和上下文自动判断所处场景：
 
-1. `ls .ai/L3-specs/changes/` — 是否有 `review-failed` 或 `implementing` 状态的变更涉及相关功能？
+1. `ls .compass-harness/context/L3-specs/changes/` — 是否有 `review-failed` 或 `implementing` 状态的变更涉及相关功能？
    - 有 → 这是 "开发中修复" 或 "review 打回"，记下变更名
    - 无 → 这是 "已归档功能 bug"，稍后需要新建 fix 变更
 2. 记录"当前变更上下文"供后续步骤使用
 
 ### Step 2: 定位相关 spec
 
-1. 读取 `.ai/L1-codebase-map/overview.md` — 匹配涉及的功能
+1. 读取 `.compass-harness/context/L1-codebase-map/overview.md` — 匹配涉及的功能
 2. 读取对应的 `features/[name]/README.md` — 理解数据流和相关代码
-3. 读取 `.ai/L3-specs/specs/` 下对应能力域的 `spec.md` — 找到相关 Requirement + Scenario
+3. 读取 `.compass-harness/context/L3-specs/specs/` 下对应能力域的 `spec.md` — 找到相关 Requirement + Scenario
 4. 若 Step 1 识别到进行中的变更 → 同时读取该变更的 delta spec
 
 ### Step 3: 分析 Bug + 定位相关测试 + 分诊（关键步骤）
 
 **3a: 读取测试配置（必做，不可跳过）**
 
-读取 `.ai/L2-rules/testing.md` — 获取：
+读取 `.compass-harness/context/L2-rules/testing.md` — 获取：
 - **测试运行命令**（如 `npm test`、`pytest`、`go test ./...`）
 - **测试目录**
 - **测试框架**
 
-读取 `.ai/L2-rules/testing.md` — 获取：
+读取 `.compass-harness/context/L2-rules/testing.md` — 获取：
 - **测试运行命令**（如 `npm test`、`pytest`、`go test ./...`）
 - **测试目录**
 - **测试框架**
 
-> 如果 `.ai/L2-rules/testing.md` 不存在，告知用户"测试规范缺失，建议先运行 `/setup-testing`"并停止。
+> 如果 `.compass-harness/context/L2-rules/testing.md` 不存在，告知用户"测试规范缺失，建议先运行 `/setup-testing`"并停止。
 
 **3b: 先分析 Bug，定位相关代码和测试（必须先于跑测试）**
 
@@ -161,15 +160,15 @@ Q1: 有测试失败吗？
 
 ### Step 4A: 代码 Bug 路径
 
-1. 读取 `.ai/L2-rules/global.md` + 相关模块规则
-2. 读取 `.ai/L1-codebase-map/features/<相关功能>/README.md` — 定位 bug 代码位置（层导航表、数据流）
+1. 读取 `.compass-harness/context/L2-rules/global.md` + 相关模块规则
+2. 读取 `.compass-harness/context/L1-codebase-map/features/<相关功能>/README.md` — 定位 bug 代码位置（层导航表、数据流）
 3. 修复代码
 4. 跑测试，确认由红转绿
 5. 跳到 Step 5
 
 ### Step 4B: 测试 Bug / 虚假通过路径
 
-1. 读取 `.ai/L2-rules/testing.md`
+1. 读取 `.compass-harness/context/L2-rules/testing.md`
 2. 对照 spec 的 WHEN/THEN 重写 / 加强测试：
    - 断言写反 → 修正断言
    - Mock 错 → 修正 mock，最好换成更真实的 fixture
@@ -191,7 +190,7 @@ Q1: 有测试失败吗？
 > - 如果当前 `depth >= 2`：不得再创建嵌套 fix 变更。定位到最上游的 parent-change，请用户直接处理根问题。
 > - 创建新 fix 变更时，必须写 `parent-change: <当前变更名>` 和 `depth: <父 depth + 1>`。
 
-1. 在 `.ai/L3-specs/changes/` 下创建或复用 fix 变更（如 `fix-empty-password-validation`）
+1. 在 `.compass-harness/context/L3-specs/changes/` 下创建或复用 fix 变更（如 `fix-empty-password-validation`）
 2. 写 `proposal.md`（Why: bug 描述；What: spec 修正；parent-change/depth 必填）
 3. 写 delta spec：
    - 缺失 → `## ADDED Requirements`
@@ -201,7 +200,7 @@ Q1: 有测试失败吗？
 
 ### Step 5: 更新追溯 & 状态回流
 
-1. 更新 `.ai/L5-validation/traceability/<domain>.md` — 该 Scenario 改为 ✅ verified
+1. 更新 `.compass-harness/context/L5-validation/traceability/<domain>.md` — 该 Scenario 改为 ✅ verified
 2. 根据 Step 1 识别的场景，回写变更状态：
 
 | Step 1 场景 | proposal.md 状态 |
@@ -211,7 +210,7 @@ Q1: 有测试失败吗？
 | 开发中挂了 | 保持 `implementing` |
 | 已归档功能 bug | 新建 fix 变更；如仅修代码可直接进入 `implementing`，如需补 spec 则先走 `drafting` → `implementing` |
 
-3. 更新 `.ai/L4-session/active-session.md`
+3. 更新 `.compass-harness/context/L4-session/active-session.md`
 
 ### Step 6: 输出报告
 

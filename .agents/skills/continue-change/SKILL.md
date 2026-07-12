@@ -1,7 +1,6 @@
 ---
 name: continue-change
 description: "Continue implementing an existing change from changes/. Use when: 继续开发, continue, 接着做, resume change, pick up, 选一个开发, 继续变更, implement change"
-argument-hint: "Optional: change name (e.g., 'add-csv-export'). Omit to list all pending changes and pick one."
 ---
 
 # Continue Change (Resume TDD Execution)
@@ -12,7 +11,7 @@ argument-hint: "Optional: change name (e.g., 'add-csv-export'). Omit to list all
 
 ## Prerequisites
 
-- `.ai/L3-specs/changes/` 下有至少一个变更（不含 `_change-template`）
+- `.compass-harness/context/L3-specs/changes/` 下有至少一个变更（不含 `_change-template`）
 - 变更已有 proposal.md（状态可为 `drafting` / `implementing` / `review-failed` / `pending-review` / `approved`）
 
 ## Procedure
@@ -21,12 +20,12 @@ argument-hint: "Optional: change name (e.g., 'add-csv-export'). Omit to list all
 
 ### Step 1: 定位变更
 
-**有参数** → 直接读取 `.ai/L3-specs/changes/<name>/proposal.md`，如不存在则报错。
+**有参数** → 直接读取 `.compass-harness/context/L3-specs/changes/<name>/proposal.md`，如不存在则报错。
 
 **无参数** → 列出所有未归档变更：
 
 ```bash
-ls .ai/L3-specs/changes/ | grep -v _change-template
+ls .compass-harness/context/L3-specs/changes/ | grep -v _change-template
 ```
 
 对每个变更读取 proposal.md 的 Why + 状态，以及 tasks.md 的完成率，展示：
@@ -51,7 +50,7 @@ ls .ai/L3-specs/changes/ | grep -v _change-template
 1. 读取 `proposal.md` — Why、What Changes、受影响能力域
 2. 读取 `specs/` 下的 delta spec — 所有 Requirement + Scenario
 3. 读取 `tasks.md` — 找到下一个未完成的 checkbox
-4. 读取 `.ai/L4-session/active-session.md` — 是否有上次中断的进度
+4. 读取 `.compass-harness/context/L4-session/active-session.md` — 是否有上次中断的进度
 
 #### 2a: L4 漂移检查（必要）
 
@@ -97,7 +96,7 @@ L4 session 内容和实际文件状态可能不一致（上个会话崩了、手
 
 与 new-change Step 5 相同：
 
-参考 `.ai/L3-specs/changes/_change-template/tasks.md`：
+参考 `.compass-harness/context/L3-specs/changes/_change-template/tasks.md`：
 
 - **第一组固定为 Tests** — 从 Scenario 的 WHEN/THEN 直接映射为测试用例
 - 后续组为实现步骤，按依赖排序
@@ -105,7 +104,7 @@ L4 session 内容和实际文件状态可能不一致（上个会话崩了、手
 
 ### Step 6: 从 Scenario 写测试代码
 
-读取 `.ai/L2-rules/testing.md`（如存在）— 遵守项目测试规范。
+读取 `.compass-harness/context/L2-rules/testing.md`（如存在）— 遵守项目测试规范。
 
 对 delta spec 中**尚未有测试的** Scenario，写测试：
 
@@ -121,9 +120,9 @@ L4 session 内容和实际文件状态可能不一致（上个会话崩了、手
 
 让测试通过：
 
-1. 读取 `.ai/L2-rules/global.md` + 相关模块规则 — 遵守编码约束
-2. 跨模块修改 → 先查 `.ai/L1-codebase-map/module-map.md` 变更联动表
-3. 创建新文件 → 查 `.ai/L2-rules/templates.md`
+1. 读取 `.compass-harness/context/L2-rules/global.md` + 相关模块规则 — 遵守编码约束
+2. 跨模块修改 → 先查 `.compass-harness/context/L1-codebase-map/module-map.md` 变更联动表
+3. 创建新文件 → 查 `.compass-harness/context/L2-rules/templates.md`
 4. 实现代码
 5. **运行测试，确认全部通过（绿灯）**
 
@@ -131,10 +130,10 @@ L4 session 内容和实际文件状态可能不一致（上个会话崩了、手
 
 ### Step 8: 收尾
 
-1. 更新 `.ai/L5-validation/traceability/<domain>.md` — 新增/修改的 Scenario 标为 ✅ verified
+1. 更新 `.compass-harness/context/L5-validation/traceability/<domain>.md` — 新增/修改的 Scenario 标为 ✅ verified
 2. proposal.md 状态改为 `pending-review`
 3. tasks.md 所有 checkbox 勾选完毕
-4. 更新 `.ai/L4-session/active-session.md` — 记录完成内容和测试结果
+4. 更新 `.compass-harness/context/L4-session/active-session.md` — 记录完成内容和测试结果
 
 ---
 

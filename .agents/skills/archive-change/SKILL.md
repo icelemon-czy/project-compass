@@ -1,7 +1,6 @@
 ---
 name: archive-change
 description: "Archive a completed change: merge delta spec into main specs, move to archive, update traceability. Use when: 归档, archive, 合并spec, merge spec, 变更完成, change done, 审核通过, approved"
-argument-hint: "Optional: change name (e.g., 'add-csv-export'). Omit to list approved changes."
 ---
 
 # Archive Change
@@ -16,12 +15,12 @@ argument-hint: "Optional: change name (e.g., 'add-csv-export'). Omit to list app
 
 ### Step 1: 定位变更
 
-**有参数** → 直接读取 `.ai/L3-specs/changes/<name>/proposal.md`，确认状态为 `approved`。
+**有参数** → 直接读取 `.compass-harness/context/L3-specs/changes/<name>/proposal.md`，确认状态为 `approved`。
 
 **无参数** → 扫描所有 `approved` 状态的变更：
 
 ```bash
-ls .ai/L3-specs/changes/ | grep -v _change-template
+ls .compass-harness/context/L3-specs/changes/ | grep -v _change-template
 ```
 
 对每个变更读取 proposal.md 的状态，只展示 `approved` 的：
@@ -45,9 +44,9 @@ ls .ai/L3-specs/changes/ | grep -v _change-template
 ### Step 2: 展示变更摘要 → 等人确认
 
 读取变更的完整内容（**逐个文件读取，不可跳过**）：
-1. 读取 `.ai/L3-specs/changes/<name>/proposal.md` — 确认状态和变更目的
-2. 读取 `.ai/L3-specs/changes/<name>/specs/` 下所有 delta spec — 了解新增/修改/删除了哪些 Requirement
-3. 读取 `.ai/L3-specs/changes/<name>/tasks.md`（如存在）— 确认任务完成状态
+1. 读取 `.compass-harness/context/L3-specs/changes/<name>/proposal.md` — 确认状态和变更目的
+2. 读取 `.compass-harness/context/L3-specs/changes/<name>/specs/` 下所有 delta spec — 了解新增/修改/删除了哪些 Requirement
+3. 读取 `.compass-harness/context/L3-specs/changes/<name>/tasks.md`（如存在）— 确认任务完成状态
 
 展示归档预览：
 
@@ -76,7 +75,7 @@ ls .ai/L3-specs/changes/ | grep -v _change-template
 对变更的 `specs/` 下每个能力域：
 
 1. 读取 delta spec（`changes/<name>/specs/<cap>/spec.md`）
-2. 读取主 spec（`.ai/L3-specs/specs/<cap>/spec.md`，如存在）
+2. 读取主 spec（`.compass-harness/context/L3-specs/specs/<cap>/spec.md`，如存在）
 
 按区段执行：
 
@@ -137,7 +136,7 @@ The system SHALL authenticate users by username and password,
 
 ### Step 4: 更新追溯
 
-读取 `.ai/L5-validation/traceability/<domain>.md`（对每个涉及的能力域），然后更新：
+读取 `.compass-harness/context/L5-validation/traceability/<domain>.md`（对每个涉及的能力域），然后更新：
 
 - ADDED Requirement 的 Scenario → 确认标为 ✅ verified。**确认方法**：检查该变更是否已通过 `/review-tests` 且报告结论为 ✅ 或 ⚠️；如果没有（例如在归档前未运行 review-tests），**必须先运行 `/review-tests`** 再回来归档
 - MODIFIED Requirement 的 Scenario → 确认状态仍正确（按同样方法检查 review-tests 报告）
@@ -149,11 +148,11 @@ The system SHALL authenticate users by username and password,
 
 1. proposal.md 状态改为 `archived`
 2. 移动整个目录：`changes/<name>/` → `archive/<name>/`
-3. 如果 `.ai/L4-session/active-session.md` 指向该变更 → 清除引用
+3. 如果 `.compass-harness/context/L4-session/active-session.md` 指向该变更 → 清除引用
 
 ```bash
-mkdir -p .ai/L3-specs/archive/
-mv .ai/L3-specs/changes/<name>/ .ai/L3-specs/archive/<name>/
+mkdir -p .compass-harness/context/L3-specs/archive/
+mv .compass-harness/context/L3-specs/changes/<name>/ .compass-harness/context/L3-specs/archive/<name>/
 ```
 
 ---

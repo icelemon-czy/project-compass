@@ -1,8 +1,6 @@
 ---
 name: git-init
 description: "Initialize a new git repository with standard structure: .gitignore, README, initial commit, and optional remote setup. Use when: init git, new repo, setup git project, create repository."
-argument-hint: "optional remote URL or platform (github/gitlab)"
-tools: [run_in_terminal, create_file]
 ---
 
 ## Step 1 — Check Environment

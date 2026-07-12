@@ -1,16 +1,15 @@
 ---
 name: setup-testing
 description: "Set up or update project testing conventions in L2-rules/testing.md. Use when: 测试规范, testing rules, 配置测试, setup tests, 更新测试规范, test conventions, 怎么写测试, how to test"
-argument-hint: "Optional: specific area to update (e.g., 'UI testing', 'mock strategy', 'coverage')"
 ---
 
 # Setup Testing Conventions
 
-读取项目代码推断测试框架和模式，引导用户确认，生成或更新 `.ai/L2-rules/testing.md`。
+读取项目代码推断测试框架和模式，引导用户确认，生成或更新 `.compass-harness/context/L2-rules/testing.md`。
 
 ## Prerequisites
 
-- `.ai/` 目录已存在
+- `.compass-harness/context/` 目录已存在
 - 项目中有代码（不一定已有测试）
 
 ## Procedure
@@ -39,10 +38,10 @@ cat Makefile 2>/dev/null | grep -A 2 'test'
 ### Step 2: 读取现有 testing.md（如存在）
 
 ```bash
-cat .ai/L2-rules/testing.md 2>/dev/null
+cat .compass-harness/context/L2-rules/testing.md 2>/dev/null
 ```
 
-如不存在，读取项目模板库中的 `L2-rules/testing.md` 模板（路径：`.ai/L2-rules/_module-template.md` 或 Compass Harness 仓库的 `L2-rules/testing.md`），了解期望的章节结构，然后基于此格式创建。
+如不存在，读取 Compass Harness 的 `templates/compass-harness/context/L2-rules/testing.md` 模板，了解期望的章节结构，然后基于此格式创建。
 
 ### Step 3: 生成初稿 / 更新
 
@@ -93,7 +92,7 @@ cat .ai/L2-rules/testing.md 2>/dev/null
 
 ### Step 5: 写入文件
 
-将最终内容写入 `.ai/L2-rules/testing.md`。
+将最终内容写入 `.compass-harness/context/L2-rules/testing.md`。
 
 如果是更新（文件已存在），只修改变更的章节，保留其他内容不变。
 
@@ -111,7 +110,7 @@ cat .ai/L2-rules/testing.md 2>/dev/null
 | 单元测试 | 新建 / 更新 / 未变 |
 | ...  | ... |
 
-文件位置：`.ai/L2-rules/testing.md`
+文件位置：`.compass-harness/context/L2-rules/testing.md`
 
 后续写测试时，new-change / continue-change / fix-bug 会自动加载此规范。
 ```

@@ -1,12 +1,11 @@
 ---
 name: update-ai
-description: "Update existing .ai project context when code changes. Use when: refresh .ai docs, code changed need to update ai context, sync .ai with code, 更新AI上下文, 刷新.ai文档, update ai docs, new feature added update docs"
-argument-hint: "Optional: what changed (e.g., 'new payment feature', 'refactored auth', 'L1 only')"
+description: "Update existing .compass-harness/context project context when code changes. Use when: refresh .compass-harness/context docs, code changed need to update ai context, sync .compass-harness/context with code, 更新AI上下文, 刷新.compass-harness/context文档, update ai docs, new feature added update docs"
 ---
 
-# Update .ai Project Context
+# Update .compass-harness/context Project Context
 
-Updates an existing `.ai/` directory to reflect code changes.
+Updates an existing `.compass-harness/context/` directory to reflect code changes.
 
 ## When to Use
 
@@ -17,27 +16,27 @@ Updates an existing `.ai/` directory to reflect code changes.
 
 ## Prerequisites
 
-- `.ai/` directory already exists with L1-L4 structure
-- Use `/build-ai` if no `.ai/` exists yet
+- `.compass-harness/context/` directory already exists with L1-L4 structure
+- Use `/build-ai` if no `.compass-harness/context/` exists yet
 
 ## Procedure
 
 ### Step 1: Assess Current State
 
-Read the existing `.ai/` structure to understand what's documented:
+Read the existing `.compass-harness/context/` structure to understand what's documented:
 
 ```bash
-# What .ai docs exist?
-find .ai -name "*.md" | sort
+# What .compass-harness/context docs exist?
+find .compass-harness/context -name "*.md" | sort
 
 # Current overview
-cat .ai/L1-codebase-map/overview.md
+cat .compass-harness/context/L1-codebase-map/overview.md
 
 # Current feature list
-ls .ai/L1-codebase-map/features/
+ls .compass-harness/context/L1-codebase-map/features/
 
 # Last session state
-cat .ai/L4-session/active-session.md
+cat .compass-harness/context/L4-session/active-session.md
 ```
 
 ### Step 2: Detect Changes
@@ -51,10 +50,10 @@ Compare current code state with documented state:
 git log --oneline -30
 
 # New/deleted/renamed files since a reference point
-git diff --name-status HEAD~30 -- . ':!.ai'
+git diff --name-status HEAD~30 -- . ':!.compass-harness'
 
 # Current project structure
-find . -maxdepth 3 -not -path '*/node_modules/*' -not -path '*/.git/*' -not -path '*/dist/*' -not -path '*/__pycache__/*' -not -path '*/venv/*' -not -path '*/.venv/*' -not -path '*/build/*' -not -path '*/target/*' -not -path '*/.ai/*' | head -120 | sort
+find . -maxdepth 3 -not -path '*/node_modules/*' -not -path '*/.git/*' -not -path '*/dist/*' -not -path '*/__pycache__/*' -not -path '*/venv/*' -not -path '*/.venv/*' -not -path '*/build/*' -not -path '*/target/*' -not -path '*/.compass-harness/*' | head -120 | sort
 
 # New directories that might be new features
 # Compare with features listed in overview.md
@@ -121,7 +120,7 @@ For each changed feature:
 1. Remove `features/[name]/` directory
 2. Remove entry from `overview.md` feature index — **具体**：删除包含该 feature name 的行
 3. Update `module-map.md` (remove module, update dependency rules) — **具体**：删除以该模块为源或目标的所有依赖规则
-4. Check `key-files.md` for references to deleted feature — `grep -n "<feature-name>" .ai/L1-codebase-map/key-files.md`，命中的行删除或标注"已移除"
+4. Check `key-files.md` for references to deleted feature — `grep -n "<feature-name>" .compass-harness/context/L1-codebase-map/key-files.md`，命中的行删除或标注"已移除"
 
 #### 4d: L2 Rules Update
 
@@ -147,18 +146,18 @@ cat .eslintrc* tsconfig.json pyproject.toml 2>/dev/null
 
 After individual updates, sync:
 
-1. **overview.md** — `ls .ai/L1-codebase-map/features/` 的目录列表 vs overview.md 中的 feature 列表，缺的补、多的删
+1. **overview.md** — `ls .compass-harness/context/L1-codebase-map/features/` 的目录列表 vs overview.md 中的 feature 列表，缺的补、多的删
 2. **module-map.md** — 对每个模块执行 `grep -rn "import\|require" <module-dir> | grep -v node_modules`，对比已记录的依赖，有差异则更新
 3. **key-files.md** — 对每个已记录的 key file 执行 `test -f <path>`，不存在的删除；`git diff --name-status` 中新增的入口文件考虑加入
 4. **infrastructure/README.md** — Update if framework/config changed
 
 ### Step 5: Update Session
 
-Update `.ai/L4-session/active-session.md`:
+Update `.compass-harness/context/L4-session/active-session.md`:
 
 ```markdown
 - **时间**: [now]
-- **对话主题**: .ai 文档更新
+- **对话主题**: .compass-harness/context 文档更新
 - **已完成**: [list of updates made]
 - **下一步**: [any remaining updates or verification needed]
 ```

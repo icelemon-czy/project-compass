@@ -1,7 +1,6 @@
 ---
 name: review-tests
 description: "Review test quality by running tests, cross-referencing specs, and hunting false-pass anti-patterns. Designed for loop usage: each invocation reviews ONE target (change or spec domain). Use when: review tests, 审查测试, test coverage, 测试覆盖, 测试够吗, are tests sufficient, 缺什么测试, missing tests, 测试质量, 虚假通过, false pass, 定时审查, scheduled review"
-argument-hint: "Optional: specific domain or change name (e.g., 'auth', 'add-csv-export'). If omitted, picks the next target automatically (L3 changes first, then specs)."
 ---
 
 # Review Tests — 跑测试 + 逐个验证 + 虚假通过狩猎
@@ -18,7 +17,7 @@ argument-hint: "Optional: specific domain or change name (e.g., 'auth', 'add-csv
 
 ## Prerequisites
 
-- `.ai/` 目录已存在且有 L3 + L5 结构
+- `.compass-harness/context/` 目录已存在且有 L3 + L5 结构
 - 项目有测试代码
 
 ## Procedure
@@ -27,12 +26,12 @@ argument-hint: "Optional: specific domain or change name (e.g., 'auth', 'add-csv
 
 **0a: 读取测试配置（必做，不可跳过）**
 
-读取 `.ai/L2-rules/testing.md` — 获取以下信息并记录到工作区：
+读取 `.compass-harness/context/L2-rules/testing.md` — 获取以下信息并记录到工作区：
 - **测试运行命令**（如 `npm test`、`pytest`、`go test ./...`）
 - **测试目录**（如 `__tests__/`、`tests/`、`*_test.go`）
 - **测试框架**（如 Jest、pytest、Go testing）
 
-> 如果 `.ai/L2-rules/testing.md` 不存在，告知用户"测试规范缺失，建议先运行 `/setup-testing`"并停止。
+> 如果 `.compass-harness/context/L2-rules/testing.md` 不存在，告知用户"测试规范缺失，建议先运行 `/setup-testing`"并停止。
 
 **0b: 构建候选队列（按优先级排序）**
 
@@ -40,16 +39,16 @@ argument-hint: "Optional: specific domain or change name (e.g., 'auth', 'add-csv
 
 ```bash
 # 优先级 1：L3 变更中 pending-review 状态的变更（按 proposal.md 的创建时间升序）
-ls .ai/L3-specs/changes/ | grep -v _change-template
+ls .compass-harness/context/L3-specs/changes/ | grep -v _change-template
 # 对每个变更，读取 proposal.md 中的 status 字段，保留 status == pending-review 的
 
 # 优先级 2：L3 已有 spec（archived 能力域），按能力域字母顺序
-ls .ai/L3-specs/specs/ | grep -v _capability-template | grep -v system.md
+ls .compass-harness/context/L3-specs/specs/ | grep -v _capability-template | grep -v system.md
 ```
 
 **队列规则**：
 1. **P1 优先**：所有 `pending-review` 状态的变更，按创建时间（proposal.md 的 `created` 字段或文件 mtime）升序
-2. **P2 兜底**：当 P1 为空时，按能力域字母顺序遍历 `.ai/L3-specs/specs/` 中的所有 spec
+2. **P2 兜底**：当 P1 为空时，按能力域字母顺序遍历 `.compass-harness/context/L3-specs/specs/` 中的所有 spec
 
 **0c: 选择本次目标（单个）**
 
@@ -60,9 +59,9 @@ ls .ai/L3-specs/specs/ | grep -v _capability-template | grep -v system.md
 
 **0d: 去重（避免循环重复审查）**
 
-读取 `.ai/L5-validation/reports/` 下最近的 review 报告（如存在）。如果 P2 队列（spec 类目标）最近一次审查时间 < 配置的冷却期（默认 7 天）且无代码变更 → 跳到下一项。
+读取 `.compass-harness/context/L5-validation/reports/` 下最近的 review 报告（如存在）。如果 P2 队列（spec 类目标）最近一次审查时间 < 配置的冷却期（默认 7 天）且无代码变更 → 跳到下一项。
 
-> 冷却规则：可在 `.ai/L2-rules/global.md` 的 `review-tests.cooldown-days` 字段配置。
+> 冷却规则：可在 `.compass-harness/context/L2-rules/global.md` 的 `review-tests.cooldown-days` 字段配置。
 
 **输出本次目标**（必填，后续所有 Step 围绕该单一目标展开）：
 
@@ -79,8 +78,8 @@ ls .ai/L3-specs/specs/ | grep -v _capability-template | grep -v system.md
 **0e: 收集本次目标的 Scenario 清单**
 
 只读取 0c 选定的**单个目标**的 spec：
-- 目标是 change → `.ai/L3-specs/changes/<change-name>/specs/*/spec.md`（delta spec）
-- 目标是 spec-domain → `.ai/L3-specs/specs/<domain>/spec.md`
+- 目标是 change → `.compass-harness/context/L3-specs/changes/<change-name>/specs/*/spec.md`（delta spec）
+- 目标是 spec-domain → `.compass-harness/context/L3-specs/specs/<domain>/spec.md`
 
 枚举该目标下的每一个 Requirement 和 Scenario。填入下表（后续步骤逐列填充）：
 
@@ -165,7 +164,7 @@ ls .ai/L3-specs/specs/ | grep -v _capability-template | grep -v system.md
 | 6 | **条件永真** | 检查是否存在：`expect(x).toBe(x)` / `expect(true).toBe(true)` / assert 在 `if(true)` 块里 / 空 snapshot 文件 / snapshot 内容为 `{}` 或 `""` | 🔴 |
 | 7 | **吞异常** | 检查测试中的 try-catch：`catch` 块是否为空 / 只有 `console.log` / 没有 `expect`。应该 `expect(error.message).toContain(...)` | 🔴 |
 
-> **项目自定义反模式**（第 8+ 条）：读取 `.ai/L2-rules/testing.md` 的"自定义反模式"区段，逐条追加检查。前 7 条是底线，不可删除。
+> **项目自定义反模式**（第 8+ 条）：读取 `.compass-harness/context/L2-rules/testing.md` 的"自定义反模式"区段，逐条追加检查。前 7 条是底线，不可删除。
 
 **输出格式（每个测试函数必须输出）**：
 
@@ -311,7 +310,7 @@ git diff --name-only HEAD~N -- <src-dir>
 
 ### Step 8: 状态回流
 
-> 以下状态回流仅适用于 **change** 目标。若本次审查目标是 `spec-domain`，则不改 proposal.md 状态，只更新报告和 `.ai/L4-session/active-session.md`。
+> 以下状态回流仅适用于 **change** 目标。若本次审查目标是 `spec-domain`，则不改 proposal.md 状态，只更新报告和 `.compass-harness/context/L4-session/active-session.md`。
 
 根据 Step 7 结论：
 
@@ -321,9 +320,9 @@ git diff --name-only HEAD~N -- <src-dir>
 | ❌ 打回 | `pending-review` → `review-failed`（记录在 proposal.md 的 Review Feedback），提示用户运行 `/fix-bug`；由 `/fix-bug` 再推进到 `implementing` |
 | ⚠️ 有缺口但非阻塞 | `pending-review` → `approved`，问题登记到 proposal.md 的"Known Gaps" |
 
-更新 `.ai/L4-session/active-session.md`，记录审查结果和下一步动作。
+更新 `.compass-harness/context/L4-session/active-session.md`，记录审查结果和下一步动作。
 
-**生成审查报告文件**：将完整报告写入 `.ai/L5-validation/reports/review-<target-name>-<YYYYMMDD>.md`，供冷却期判断（Step 0d）复用。
+**生成审查报告文件**：将完整报告写入 `.compass-harness/context/L5-validation/reports/review-<target-name>-<YYYYMMDD>.md`，供冷却期判断（Step 0d）复用。
 
 ### Step 9: 循环出口提示（单次结束）
 
@@ -349,4 +348,3 @@ git diff --name-only HEAD~N -- <src-dir>
 - ❌ 主表输出时省略列（"调用链验证"和"反向推理"两列最容易被跳过——不允许）
 - ❌ 对某个 Scenario 写"已覆盖"但不填写"实际 assertion"列的具体内容
 - ❌ 抽样检查（本 Skill 要求穷举当次目标内的每个 Scenario）
-

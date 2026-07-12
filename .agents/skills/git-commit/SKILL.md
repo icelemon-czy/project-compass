@@ -1,8 +1,6 @@
 ---
 name: git-commit
 description: "Stage, commit, and push changes with an auto-generated conventional commit message. Use when: ready to commit, git push, summarize changes, commit message."
-argument-hint: "optional branch or extra context"
-tools: [run_in_terminal]
 ---
 
 ## Step 1 — Summarize Changes
@@ -34,13 +32,13 @@ git diff HEAD --name-only
 - If the user confirms to proceed without README changes, continue to Step 2.
 - If the user wants README updated, stop and offer to update it.
 
-Skip this check if the only changed files are `README.md`, `README.zh.md`, or files inside `.ai/L4-session/` (session state updates don't require README changes).
+Skip this check if the only changed files are `README.md`, `README.zh.md`, or files inside `.compass-harness/context/L4-session/` (session state updates don't require README changes).
 
 ## Step 2 — Doc Sync Check
 
-在提交前，检查待提交的代码变更是否需要同步 `.ai/` 文档：
+在提交前，检查待提交的代码变更是否需要同步 `.compass-harness/context/` 文档：
 
-1. 读取 `.ai/doc-sync.md`（如存在）；**如果文件不存在 → 跳过本步骤**
+1. 读取 `.compass-harness/context/doc-sync.md`（如存在）；**如果文件不存在 → 跳过本步骤**
 2. 对照变更列表，按以下规则逐条判断是否命中同步条件：
 
 | 变更类型 | 命中条件 | 需同步的文档 |

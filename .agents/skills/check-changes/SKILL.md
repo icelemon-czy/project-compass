@@ -1,16 +1,15 @@
 ---
 name: check-changes
 description: "Check status of all in-progress and recent changes. Use when: 变更状态, 进度, change status, what's in progress, 当前变更, 查看变更, show changes, list changes, 有哪些变更"
-argument-hint: "Optional: specific change name or 'all' for full history including archive"
 ---
 
 # Check Changes Status
 
-汇总 `.ai/L3-specs/` 下所有变更的状态，给出全局视图。
+汇总 `.compass-harness/context/L3-specs/` 下所有变更的状态，给出全局视图。
 
 ## Prerequisites
 
-- `.ai/L3-specs/` 目录已存在
+- `.compass-harness/context/L3-specs/` 目录已存在
 - 至少有 `changes/` 或 `archive/` 目录
 
 ## Procedure
@@ -19,10 +18,10 @@ argument-hint: "Optional: specific change name or 'all' for full history includi
 
 ```bash
 # 列出所有进行中的变更
-ls .ai/L3-specs/changes/ | grep -v _change-template
+ls .compass-harness/context/L3-specs/changes/ | grep -v _change-template
 
 # 如果用户要看全量（含归档）
-ls .ai/L3-specs/archive/ 2>/dev/null
+ls .compass-harness/context/L3-specs/archive/ 2>/dev/null
 ```
 
 ### Step 2: 读取每个变更的状态
@@ -72,7 +71,7 @@ ls .ai/L3-specs/archive/ 2>/dev/null
 
 检查是否有异常情况，主动告知用户：
 
-- ⚠️ 变更的 tasks.md 中有超过 **7 天**未推进的 checkbox（依据：`git log --format='%ai' -1 -- .ai/L3-specs/changes/<name>/`，如最后修改距今 > 7 天则告警）
+- ⚠️ 变更的 tasks.md 中有超过 **7 天**未推进的 checkbox（依据：`git log --format='%ai' -1 -- .compass-harness/context/L3-specs/changes/<name>/`，如最后修改距今 > 7 天则告警）
 - ⚠️ active-session.md 指向的变更与 changes/ 中的不一致
 - ⚠️ 有变更缺少 delta spec（proposal 有但 specs/ 为空）
 - ⚠️ 有变更缺少 tasks.md

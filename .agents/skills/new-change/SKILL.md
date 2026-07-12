@@ -1,7 +1,6 @@
 ---
 name: new-change
 description: "Create a new change proposal with spec-driven TDD workflow: proposal → confirm → delta spec → tests → implement. Use when: 新需求, new feature, 加功能, add feature, 改需求, change request, 新变更, create change, 我要做, implement"
-argument-hint: "Describe what you want to change or add (e.g., 'add CSV export for reports', '添加用户头像功能')"
 ---
 
 # New Change (Spec-Driven TDD)
@@ -12,7 +11,7 @@ argument-hint: "Describe what you want to change or add (e.g., 'add CSV export f
 
 ## Prerequisites
 
-- `.ai/` 目录已存在且有 L1 + L3 + L5 结构
+- `.compass-harness/context/` 目录已存在且有 L1 + L3 + L5 结构
 - 用户描述了要做的变更（新功能 / 需求变更 / 重构等）
 
 ## Procedure
@@ -23,21 +22,21 @@ argument-hint: "Describe what you want to change or add (e.g., 'add CSV export f
 
 #### Step 1: 收集上下文
 
-1. 读取 `.ai/L1-codebase-map/overview.md` — 项目功能索引
-2. 读取 `.ai/L3-specs/specs/system.md` — 系统级需求
+1. 读取 `.compass-harness/context/L1-codebase-map/overview.md` — 项目功能索引
+2. 读取 `.compass-harness/context/L3-specs/specs/system.md` — 系统级需求
 
 ```bash
 # 已有能力域
-ls .ai/L3-specs/specs/ | grep -v _capability-template | grep -v system.md
+ls .compass-harness/context/L3-specs/specs/ | grep -v _capability-template | grep -v system.md
 
 # 进行中的变更（避免冲突）
-ls .ai/L3-specs/changes/ | grep -v _change-template
+ls .compass-harness/context/L3-specs/changes/ | grep -v _change-template
 ```
 
 3. 根据变更描述，定位涉及的功能和模块：
-   - `.ai/L1-codebase-map/features/[name]/README.md`
-   - `.ai/L2-rules/[module].md`
-   - `.ai/L3-specs/specs/<domain>/spec.md`（如已存在）
+   - `.compass-harness/context/L1-codebase-map/features/[name]/README.md`
+   - `.compass-harness/context/L2-rules/[module].md`
+   - `.compass-harness/context/L3-specs/specs/<domain>/spec.md`（如已存在）
 
 #### Step 2: 创建 proposal.md
 
@@ -46,13 +45,13 @@ ls .ai/L3-specs/changes/ | grep -v _change-template
 创建变更目录：
 
 ```
-.ai/L3-specs/changes/<name>/
+.compass-harness/context/L3-specs/changes/<name>/
 ├── proposal.md
 ├── specs/         (delta specs, Step 4 生成)
 └── tasks.md       (Step 5 生成)
 ```
 
-参考 `.ai/L3-specs/changes/_change-template/proposal.md`，填写：
+参考 `.compass-harness/context/L3-specs/changes/_change-template/proposal.md`，填写：
 
 - **Why**: 为什么做、为什么是现在（1-2 句话）
 - **What Changes**: 具体变更列表，标注破坏性变更为 **BREAKING**
@@ -101,7 +100,7 @@ ls .ai/L3-specs/changes/ | grep -v _change-template
 
 #### Step 5: 生成 tasks.md
 
-参考 `.ai/L3-specs/changes/_change-template/tasks.md`，根据 proposal + delta spec 生成执行步骤：
+参考 `.compass-harness/context/L3-specs/changes/_change-template/tasks.md`，根据 proposal + delta spec 生成执行步骤：
 
 - **第一组固定为 Tests** — 从 Scenario 的 WHEN/THEN 直接映射为测试用例
 - 后续组为实现步骤，按依赖排序
@@ -114,7 +113,7 @@ ls .ai/L3-specs/changes/ | grep -v _change-template
 
 #### Step 6: 从 Scenario 写测试代码
 
-读取 `.ai/L2-rules/testing.md`（如存在）— 遵守项目测试规范。
+读取 `.compass-harness/context/L2-rules/testing.md`（如存在）— 遵守项目测试规范。
 
 对 delta spec 中每个 Scenario，写测试：
 
@@ -130,9 +129,9 @@ ls .ai/L3-specs/changes/ | grep -v _change-template
 
 让测试通过：
 
-1. **强制注入 L2 规则（写任何新代码前）**：完整读取 `.ai/L2-rules/global.md`、`.ai/L2-rules/testing.md`、以及此变更涉及的每个模块的 `L2-rules/<module>.md`。在输出中明列本次要遵守的关键规则（3-5 条）。不允许跳过
-2. 跨模块修改 → 先查 `.ai/L1-codebase-map/module-map.md` 变更联动表
-3. 创建新文件 → 查 `.ai/L2-rules/templates.md`
+1. **强制注入 L2 规则（写任何新代码前）**：完整读取 `.compass-harness/context/L2-rules/global.md`、`.compass-harness/context/L2-rules/testing.md`、以及此变更涉及的每个模块的 `L2-rules/<module>.md`。在输出中明列本次要遵守的关键规则（3-5 条）。不允许跳过
+2. 跨模块修改 → 先查 `.compass-harness/context/L1-codebase-map/module-map.md` 变更联动表
+3. 创建新文件 → 查 `.compass-harness/context/L2-rules/templates.md`
 4. 实现代码，每一步對比 Step 1 列出的规则
 5. **运行测试，确认全部通过（绿灯）**
 6. **L2 合规自检（实现完成后，提交前）**：对 Step 7.1 列出的每条关键规则，逐条标注本次代码是否符合：
@@ -149,10 +148,10 @@ ls .ai/L3-specs/changes/ | grep -v _change-template
 
 #### Step 8: 收尾
 
-1. 更新 `.ai/L5-validation/traceability/<domain>.md` — 新增的 Scenario 标为 ✅ verified
+1. 更新 `.compass-harness/context/L5-validation/traceability/<domain>.md` — 新增的 Scenario 标为 ✅ verified
 2. proposal.md 状态改为 `pending-review`
 3. tasks.md 所有 checkbox 勾选完毕
-4. 更新 `.ai/L4-session/active-session.md` — 记录完成内容和测试结果
+4. 更新 `.compass-harness/context/L4-session/active-session.md` — 记录完成内容和测试结果
 
 ---
 

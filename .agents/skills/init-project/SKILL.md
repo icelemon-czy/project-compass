@@ -1,14 +1,13 @@
 ---
 name: init-project
-description: "Initialize a new project from scratch: requirements → tech stack → scaffold → .ai context. Use when: 新项目, init project, 从零开始, start from scratch, 我想做一个, I want to build, 初始化项目, create project, 新建项目, bootstrap"
-argument-hint: "Describe what you want to build (e.g., 'a TODO app with React', '一个博客系统用 Go')"
+description: "Initialize a new project from scratch: requirements → tech stack → scaffold → Compass Harness → first spec. Use when: 新项目, init project, 从零开始, start from scratch, 我想做一个, I want to build, 初始化项目, create project, 新建项目, bootstrap"
 ---
 
 # Init Project（从零到可开发）
 
-从用户的一句话出发，完成：需求澄清 → 技术选型 → 项目脚手架 → `.ai/` 上下文 → 第一个 Spec。
+从用户的一句话出发，完成：需求澄清 → 技术选型 → 项目脚手架 → `.compass-harness/` 安装与上下文 → 第一个 Spec。
 
-> **诚实声明**：本 Skill 的流程不是"一键生成"。需求澄清和技术选型本质上是对话，可能要停下来问你 **多次**（不止一两次）。主要的确认点是 Phase A（方案）和 Phase E（.ai 验收），但中间每当用户给的信息模糊时都会再问。其余能自动的都自动。
+> **诚实声明**：本 Skill 的流程不是"一键生成"。需求澄清和技术选型本质上是对话，可能要停下来问你 **多次**（不止一两次）。主要的确认点是 Phase A（方案）和 Phase E（Compass Harness 验收），但中间每当用户给的信息模糊时都会再问。其余能自动的都自动。
 
 ## Prerequisites
 
@@ -108,17 +107,30 @@ argument-hint: "Describe what you want to build (e.g., 'a TODO app with React', 
 
 ---
 
-### Phase C: 构建 `.ai/` 上下文 + Spec（自动）
+### Phase C: 安装 `.compass-harness/` 并构建上下文 + Spec（自动）
 
-#### Step 5: 复制 Compass Harness 模板
+#### Step 5: 安装 Compass Harness 权威目录
 
 ```bash
-cp -r /path/to/compass-harness /path/to/project/.ai/
+mkdir -p /path/to/project/.compass-harness/rules
+mkdir -p /path/to/project/.compass-harness/context
+mkdir -p /path/to/project/.compass-harness/skills
+mkdir -p /path/to/project/.compass-harness/subagents
+
+cp /path/to/compass-harness/templates/compass-harness/installed-manifest.yaml.template /path/to/project/.compass-harness/manifest.yaml
+cp /path/to/compass-harness/templates/compass-harness/config.yaml /path/to/project/.compass-harness/config.yaml
+cp /path/to/compass-harness/templates/compass-harness/agent-rules/AGENTS.global.md /path/to/project/.compass-harness/rules/global.md
+cp /path/to/compass-harness/templates/compass-harness/agent-rules/AGENTS.project.md /path/to/project/.compass-harness/rules/project.md
+cp -R /path/to/compass-harness/templates/compass-harness/context/. /path/to/project/.compass-harness/context/
+cp -R /path/to/compass-harness/.agents/skills/. /path/to/project/.compass-harness/skills/
+cp -R /path/to/compass-harness/templates/compass-harness/subagents/. /path/to/project/.compass-harness/subagents/
 ```
+
+渲染 `.compass-harness/manifest.yaml`、`.compass-harness/config.yaml` 和 `.compass-harness/rules/project.md` 中的项目占位符。安装后只编辑 `.compass-harness/` 内的权威内容。
 
 #### Step 6: 构建 L1 — 代码导航
 
-读取 `.ai/L1-codebase-map/` 下的模板文件（`overview.md`、`features/_feature-template/README.md`、`module-map.md`、`key-files.md`），了解期望格式，然后基于刚创建的项目结构填写：
+读取 `.compass-harness/context/L1-codebase-map/` 下的模板文件（`overview.md`、`features/_feature-template/README.md`、`module-map.md`、`key-files.md`），了解期望格式，然后基于刚创建的项目结构填写：
 
 - `L1-codebase-map/overview.md` — 功能索引（< 60 行）
 - `L1-codebase-map/features/` — 按核心功能创建 feature 文档
@@ -133,7 +145,7 @@ cp -r /path/to/compass-harness /path/to/project/.ai/
 
 #### Step 8: 构建 L3 — 需求 Spec
 
-读取 `.ai/L3-specs/specs/_capability-template/spec.md` — 了解 Requirement + Scenario 的格式要求。然后：
+读取 `.compass-harness/context/L3-specs/specs/_capability-template/spec.md` — 了解 Requirement + Scenario 的格式要求。然后：
 
 - `L3-specs/specs/system.md` — 系统级需求（TOR），从 Step 1 的需求澄清直接映射
 - 为每个核心功能创建能力域 spec：`L3-specs/specs/<domain>/spec.md`
@@ -143,15 +155,21 @@ cp -r /path/to/compass-harness /path/to/project/.ai/
 
 - `L5-validation/traceability/` — 初始追溯矩阵（Spec ↔ Code ↔ Test），此时 Code/Test 列为空
 
-#### Step 10: 部署 Entrypoint
+#### Step 10: 生成平台薄适配层
 
-根据用户使用的 AI 工具，复制对应的 entrypoint：
+根据用户使用的 AI 工具，从 `templates/compass-harness/adapters/` 读取对应模板：
 
 | 工具 | 操作 |
 |:-----|:-----|
-| Claude Code | `cp .ai/entrypoints/claude.md ./CLAUDE.md` |
-| Cline | `cp .ai/entrypoints/clinerules.md ./.clinerules` |
-| GitHub Copilot | `mkdir -p .github && cp .ai/entrypoints/copilot-instructions.md ./.github/copilot-instructions.md` |
+| Codex | 渲染 `adapters/codex/AGENTS.md.template` 到 `AGENTS.md` |
+| Claude Code | 渲染 `adapters/claude-code/CLAUDE.md.template` 到 `CLAUDE.md` |
+| OpenCode | 渲染 `adapters/opencode/AGENTS.md.template` 到 `AGENTS.md`；需要时再安装 `opencode.json` |
+
+如果目标文件已存在，先合并用户规则，不要直接覆盖。不要自动安装 Subagent 模板。
+
+入口文件只导航到 `.compass-harness/`，不复制项目知识正文。同时从 `.compass-harness/skills/` 生成平台发现镜像：Codex/OpenCode 使用 `.agents/skills/`，Claude Code 使用 `.claude/skills/`。生成目录不得手工维护。
+
+`.compass-harness/subagents/` 只保存角色定义和示例；除非用户明确选择角色，否则不生成平台私有 Subagent 实例。
 
 ---
 
@@ -159,7 +177,7 @@ cp -r /path/to/compass-harness /path/to/project/.ai/
 
 #### Step 11: 从 Spec Scenario 写测试
 
-读取 `.ai/L2-rules/testing.md` — 遵守项目测试规范。
+读取 `.compass-harness/context/L2-rules/testing.md` — 遵守项目测试规范。
 
 对 L3 中每个核心能力域的 Scenario，写测试：
 
@@ -198,12 +216,15 @@ cp -r /path/to/compass-harness /path/to/project/.ai/
 
 ### 已创建
 - [x] 项目脚手架 + 依赖安装
-- [x] .ai/ 上下文（L1 ~ L5）
-- [x] Entrypoint 部署
+- [x] .compass-harness/ 权威目录（rules + context + skills + subagents）
+- [x] 平台薄适配层
 - [x] 基于 Spec 的测试（红灯 → 绿灯）
 - [x] 追溯矩阵已更新
 
-### .ai/ 概览
+### .compass-harness/ 概览
+- rules: 全局规则 + 项目规则
+- skills: 13 个权威 Skill
+- subagents: 通用角色定义（未自动生成实例）
 - L1: overview.md + N 个 feature 文档
 - L2: global.md + testing.md + templates.md
 - L3: system.md + N 个能力域 spec
