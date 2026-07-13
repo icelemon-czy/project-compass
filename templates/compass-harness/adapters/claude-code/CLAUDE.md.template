@@ -1,5 +1,0 @@
-# {{PROJECT_NAME}}
-
-Read and follow the project rules in `AGENTS.md` before working.
-
-Project context lives under `.compass-harness/context/`. Canonical Skills live under `.compass-harness/skills/`; `.claude/skills/` is only a generated discovery mirror. Load optional Subagents only when the project has selected and generated them. Do not duplicate the `AGENTS.md` rules here.

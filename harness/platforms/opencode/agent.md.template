@@ -1,0 +1,17 @@
+---
+description: "{{SUBAGENT_DESCRIPTION}}"
+mode: subagent
+permission:
+  edit: deny
+  bash:
+    "*": ask
+    "git diff*": allow
+    "git log*": allow
+    "rg *": allow
+---
+
+<!-- Render only from a user-selected concrete role: `.compass-harness/subagents/{{SUBAGENT_ID}}.md`. -->
+
+{{SUBAGENT_INSTRUCTIONS}}
+
+Do not modify files or external state. Return evidence and uncertainty to the parent agent.

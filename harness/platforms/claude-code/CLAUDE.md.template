@@ -1,0 +1,5 @@
+# {{PROJECT_NAME}}
+
+Read and follow the project rules in `AGENTS.md` before working.
+
+Project context lives under `.compass-harness/context/`. Workflow Skills live under `.compass-harness/skills/`; read them directly when needed. Load optional Subagents only when the user explicitly requests them. Do not duplicate the `AGENTS.md` rules here.

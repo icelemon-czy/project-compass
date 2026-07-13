@@ -1,0 +1,13 @@
+---
+name: "{{SUBAGENT_ID}}"
+description: "{{SUBAGENT_DESCRIPTION}}"
+tools: Read, Grep, Glob, Bash
+model: inherit
+permissionMode: plan
+---
+
+<!-- Render only from a user-selected concrete role: `.compass-harness/subagents/{{SUBAGENT_ID}}.md`. -->
+
+{{SUBAGENT_INSTRUCTIONS}}
+
+Do not modify files or external state. Return evidence and uncertainty to the parent agent.

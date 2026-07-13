@@ -1,6 +1,6 @@
 # Changelog
 
-Compass Harness 将 `.agents/skills/` 与 `templates/compass-harness/` 视为当前的**公共接口**。fork 使用者请按本文件判断是否需要 rebase。
+Compass Harness 将 `harness/` 及其中的 `INSTALL.md`、`AGENTS.md`、`context/`、`skills/`、`subagents/` 和 `platforms/` 视为当前的**公共接口**。fork 使用者请按本文件判断是否需要 rebase。
 
 版本号采用 [Semantic Versioning](https://semver.org/)：
 
@@ -13,37 +13,34 @@ Compass Harness 将 `.agents/skills/` 与 `templates/compass-harness/` 视为当
 ### Changed
 
 - 项目品牌从 **Project Compass** 更新为 **Compass Harness**。
-- 统一 README、路线图、工作流分析、演示文稿和 CLI 展示名称。
-- 明确产品定位为面向上下文、代理、Skills、Specs、工作流与验证的 AI engineering harness。
-- 更新模板复制示例中的仓库目录名为 `compass-harness`。
-- 将原有 13 个 Skill 从 `.github/skills/` 迁移到跨工具权威目录 `.agents/skills/`，保留 Skill 名称和主要工作流。
-- 将原根目录 L1–L5 上下文模板集中到 `templates/compass-harness/context/`。
+- 明确产品定位为可以直接复制到目标项目 `.compass-harness/` 的 AI 辅助开发工具包。
 - 将当前支持平台收敛为 Codex、Claude Code 与 OpenCode。
-- 将目标项目的上下文、Skills、Subagent 角色和配置集中到 `.compass-harness/`。
-- 将根 `AGENTS.md` 定义为 Codex/OpenCode 原生项目规则；Claude Code 的 `CLAUDE.md` 引用它，不维护重复规则。
-- 取消 AGENTS global/project 分层，合并为唯一 `templates/compass-harness/AGENTS.md`。
-- 将平台 Skill 目录和平台 agents 目录定义为可重建的生成适配层。
+- 将可复制运行资产收口到唯一 `harness/`；根目录只保留说明、维护文档、测试和 CI。
+- 将原有 13 个 Skill 收口到 `harness/skills/` 唯一权威目录；不保留 Skill 复制目录或软链接。
+- 将 L1–L5 空白上下文直接收口到 `harness/context/`，安装后在原地填写为目标项目 `.compass-harness/context/`。
+- 将四个可选的具体 Subagent 角色与三平台格式收口到 `harness/`；每个角色声明适用的委派条件，不生成真实 Subagent 实例。
+- 将用户可见的 `harness/adapters/` 更名为 `harness/platforms/`，按 Codex、Claude Code、OpenCode 分组。
+- 将 TODO、工作流分析和路线图保留在仅供维护者使用的 `docs/`。
 
 ### Added
 
-- 新增 `templates/compass-harness/manifest.yaml`，登记模板组件、占位符、安装目标和适配器。
-- 新增目标项目的 installed manifest 与 `.compass-harness/config.yaml` 模板。
-- 新增单一 AGENTS、Skill、Subagent 角色与三平台适配模板。
-- 新增四个仅供复制修改的 Subagent 角色示例，不在仓库中安装真实 Subagent。
-- 新增 `scripts/validate-phase2.rb`，对 Skill、模板、占位符、引用和旧平台路径执行可重复的静态检查。
+- 新增 `harness/INSTALL.md`，作为供 Agent 执行的非破坏安装、迁移、验证和移除契约。
+- 新增带稳定标记区块的 `harness/AGENTS.md`，允许安装 Agent 与现有项目规则安全合并。
 
 ### Removed
 
 - 移除 GitHub Copilot 与 Cline 的 builders、entrypoints 和当前支持说明。
-- 移除迁移后的旧 `.github/skills/` 权威目录；`.github/workflows/` 中的 GitHub Actions CI 保留。
-- 移除分散的 `entrypoints/`，将仍有价值的上下文说明并入统一模板目录。
+- 移除旧 `.github/skills/`、嵌套 `templates/compass-harness/`、通用 Skill 脚手架和 Claude builder prompts。
+- 移除已放弃的 manifest、installed manifest、config 和 Bash `compass` CLI。
+- 移除 AGENTS global/project 分层与重复平台 AGENTS 模板。
+- 移除没有产品价值的仓库静态测试与仅服务于它的 GitHub Actions CI。
 
 ### Compatibility
 
-- CLI 命令继续使用 `compass`。
-- 13 个 Skill 名称保持不变；L1–L5 语义结构保持不变，但模板路径已经迁移。
-- `.ai/` 迁移为 `.compass-harness/context/`；目标项目中平台发现目录不再是可编辑权威源。
-- `.github/skills/`、根目录 `L1-*` 至 `L5-*`、`.ai/`、`entrypoints/` 属于本版本已迁移或移除的旧接口。
+- 13 个 Skill 名称和 L1–L5 语义结构保持不变。
+- 安装方式改为仅复制 `harness/` 后让 Agent 执行 `.compass-harness/INSTALL.md`，不提供 Bash 安装脚本或全局安装。
+- 旧 `.ai/` 由安装 Agent 非破坏迁移到 `.compass-harness/context/`，验证前不删除原目录。
+- `.github/skills/`、`templates/compass-harness/`、根目录 `L1-*` 至 `L5-*`、`.ai/` 和旧 `entrypoints/` 属于已迁移或移除的旧接口。
 - 本次版本不自动重命名 GitHub 仓库、本地目录或 Git remote。
 
 ## [0.3.0] — 2026-04-18

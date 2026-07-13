@@ -1,0 +1,6 @@
+# Render this platform format only for a user-selected concrete role under `.compass-harness/subagents/`.
+# Merge this block into project `.codex/config.toml`.
+
+[agents.{{SUBAGENT_ID}}]
+description = "{{SUBAGENT_DESCRIPTION}}"
+config_file = ".codex/agents/{{SUBAGENT_ID}}.toml"
