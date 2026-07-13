@@ -148,10 +148,11 @@ ls .compass/context/L3-specs/changes/ | grep -v _change-template
 
 #### Step 8: 收尾
 
-1. 更新 `.compass/context/L5-validation/traceability/<domain>.md` — 新增的 Scenario 标为 ✅ verified
-2. proposal.md 状态改为 `pending-review`
-3. tasks.md 所有 checkbox 勾选完毕
-4. 更新 `.compass/context/L4-session/active-session.md` — 记录完成内容和测试结果
+1. 读取 `.compass/context/doc-sync.md`，根据本次实际代码 diff 自动同步受影响的 L1/L2；没有命中同步条件则记录“无需同步”。不要要求用户另行触发上下文更新
+2. 更新 `.compass/context/L5-validation/traceability/<domain>.md` — 新增的 Scenario 标为 ✅ verified
+3. proposal.md 状态改为 `pending-review`
+4. tasks.md 所有 checkbox 勾选完毕
+5. 更新 `.compass/context/L4-session/active-session.md` — 记录完成内容、测试结果和 context 同步结果
 
 ---
 
@@ -192,6 +193,7 @@ Phase C 完成后展示：
 - Delta spec: [N 个域，ADDED/MODIFIED/REMOVED 数量]
 - 测试: [新增 N 个测试用例，全部通过]
 - 代码变更: [修改了哪些文件]
+- Context: [已同步的 L1/L2 文件，或“无需同步”]
 
 ### 受影响的 Requirement
 | Requirement | Scenario | 测试文件 | 状态 |

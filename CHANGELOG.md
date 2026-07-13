@@ -8,6 +8,23 @@ Compass 将 `compass/` 及其中的 `INSTALL.md`、`AGENTS.md`、`context/`、`s
 - **MINOR** — 新增 skill / 新增字段 / 可选能力
 - **PATCH** — 措辞修订、拼写、语义不变的澄清
 
+## [Unreleased]
+
+### Added
+
+- 新增 `/ralph-loop` Skill，以可验证完成条件驱动持续改进，并在平台支持时复用原生 goal/continuation 能力。
+- Ralph Loop 可把单轮工作路由到现有 Compass Workflow，同时保留 Proposal、Review、权限和验证边界。
+
+### Changed
+
+- 将 L1/L2 上下文同步收口为代码变更 workflow 的自动收尾步骤，由 `doc-sync.md` 提供唯一规则；用户无需额外触发同步。
+- `/build-ai` 保持为已有代码库首次构建或完整重建上下文的独立入口。
+- `/git-commit` 只负责用户明确要求的提交与推送，不再承担上下文同步检查。
+
+### Removed
+
+- 移除独立的 `/update-ai` Skill；加入 `/ralph-loop` 后，当前安装包包含 13 个 Skill。
+
 ## [0.4.0] — 2026-07-12
 
 ### Changed

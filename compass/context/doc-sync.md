@@ -1,18 +1,21 @@
 # .compass/context 文档同步流程
 
-> 本文件是 AI 在 git commit 前同步 .compass/context 文档的参考。
+> 本文件是产生代码变更的 Workflow 在完成前同步 `.compass/context/` 的唯一参考。
 > 部署位置：`.compass/context/doc-sync.md`
 >
-> `git-commit` Skill 在提交前引用本文件。
+> `new-change`、`continue-change`、`fix-bug` 和其他代码变更 Workflow 自动引用本文件；用户不需要单独触发上下文更新。
 
 ## 适用范围
 
-仅覆盖 **L1（Codebase Map）** 和 **L2（Coding Rules）** 的同步。
-L3 spec 的更新由 `change-management.md` 的归档流程处理。
+仅覆盖 **L1（Codebase Map）** 和 **L2（Coding Rules）** 的增量同步。
+
+- L3 Spec 由 `change-management.md` 的归档流程更新。
+- L5 验证证据由 Review Workflow 更新。
+- 首次构建或整体重建上下文使用独立的 `build-ai` Skill。
 
 ## 何时触发
 
-**在 git commit 前**，检查本次待提交的变更是否命中以下任一操作：
+代码和相关测试验证完成后、Workflow 结束前，检查本次实际 diff 是否命中以下任一操作：
 
 | 代码变更类型 | 需要更新的文档 |
 |-------------|---------------|
@@ -27,11 +30,13 @@ L3 spec 的更新由 `change-management.md` 的归档流程处理。
 
 **不需要触发**：纯业务逻辑修改（不改结构）、bug 修复（不引入新模式）、配置值调整。
 
+同步是代码变更 Workflow 的内部收尾步骤。事实明确时直接更新，不要求用户额外确认；如果源码、现有上下文和用户要求互相冲突，报告冲突并只询问会改变产品或架构语义的决策。
+
 ## 同步步骤
 
 ### 1. 快速检查
 
-对照上表，判断本次改动是否命中任何行。没有命中 → 跳过，不需要同步。
+读取本次 Workflow 产生的实际 diff，对照上表判断是否命中。没有命中 → 记录“无需同步”并跳过。
 
 ### 2. 更新 L1 文档
 
@@ -70,3 +75,5 @@ L3 spec 的更新由 `change-management.md` 的归档流程处理。
 - 没有指向不存在代码的 feature 文档
 - module-map.md 的依赖关系仍然准确
 - global.md 的规则反映当前编码实践
+
+Workflow 的最终摘要只报告“已同步哪些 context”或“无需同步”，不要提示用户再运行另一个 Skill。

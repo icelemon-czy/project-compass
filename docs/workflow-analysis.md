@@ -31,7 +31,17 @@
 | 14 | `/fix-bug` 分诊靠感觉 + 补 edge case 无方法 | Q1→Q6 决策树 + 边界值识别表 | `fix-bug/SKILL.md` |
 | 15 | `/archive-change` "确认 verified"无依据 + "语法完整"无规则 | 必须有 review-tests 报告；5 条结构完整性规则 | `archive-change/SKILL.md` |
 | 16 | `/build-ai` Verify 只是 checkbox | 替换为可执行 bash 验证脚本 | `build-ai/SKILL.md` |
-| 17 | `/update-ai` Step 4 "update accordingly" | 5 个子步骤全部改为 diff 对比 + 具体增删操作 | `update-ai/SKILL.md` |
+| 17 | `/update-ai` Step 4 "update accordingly" | 当时将 5 个子步骤改为 diff 对比 + 具体增删操作；第三轮已将整个 Skill 合并进代码变更 workflow | 已移除 |
+
+### 第三轮（用户体验收敛）
+
+从第一性原理重新判断后，项目把“上下文同步”视为代码变更的内部后置条件，而不是用户的独立目标：
+
+- 保留 `/build-ai`：它服务于已有代码库的首次上下文构建或完整重建，是用户可以独立表达的目标。
+- 移除 `/update-ai`：`/new-change`、`/continue-change`、`/fix-bug` 和 `/init-project` 在产生代码变更后自动按 `context/doc-sync.md` 同步 L1/L2。
+- `/archive-change` 继续负责 L3 delta 合并，`/review-tests` 继续负责 L5 验证证据；不让一个同步步骤横跨所有层级。
+- `/git-commit` 只在用户明确要求提交时运行，不再承担文档同步门禁。
+- 用户只描述目标；Agent 内部执行同步并在结果中简短报告，不提示用户再运行另一个 Skill。
 
 ---
 
@@ -67,12 +77,23 @@
 |:------|:-----|
 | `/fix-bug` | 任何"不对劲"的统一入口：自动分诊 + 按类型修复 |
 
-### 5. 文档维护（2）
+### 5. 代码库问答（1）
 
 | Skill | 用途 |
 |:------|:-----|
-| `/update-ai` | 代码改了后增量刷新 `.compass/context/` |
-| `/git-commit` | 生成 commit message + doc-sync 检查 + push |
+| `/ask-codebase` | 基于已有上下文和源码回答问题，不修改项目 |
+
+### 6. 版本控制（1）
+
+| Skill | 用途 |
+|:------|:-----|
+| `/git-commit` | 用户明确要求时生成 commit message、commit 和 push |
+
+### 7. 持续执行（1）
+
+| Skill | 用途 |
+|:------|:-----|
+| `/ralph-loop` | 围绕客观 verifier 持续改进，直到成功或达到安全上限 |
 
 ---
 
@@ -103,7 +124,7 @@ Phase C: 按 `.compass/INSTALL.md` 填写 context + 写初始 Spec
   ↓
 Phase D: 按 Spec 做 TDD
    ├─ 从 Scenario 写测试 → 红灯
-   └─ 实现代码 → 绿灯 → 更新追溯
+   └─ 实现代码 → 绿灯 → 自动同步 L1/L2 → 更新追溯
   ↓
 Phase E: 展示完成状态              ✋ 人工检查
 ```
@@ -156,7 +177,7 @@ Step 7: 实现代码 → 绿灯
    ├─ 写代码前：强制读取 L2 规则，明列 3-5 条关键规则
    └─ 写代码后：L2 合规自检表（逐条 ✅/🔴，有 🔴 先修）
   ↓
-Step 8: 更新 L5 追溯 → 状态改为 pending-review
+Step 8: 按 doc-sync.md 自动同步 L1/L2 → 更新 L5 追溯 → 状态改为 pending-review
   ↓
 提示用户: 运行 /review-tests
 ```
@@ -170,7 +191,7 @@ Step 8: 更新 L5 追溯 → 状态改为 pending-review
   ↓
 根据当前状态恢复上下文：
   drafting → 继续 /new-change
-  implementing → 继续 TDD
+  implementing → 继续 TDD；代码完成后自动同步 L1/L2
   review-failed → 读 Review Feedback → 转 /fix-bug
   pending-review → 提示用户 /review-tests
   approved → 提示用户 /archive-change
@@ -249,9 +270,10 @@ Step 3B 改/加测试（含边界值表识别 edge case）→ 确认能捕获问
 Step 3C 新建/复用 fix 变更 → delta spec → ✋ 确认 → 回 3B → 3A
          （环检测：depth >= 2 禁止再嵌套，回溯到 parent-change）
   ↓
-Step 4: 更新 L5 追溯 + proposal 状态回流（review-failed → implementing → pending-review）
+Step 5: 按 doc-sync.md 自动同步 L1/L2 + 更新 L5 追溯
+        + proposal 状态回流（review-failed → implementing → pending-review）
   ↓
-Step 5: 输出报告（触发场景 / 根因分类 / 变更状态）
+Step 6: 输出报告（触发场景 / 根因分类 / 变更状态）
 ```
 
 ### 2.9 `/archive-change`
@@ -270,7 +292,7 @@ Step 5: 输出报告（触发场景 / 根因分类 / 变更状态）
   ↓
 更新 proposal.md 状态 → archived
   ↓
-提示: /update-ai + /git-commit
+输出归档摘要；只有用户明确要求时才运行 /git-commit
 ```
 
 ### 2.10 `/check-changes`
@@ -285,21 +307,16 @@ ls .compass/context/L3-specs/archive/ → 历史归档
   | 变更 | 状态 | 创建时间 | 最近更新 | 下一步动作 |
 ```
 
-### 2.11 `/update-ai`
+### 2.11 `/ask-codebase`
 
 ```
-git diff HEAD~N → 识别变更的代码文件
+根据问题选择最小上下文层级
   ↓
-对照 .compass/context/doc-sync.md 的同步规则
+先查 L1–L5 中已有事实
   ↓
-触发的文档层：
-  ├─ 新增/删除模块 → L1 (overview + features)
-  ├─ 新编码模式 → L2 (global / testing / templates)
-  └─ 接口契约变 → 相关 feature 的 README
+必要时读源码验证，不把推断写成事实
   ↓
-增量更新对应文件
-  ↓
-输出: 本次同步了哪些文档
+带证据回答；只读问答不修改 context
 ```
 
 ### 2.12 `/git-commit`
@@ -309,11 +326,26 @@ Step 1: git status + git diff HEAD → 总结变更
   ↓
 Step 1.5: README 检查（非 README 变更但 README 没改 → 警告）
   ↓
-Step 2: doc-sync 检查（.compass/context/doc-sync.md → 是否触发 L1/L2 同步）
-  ↓
-Step 3: git add -A → commit → push (带 proxy)
+Step 2: git add -A → commit → push (带 proxy)
   ↓
 输出: commit hash + branch
+```
+
+### 2.13 `/ralph-loop`
+
+```
+定义 Objective + Completion criteria + Verifier + Scope + Safety cap
+  ↓
+Measure 当前基线
+  ↓
+选择一个最小推进，并按需路由到一个现有 Compass Skill
+  ↓
+Act → Verify → 直接检查证据
+  ↓
+├─ 全部条件成立 → success
+├─ 未成立且有新假设 → 下一轮
+├─ 达到上限 → honest incomplete report
+└─ 人工门槛/权限/外部依赖 → 暂停并报告
 ```
 
 ---
@@ -358,7 +390,7 @@ drafting ──→ implementing ──→ pending-review ──→ approved ─�
                          ↓
              Proposal ──✋ 人工门槛 1：业务确认
                          ↓
-              Delta Spec → 红灯测试 → 绿灯代码
+      Delta Spec → 红灯测试 → 绿灯代码 → 自动同步 L1/L2
                          ↓
                   pending-review
                          ↓
@@ -374,7 +406,8 @@ drafting ──→ implementing ──→ pending-review ──→ approved ─�
                      ↓             ↓
                    修完回到       /archive-change
                  pending-review           ↓
-                   /update-ai + /git-commit
+                        交付结果
+               （明确要求时才 /git-commit）
                             ↓
                     → 下一个 /new-change
 
@@ -383,6 +416,8 @@ drafting ──→ implementing ──→ pending-review ──→ approved ─�
 │   /continue-change — 接续昨天的工作                           │
 │   /check-changes   — 看所有变更进度                           │
 │   /fix-bug         — 任何时候发现问题                         │
+│   /ask-codebase    — 定位、解释和影响分析                     │
+│   /ralph-loop      — 用 verifier 驱动持续迭代                  │
 │   /git-commit      — 提交代码                                │
 └────────────────────────────────────────────────────────────┘
 ```
@@ -402,7 +437,11 @@ drafting ──→ implementing ──→ pending-review ──→ approved ─�
 
 /continue-change 会读状态机 → 自动判断该调 /new-change 还是 /fix-bug 还是 /review-tests
 
-任何 skill 结束 → /git-commit 收尾
+/ralph-loop 作为外层执行器 → 每轮选择一个现有 Skill → 运行 verifier → 未达标则继续
+
+产生代码变更的 workflow → 完成前自动按 doc-sync.md 同步 L1/L2
+
+用户明确要求提交 → /git-commit
 ```
 
 ---
@@ -416,7 +455,7 @@ drafting ──→ implementing ──→ pending-review ──→ approved ─�
 
 > 第 3 类（Spec 歧义时）会在 `/fix-bug` Step 3C 出现一次**临时门槛**，因为修 spec 本质上是业务决策。但这是例外情况，不是常规流程的固定门槛。
 
-其余全部自动化：写 spec、写测试、写代码、分诊、修 bug、归档、同步文档、提交。
+其余全部自动化：写 spec、写测试、写代码、分诊、修 bug、归档、同步上下文。提交只在用户明确要求时执行。
 
 ---
 

@@ -177,9 +177,10 @@ description: "Initialize a new project from scratch: requirements → tech stack
 3. 创建新文件 → 查 `L2-rules/templates.md`
 4. **运行测试，确认全部通过（绿灯）**
 
-#### Step 13: 更新追溯矩阵
+#### Step 13: 同步上下文与追溯矩阵
 
-更新 `L5-validation/traceability/` — 已实现的 Scenario 标为 ✅ verified。
+1. 读取 `.compass/context/doc-sync.md`，根据 Phase D 的实际代码 diff 自动校正受影响的 L1/L2；不要求用户另行触发上下文更新。
+2. 更新 `L5-validation/traceability/` — 已实现的 Scenario 标为 ✅ verified。
 
 ---
 

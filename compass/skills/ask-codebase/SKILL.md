@@ -192,10 +192,10 @@ description: "Answer questions about the codebase: locate features, explain arch
 
 1. 用 `grep -rn` / `find` 在源码中搜索
 2. 读取找到的源码文件，提取关键信息
-3. **标记为"来自源码直接搜索，非 .compass/context/ 文档"**，提醒用户考虑更新 `.compass/context/`
+3. **标记为"来自源码直接搜索，非 .compass/context/ 文档"**，指出具体漂移；本次只读问答不修改 `.compass/context/`
 
 ```
-> ⚠️ 以下信息来自源码直接搜索，`.compass/context/` 文档中未记录。建议运行 `/update-ai` 补充。
+> ⚠️ 以下信息来自源码直接搜索，`.compass/context/` 文档中未记录。若后续进入代码变更，相关 Workflow 会按 `doc-sync.md` 自动同步；本次只读问答不修改上下文。
 ```
 
 ### Step 4: 输出回答
@@ -206,7 +206,7 @@ description: "Answer questions about the codebase: locate features, explain arch
 2. **详细信息**（按 Step 2 的输出格式）
 3. **相关操作建议**（如适用）：
    - 如果用户可能想修改 → 提示 `/new-change` 或 `/continue-change`
-   - 如果发现 `.compass/context/` 文档缺失/过期 → 提示 `/update-ai`
+   - 如果发现 `.compass/context/` 文档缺失/过期 → 标记具体漂移；只读问答不修改，后续代码变更 Workflow 自动同步
    - 如果发现测试缺口 → 提示 `/review-tests`
 
 ## 反模式

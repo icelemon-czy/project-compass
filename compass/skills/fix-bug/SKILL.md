@@ -200,8 +200,9 @@ Q1: 有测试失败吗？
 
 ### Step 5: 更新追溯 & 状态回流
 
-1. 更新 `.compass/context/L5-validation/traceability/<domain>.md` — 该 Scenario 改为 ✅ verified
-2. 根据 Step 1 识别的场景，回写变更状态：
+1. 读取 `.compass/context/doc-sync.md`，根据本次实际代码 diff 自动同步受影响的 L1/L2；没有命中同步条件则记录“无需同步”。不要要求用户另行触发上下文更新
+2. 更新 `.compass/context/L5-validation/traceability/<domain>.md` — 该 Scenario 改为 ✅ verified
+3. 根据 Step 1 识别的场景，回写变更状态：
 
 | Step 1 场景 | proposal.md 状态 |
 |:-----------|:-----------------|
@@ -210,7 +211,7 @@ Q1: 有测试失败吗？
 | 开发中挂了 | 保持 `implementing` |
 | 已归档功能 bug | 新建 fix 变更；如仅修代码可直接进入 `implementing`，如需补 spec 则先走 `drafting` → `implementing` |
 
-3. 更新 `.compass/context/L4-session/active-session.md`
+4. 更新 `.compass/context/L4-session/active-session.md`，记录修复、测试和 context 同步结果
 
 ### Step 6: 输出报告
 
@@ -225,6 +226,7 @@ Q1: 有测试失败吗？
 - Spec: [有/无变更，如有列出 delta]
 - 测试: [新增 N / 修改 N]
 - 代码: [修改的文件]
+- Context: [已同步的 L1/L2 文件，或“无需同步”]
 
 **测试结果**: ✅ 全部通过 / ❌ 仍有失败
 **变更状态**: [变更名] → [新状态]

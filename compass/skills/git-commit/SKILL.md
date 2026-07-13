@@ -34,25 +34,7 @@ git diff HEAD --name-only
 
 Skip this check if the only changed files are `README.md`, `README.zh.md`, or files inside `.compass/context/L4-session/` (session state updates don't require README changes).
 
-## Step 2 — Doc Sync Check
-
-在提交前，检查待提交的代码变更是否需要同步 `.compass/context/` 文档：
-
-1. 读取 `.compass/context/doc-sync.md`（如存在）；**如果文件不存在 → 跳过本步骤**
-2. 对照变更列表，按以下规则逐条判断是否命中同步条件：
-
-| 变更类型 | 命中条件 | 需同步的文档 |
-|:---------|:---------|:-------------|
-| 新增/删除/重命名 src 文件 | `git diff --name-status` 中出现 A/D/R 且路径在 src 目录 | L1: overview.md, key-files.md, module-map.md |
-| 新增/修改 export/public API | `git diff` 中有新增 `export`、`pub fn`、`def` 等入口 | L1: features/ 对应 README.md |
-| 修改 lint/tsconfig/build 配置 | 变更列表含 `.eslintrc*`、`tsconfig*`、`pyproject.toml` 等 | L2: global.md |
-| 修改测试配置或约定 | 变更列表含 `jest.config*`、`vitest.config*`、`conftest.py` 等 | L2: testing.md |
-| 其他（仅业务逻辑变更） | 不命中以上任何一条 | 无需同步 |
-
-3. 如果命中 → 按 doc-sync.md 的步骤更新对应文档，将更新一并纳入本次提交
-4. 如果没命中 → 跳过
-
-## Step 3 — Commit & Push
+## Step 2 — Commit & Push
 
 Using the summary from Step 1:
 1. `git add -A`
