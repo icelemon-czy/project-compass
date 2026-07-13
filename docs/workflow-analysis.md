@@ -1,4 +1,4 @@
-# Compass Harness Skill 工作流分析
+# Compass Skill 工作流分析
 
 > 盘点全部 Skill + 逐个展开 workflow + 全局工作流 + 已修缺口记录。
 
@@ -10,10 +10,10 @@
 
 | # | 原缺口 | 补丁 | 落地文件 |
 |:--|:-------|:-----|:---------|
-| 1 | `/spec-fix` 只面向"已归档 bug"，边界模糊 | 重命名 → `/fix-bug`，统一修复入口，含 5 类分诊（代码/测试/虚假通过/Spec歧义/Spec缺失） | `harness/skills/fix-bug/SKILL.md` |
-| 2 | `/review-tests` 只做静态比对，不跑测试 | 新增 Step 0 强制跑测试，红灯自动转 `/fix-bug` | `harness/skills/review-tests/SKILL.md` |
+| 1 | `/spec-fix` 只面向"已归档 bug"，边界模糊 | 重命名 → `/fix-bug`，统一修复入口，含 5 类分诊（代码/测试/虚假通过/Spec歧义/Spec缺失） | `compass/skills/fix-bug/SKILL.md` |
+| 2 | `/review-tests` 只做静态比对，不跑测试 | 新增 Step 0 强制跑测试，红灯自动转 `/fix-bug` | `compass/skills/review-tests/SKILL.md` |
 | 3 | 没有"虚假通过"审查 | `/review-tests` Step 3 加入 7 条反模式清单 | 同上 |
-| 4 | 状态机不完整，没有 `review-failed` | `_change-template/proposal.md` 加状态机图 + `Review Feedback` + `Known Gaps` 区段 | `harness/context/L3-specs/changes/_change-template/proposal.md` |
+| 4 | 状态机不完整，没有 `review-failed` | `_change-template/proposal.md` 加状态机图 + `Review Feedback` + `Known Gaps` 区段 | `compass/context/L3-specs/changes/_change-template/proposal.md` |
 | 5 | 宣传"唯一人工门槛"不准确 | 本文档第六节明确列出**两个人工门槛** | 本文档 |
 
 ### 第二轮（Skill 算法具体化）
@@ -42,8 +42,8 @@
 | Skill | 用途 |
 |:------|:-----|
 | `/git-init` | 新仓库初始化 |
-| `/init-project` | 从零新项目：需求→选型→脚手架→安装 `.compass-harness/`→首批 TDD |
-| `/build-ai` | 已有代码，首次安装 `.compass-harness/` 并构建上下文 |
+| `/init-project` | 从零新项目：需求→选型→脚手架→安装 `.compass/`→首批 TDD |
+| `/build-ai` | 已有代码，首次安装 `.compass/` 并构建上下文 |
 | `/setup-testing` | 生成 / 更新 `L2-rules/testing.md` |
 
 ### 2. 需求开发（2）
@@ -71,7 +71,7 @@
 
 | Skill | 用途 |
 |:------|:-----|
-| `/update-ai` | 代码改了后增量刷新 `.compass-harness/context/` |
+| `/update-ai` | 代码改了后增量刷新 `.compass/context/` |
 | `/git-commit` | 生成 commit message + doc-sync 检查 + push |
 
 ---
@@ -99,7 +99,7 @@ Phase A: 需求澄清 + 技术选型        ✋ 人工确认
   ↓
 Phase B: 脚手架（不写业务代码）
   ↓
-Phase C: 按 `.compass-harness/INSTALL.md` 填写 context + 写初始 Spec
+Phase C: 按 `.compass/INSTALL.md` 填写 context + 写初始 Spec
   ↓
 Phase D: 按 Spec 做 TDD
    ├─ 从 Scenario 写测试 → 红灯
@@ -164,7 +164,7 @@ Step 8: 更新 L5 追溯 → 状态改为 pending-review
 ### 2.6 `/continue-change`
 
 ```
-读 .compass-harness/context/L4-session/active-session.md → 确定断点
+读 .compass/context/L4-session/active-session.md → 确定断点
   ↓
 读对应变更的 proposal.md + tasks.md → 找到下一步
   ↓
@@ -276,8 +276,8 @@ Step 5: 输出报告（触发场景 / 根因分类 / 变更状态）
 ### 2.10 `/check-changes`
 
 ```
-ls .compass-harness/context/L3-specs/changes/ → 所有进行中变更
-ls .compass-harness/context/L3-specs/archive/ → 历史归档
+ls .compass/context/L3-specs/changes/ → 所有进行中变更
+ls .compass/context/L3-specs/archive/ → 历史归档
   ↓
 读每个 proposal.md 的状态 + 修改时间
   ↓
@@ -290,7 +290,7 @@ ls .compass-harness/context/L3-specs/archive/ → 历史归档
 ```
 git diff HEAD~N → 识别变更的代码文件
   ↓
-对照 .compass-harness/context/doc-sync.md 的同步规则
+对照 .compass/context/doc-sync.md 的同步规则
   ↓
 触发的文档层：
   ├─ 新增/删除模块 → L1 (overview + features)
@@ -309,7 +309,7 @@ Step 1: git status + git diff HEAD → 总结变更
   ↓
 Step 1.5: README 检查（非 README 变更但 README 没改 → 警告）
   ↓
-Step 2: doc-sync 检查（.compass-harness/context/doc-sync.md → 是否触发 L1/L2 同步）
+Step 2: doc-sync 检查（.compass/context/doc-sync.md → 是否触发 L1/L2 同步）
   ↓
 Step 3: git add -A → commit → push (带 proxy)
   ↓
@@ -434,7 +434,7 @@ drafting ──→ implementing ──→ pending-review ──→ approved ─�
 | 6 | **条件永真** | `expect(x).toBe(x)` / `expect(true).toBe(true)` / 空 snapshot → 命中 | 🔴 |
 | 7 | **吞异常** | try-catch 中 catch 块为空 / 只有 console.log / 没有 expect → 命中 | 🔴 |
 
-> 第 8+ 条：项目可在 `.compass-harness/context/L2-rules/testing.md` 的"自定义反模式"区段追加。前 7 条是底线，不可删除。
+> 第 8+ 条：项目可在 `.compass/context/L2-rules/testing.md` 的"自定义反模式"区段追加。前 7 条是底线，不可删除。
 
 **每个测试函数的输出格式**：
 

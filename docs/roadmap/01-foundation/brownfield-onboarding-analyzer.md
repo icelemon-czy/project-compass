@@ -2,7 +2,7 @@
 
 > 级别：基础层
 > 优先级：P2
-> 一句话：让已有项目能更低成本地接入 Compass，而不是要求用户先手工搭好整套 `.compass-harness/context/`。
+> 一句话：让已有项目能更低成本地接入 Compass，而不是要求用户先手工搭好整套 `.compass/context/`。
 
 ## 要解决的问题
 
@@ -44,12 +44,12 @@
 ## 开放问题
 
 - 置信度应该如何在 Markdown 中表达，既可读又可机检。
-- 如何处理用户已有 `.compass-harness/context/` 但结构不完整的混合场景。
+- 如何处理用户已有 `.compass/context/` 但结构不完整的混合场景。
 - 是否需要把迁移前后的差异单独产出为报告。
 
 ## 相关文档
 
 - [基础层索引](README.md)
-- [Compass Harness CLI](compass-harness-cli.md)
+- [Compass CLI](compass-cli.md)
 - [路线图总索引](../README.md)
 - [根 README](../../../README.md)

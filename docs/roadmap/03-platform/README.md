@@ -4,7 +4,7 @@
 
 ## 收录方向
 
-- [Agent QA Harness](agent-qa-harness.md)：验证 Compass 自己的 review 和 workflow 是否真的可靠。
+- [Agent QA](agent-qa.md)：验证 Compass 自己的 review 和 workflow 是否真的可靠。
 - [Stack And Domain Packs](stack-and-domain-packs.md)：把常见技术栈和业务域经验封装成可复用包。
 - [Team And Enterprise Governance](team-and-enterprise-governance.md)：补齐团队级审计、策略和扩展能力。
 

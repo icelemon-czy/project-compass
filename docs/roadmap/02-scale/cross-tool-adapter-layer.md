@@ -21,7 +21,7 @@
 - 定义 Compass workflow 的 canonical schema。
 - 为 Codex、Claude Code 和 OpenCode 生成对应的 instructions/skills。
 - 建立适配器测试，检查不同工具资产是否跟 canonical schema 保持同步。
-- 让 `.compass-harness/` 成为唯一权威源，平台入口和发现目录全部由它生成。
+- 让 `.compass/` 成为唯一权威源，平台入口和发现目录全部由它生成。
 
 ## 非目标
 
@@ -31,7 +31,7 @@
 
 ## 关键依赖
 
-- Harness CLI 或生成器能力。
+- Compass CLI 或生成器能力。
 - 更明确的 workflow schema 和公共接口定义。
 - 针对不同工具最小能力模型的整理。
 

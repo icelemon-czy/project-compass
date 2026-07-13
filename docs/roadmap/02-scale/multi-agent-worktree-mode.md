@@ -6,7 +6,7 @@
 
 ## 要解决的问题
 
-- 当前 Compass Harness 的 L3 和 L4 本质上还是单 agent 设计。
+- 当前 Compass 的 L3 和 L4 本质上还是单 agent 设计。
 - 多个 agent 同时修改任务状态或会话状态时，最容易出现冲突和信息错乱。
 - 如果没有明确的协作协议，多 Agent 只会把已有流程噪音和冲突放大。
 
@@ -32,7 +32,7 @@
 ## 关键依赖
 
 - 更稳定的任务板和 session 文件契约。
-- Harness CLI 或等价检查层，帮助识别 worktree 模式下的违规写入。
+- Compass CLI 或等价检查层，帮助识别 worktree 模式下的违规写入。
 - 对 `.gitattributes`、merge 规则和任务命名的一致约定。
 
 ## 里程碑建议

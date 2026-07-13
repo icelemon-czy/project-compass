@@ -2,7 +2,7 @@
 
 > 调研日期：2026-03-31
 > 目的：研究多个 AI Agent 如何在同一代码库上并行工作，了解任务分配、隔离、冲突解决和通信机制
-> 相关产出：基于本调研整理的正式路线图见 [Compass Harness Roadmap](../README.md)
+> 相关产出：基于本调研整理的正式路线图见 [Compass Roadmap](../README.md)
 
 ---
 
@@ -312,11 +312,11 @@ git worktree add ../agent-3-workspace feature-3
 
 ---
 
-## 5. 对 Compass Harness 的启示
+## 5. 对 Compass 的启示
 
 ### 当前状态
 
-Compass Harness 的 L3（任务层）和 L4（会话层）本质上是**单 agent 设计**：
+Compass 的 L3（任务层）和 L4（会话层）本质上是**单 agent 设计**：
 - board.md 的一个任务 → 一个 agent 执行
 - active-session.md 追踪一个 agent 的进度
 
@@ -357,7 +357,7 @@ L4-session/
 - 各自有独立的 `.ai/L4-session/active-session.md`
 - 合并时只合并代码，L4 状态各自维护
 
-> ⚠️ 这些都是**可能的方向**，不是立即要做的。当前 Compass Harness 的单 agent 设计对大多数使用场景已经足够。
+> ⚠️ 这些都是**可能的方向**，不是立即要做的。当前 Compass 的单 agent 设计对大多数使用场景已经足够。
 
 ### Git Worktree 工作原理
 
@@ -375,7 +375,7 @@ my-project/                          ← 主 worktree
 │       │   └── gitdir               ← 指回 linked worktree 的路径
 │       └── agent-2/
 │           └── ...
-├── .ai/                             ← Compass Harness 文档
+├── .ai/                             ← Compass 文档
 ├── src/
 └── ...
 

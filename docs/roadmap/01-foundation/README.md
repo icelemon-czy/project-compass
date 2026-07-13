@@ -1,10 +1,10 @@
 # 基础层路线图
 
-> 定位：先补齐让 Compass Harness 更容易运行、验证和落地的基础能力。
+> 定位：先补齐让 Compass 更容易运行、验证和落地的基础能力。
 
 ## 收录方向
 
-- [Compass Harness CLI](compass-harness-cli.md)：把现有规则和流程变成可执行的本地 harness。
+- [Compass CLI](compass-cli.md)：把现有规则和流程变成可执行的本地工具。
 - [Workflow Macros](workflow-macros.md)：把原子 skills 组合成可复用的任务流。
 - [Brownfield Onboarding Analyzer](brownfield-onboarding-analyzer.md)：降低老项目接入 Compass 的门槛。
 

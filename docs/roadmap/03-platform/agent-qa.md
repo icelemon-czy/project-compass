@@ -1,4 +1,4 @@
-# Agent QA Harness
+# Agent QA
 
 > 级别：平台层
 > 优先级：P2
@@ -8,11 +8,11 @@
 
 - Compass 现在强调 `review-tests`、traceability 和 false-pass 检测，但缺少反向验证机制。
 - 如果 workflow 自己无法稳定抓住“植入的坏样本”，就很难证明它真的可靠。
-- 没有自测 harness，后续优化很容易只停留在主观体验层。
+- 没有自测体系，后续优化很容易只停留在主观体验层。
 
 ## 为什么现在做
 
-- 这正好对应你提到的 harness engineering 方向，是 Compass 很有辨识度的路线。
+- 这正好对应 Agent 评估工程方向，是 Compass 很有辨识度的路线。
 - 一旦要支持更多工具和 agent，workflow 本身的质量基线必须可测。
 - 这项能力和 Validation Analytics 是天然互补关系。
 
@@ -27,7 +27,7 @@
 
 - 不在第一阶段做通用 LLM Benchmark 平台。
 - 不追求覆盖所有可能的测试反模式或 agent 行为。
-- 不让 harness 复杂到压过 Compass 本身的主线价值。
+- 不让验证系统复杂到压过 Compass 本身的主线价值。
 
 ## 关键依赖
 
@@ -43,7 +43,7 @@
 
 ## 开放问题
 
-- harness 样本应该放在独立测试仓库还是当前仓库下。
+- 验证样本应该放在独立测试仓库还是当前仓库下。
 - 评估失败时，是阻塞发布还是只做告警。
 - 是否需要按模型、按工具分别维护基线。
 

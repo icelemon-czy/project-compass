@@ -1,4 +1,4 @@
-# Compass Harness Roadmap
+# Compass Roadmap
 
 > 更新日期：2026-07-12
 > 说明：正文保留中文，按层分目录；每个路线方向单独一个 Markdown 文件。
@@ -18,7 +18,7 @@
 
 ## 当前优先顺序
 
-1. [Compass Harness CLI](01-foundation/compass-harness-cli.md)
+1. [Compass CLI](01-foundation/compass-cli.md)
 2. [Multi-Agent Worktree Mode](02-scale/multi-agent-worktree-mode.md)
 3. [Validation Analytics Dashboard](02-scale/validation-analytics-dashboard.md)
 4. [Brownfield Onboarding Analyzer](01-foundation/brownfield-onboarding-analyzer.md)
@@ -26,7 +26,7 @@
 
 ## 路线图原则
 
-- Compass Harness 要从“文档模板”演进为“可执行的 AI workflow harness”。
+- Compass 要从“文档模板”演进为“可执行的 AI 工作流系统”。
 - 优先补执行层、验证层和协作层，不优先堆更多说明性文档。
 - 保持和 OpenSpec 的差异化：更强调上下文导航、验证严谨性和多 Agent 协作。
-- 把 `harness/skills/`、`harness/context/`、`harness/platforms/`、`harness/AGENTS.md` 和 `harness/INSTALL.md` 视为当前公共接口。
+- 把 `compass/skills/`、`compass/context/`、`compass/platforms/`、`compass/AGENTS.md` 和 `compass/INSTALL.md` 视为当前公共接口。

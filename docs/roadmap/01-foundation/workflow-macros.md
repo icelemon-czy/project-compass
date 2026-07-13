@@ -13,7 +13,7 @@
 ## 为什么现在做
 
 - Compass 的工作流已经足够丰富，开始适合抽象成宏流程而不是继续增加原子命令。
-- 一旦有了 Harness CLI，macro 可以成为最直接的用户入口。
+- 一旦有了 Compass CLI，macro 可以成为最直接的用户入口。
 - 这能显著降低新用户理解成本，也方便后续团队化使用。
 
 ## 规划范围
@@ -31,7 +31,7 @@
 
 ## 关键依赖
 
-- Harness CLI 或等价执行层。
+- Compass CLI 或等价执行层。
 - 更稳定的 change 状态定义和恢复机制。
 - 对 `fix-bug`、`review-tests`、`archive-change` 等 skill 的输入输出约束做统一整理。
 
@@ -50,6 +50,6 @@
 ## 相关文档
 
 - [基础层索引](README.md)
-- [Compass Harness CLI](compass-harness-cli.md)
+- [Compass CLI](compass-cli.md)
 - [路线图总索引](../README.md)
 - [工作流分析](../../workflow-analysis.md)
