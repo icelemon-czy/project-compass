@@ -1,0 +1,17 @@
+---
+description: "{{SUBAGENT_DESCRIPTION}}"
+mode: subagent
+permission:
+  edit: deny
+  bash:
+    "*": ask
+    "git diff*": allow
+    "git log*": allow
+    "rg *": allow
+---
+
+<!-- compass:generated role={{SUBAGENT_ID}} -->
+
+{{SUBAGENT_INSTRUCTIONS}}
+
+Do not modify files or external state. Return evidence and uncertainty to the parent agent.
