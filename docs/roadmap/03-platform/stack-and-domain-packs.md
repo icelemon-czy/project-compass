@@ -52,4 +52,4 @@
 - [平台层索引](README.md)
 - [Brownfield Onboarding Analyzer](../01-foundation/brownfield-onboarding-analyzer.md)
 - [路线图总索引](../README.md)
-- [根 README](../../README.md)
+- [根 README](../../../README.md)

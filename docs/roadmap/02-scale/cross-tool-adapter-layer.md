@@ -51,5 +51,4 @@
 
 - [扩展层索引](README.md)
 - [路线图总索引](../README.md)
-- [根 README](../../README.md)
-- [OpenSpec supported tools](../../OpenSpec-1.2.0/docs/supported-tools.md)
+- [根 README](../../../README.md)

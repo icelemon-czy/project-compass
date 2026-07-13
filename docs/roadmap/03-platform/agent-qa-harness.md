@@ -52,4 +52,4 @@
 - [平台层索引](README.md)
 - [Validation Analytics Dashboard](../02-scale/validation-analytics-dashboard.md)
 - [路线图总索引](../README.md)
-- [工作流分析](../../WORKFLOW-ANALYSIS.md)
+- [工作流分析](../../workflow-analysis.md)

@@ -51,5 +51,5 @@
 
 - [扩展层索引](README.md)
 - [路线图总索引](../README.md)
-- [根 README](../../README.md)
-- [工作流分析](../../WORKFLOW-ANALYSIS.md)
+- [根 README](../../../README.md)
+- [工作流分析](../../workflow-analysis.md)

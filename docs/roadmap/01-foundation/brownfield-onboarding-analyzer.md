@@ -52,4 +52,4 @@
 - [基础层索引](README.md)
 - [Compass Harness CLI](compass-harness-cli.md)
 - [路线图总索引](../README.md)
-- [根 README](../../README.md)
+- [根 README](../../../README.md)

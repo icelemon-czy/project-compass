@@ -29,4 +29,4 @@
 - Compass Harness 要从“文档模板”演进为“可执行的 AI workflow harness”。
 - 优先补执行层、验证层和协作层，不优先堆更多说明性文档。
 - 保持和 OpenSpec 的差异化：更强调上下文导航、验证严谨性和多 Agent 协作。
-- 把 `.agents/skills/` 和 `templates/compass-harness/` 视为公共接口来设计。
+- 把 `harness/skills/`、`harness/context/`、`harness/platforms/`、`harness/AGENTS.md` 和 `harness/INSTALL.md` 视为当前公共接口。

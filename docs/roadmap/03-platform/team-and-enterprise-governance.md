@@ -52,4 +52,4 @@
 - [平台层索引](README.md)
 - [Cross-Tool Adapter Layer](../02-scale/cross-tool-adapter-layer.md)
 - [路线图总索引](../README.md)
-- [CHANGELOG](../../CHANGELOG.md)
+- [CHANGELOG](../../../CHANGELOG.md)

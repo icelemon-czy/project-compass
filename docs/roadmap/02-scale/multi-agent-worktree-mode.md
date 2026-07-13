@@ -52,4 +52,4 @@
 - [扩展层索引](README.md)
 - [多 Agent 并行协作方案调研](../research/multi-agent-collaboration-research.md)
 - [路线图总索引](../README.md)
-- [工作流分析](../../WORKFLOW-ANALYSIS.md)
+- [工作流分析](../../workflow-analysis.md)

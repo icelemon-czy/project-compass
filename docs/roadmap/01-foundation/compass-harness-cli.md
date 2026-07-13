@@ -6,7 +6,7 @@
 
 ## 要解决的问题
 
-- 目前很多规则只存在于 `README`、`.agents/skills/` 和 `templates/compass-harness/` 中，安装与升级仍需统一入口。
+- 当前安装由 Agent 按 `harness/INSTALL.md` 执行；只有真实使用证明需要自动化后，才考虑统一 CLI。
 - 文档结构漂移、状态机错误、字段缺失、目录不一致等问题缺少统一检查入口。
 - 新用户接入 Compass 时，需要手动建立 `.compass-harness/` 权威目录并渲染平台适配模板。
 
@@ -31,7 +31,7 @@
 
 ## 关键依赖
 
-- 明确模板仓库 `.agents/skills/`、目标项目 `.compass-harness/skills/`、manifest 和各类模板的最小公共契约。
+- 以 `harness/skills/` 为唯一源，并保持 `harness/INSTALL.md` 的非破坏安装契约。
 - 给现有 workflow 状态机一个机器可检查的表示。
 - 约定 CLI 与文档目录之间的版本关系。
 
@@ -44,12 +44,12 @@
 ## 开放问题
 
 - CLI 用 Node.js 还是保持尽量无运行时依赖。
-- 生成逻辑是否完全由 `manifest.yaml` 驱动。
+- 是否真的需要 manifest，还是继续由 `harness/INSTALL.md` 作为唯一安装契约。
 - 是否需要显式的 `compass upgrade` 命令。
 
 ## 相关文档
 
 - [基础层索引](README.md)
 - [路线图总索引](../README.md)
-- [根 README](../../README.md)
-- [工作流分析](../../WORKFLOW-ANALYSIS.md)
+- [根 README](../../../README.md)
+- [工作流分析](../../workflow-analysis.md)

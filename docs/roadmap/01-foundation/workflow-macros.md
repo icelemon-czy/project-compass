@@ -52,4 +52,4 @@
 - [基础层索引](README.md)
 - [Compass Harness CLI](compass-harness-cli.md)
 - [路线图总索引](../README.md)
-- [工作流分析](../../WORKFLOW-ANALYSIS.md)
+- [工作流分析](../../workflow-analysis.md)
