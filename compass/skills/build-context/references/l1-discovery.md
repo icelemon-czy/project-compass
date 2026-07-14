@@ -1,4 +1,4 @@
-# L1 Discovery
+# L1 Codebase Discovery
 
 Use this reference to scan a project, identify infrastructure and product features, and build the lightweight L1 navigation index. Complete it before `l1-deep-analysis.md`.
 

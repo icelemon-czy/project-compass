@@ -1,7 +1,7 @@
 # 测试规范
 
 > 适用于整个项目的测试规范。写测试前加载本文件。
-> 更新方式：使用 `setup-testing` skill 引导填写或直接编辑。
+> 更新方式：由 `build-context` 的 L2 testing scope 从真实配置和测试中构建，或由代码变更 Workflow 按实际 diff 自动校正。
 
 ## 测试框架
 

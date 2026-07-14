@@ -1,28 +1,36 @@
 ---
 name: init-project
-description: "Initialize a new project from scratch: requirements → tech stack → scaffold → Compass → first spec. Use when: 新项目, init project, 从零开始, start from scratch, 我想做一个, I want to build, 初始化项目, create project, 新建项目, bootstrap"
+description: "从零创建一个可运行、经过测试并已配置 Compass 的新项目。Use only for greenfield or new-project requests; not for adding features to an existing repository."
 ---
 
 # Init Project（从零到可开发）
 
 从用户的一句话出发，完成：需求澄清 → 技术选型 → 项目脚手架 → `.compass/` 安装与上下文 → 第一个 Spec。
 
-> **诚实声明**：本 Skill 的流程不是"一键生成"。需求澄清和技术选型本质上是对话，可能要停下来问你 **多次**（不止一两次）。主要的确认点是 Phase A（方案）和 Phase E（Compass 验收），但中间每当用户给的信息模糊时都会再问。其余能自动的都自动。
+> 用户只负责会改变产品方向的决策。可从请求、代码或常见安全默认值确定的内容由 Agent 直接完成，并把必要问题合并成一次确认。
 
 ## Prerequisites
 
 - 用户描述了想做什么（可以很粗略，如"我想做一个 XX"）
-- Compass 模板可用
+- 当前工作目录是目标项目根目录，用户已将 Compass 的 `compass/` 复制为该目录下的 `.compass/`
+- 除 `.compass/`、用户提供的初始文档和可选 Git 元数据外，当前目录尚未包含已有应用实现
 
 ## Procedure
 
+### Step 0: 验证当前项目根目录
+
+1. 将当前工作目录视为唯一的目标项目根目录，确认 `.compass/INSTALL.md` 存在。
+2. 若不存在，在任何需求分析或脚手架操作前停止，请用户先创建空项目目录并把 Compass 复制为 `.compass/`；不从不明确位置拼装文件。
+3. 检查已有文件和 Git 状态。发现已有应用代码时，这不是 greenfield 初始化；保留用户内容并转为 `develop` 或其他匹配目标，不覆盖。
+4. 后续步骤只在当前根目录内原地初始化；不再创建同名嵌套项目目录，不移动 `.compass/`。
+
 ---
 
-### Phase A: 需求澄清 + 技术选型（需人确认）
+### Phase A: 需求澄清 + 技术选型
 
 #### Step 1: 需求澄清
 
-通过用户描述，按以下 **checklist 逐项**提炼（不可跳过任何一项，用户未提到的标为"待确认"并主动询问）：
+通过用户描述按以下维度提炼。缺失内容先判断能否采用低风险默认值；只有答案会改变产品范围、数据、安全、部署或主要成本时才询问：
 
 | 维度 | 要提取的信息 | 示例 |
 |:-----|:------------|:-----|
@@ -34,11 +42,11 @@ description: "Initialize a new project from scratch: requirements → tech stack
 | 集成约束 | 第三方 API、已有系统 | "对接公司 SSO" |
 | 数据约束 | 数据量级、存储、合规 | "日增 10 万条"、"需要 GDPR 合规" |
 
-如果用户描述太模糊（checklist 中有 ≥3 项无法从描述中提取），提出澄清问题——问题**必须**来自上表中空白的维度，不要泛泛提问。
+将所有真正阻塞的问题合并成一批，不逐项审问，不询问读现有材料或运行检查即可知道的事实。
 
 #### Step 2: 技术选型建议
 
-根据需求推荐技术方案。**必须列出至少 2 个候选方案并附 pros/cons，让用户选择**（除非用户已明确指定技术栈）。
+根据需求给出一个有理由的默认技术方案。只有两个方案会产生实质性产品、运维或成本差异时，才列出简短 pros/cons 让用户选择；用户已指定技术栈时直接采用。
 
 | 维度 | 要给出的建议 |
 |:-----|:-------------|
@@ -48,7 +56,7 @@ description: "Initialize a new project from scratch: requirements → tech stack
 | 测试框架 | 单测 + 集成测试工具 |
 | 构建 + 部署 | 包管理、构建工具、CI 建议 |
 
-**候选方案对比格式**（至少 2 个方案）：
+**需要选择时的对比格式**：
 
 ```
 | 维度 | 方案 A: [名称] | 方案 B: [名称] |
@@ -62,7 +70,7 @@ description: "Initialize a new project from scratch: requirements → tech stack
 
 如果用户已指定技术栈，直接采用，只补充未指定的部分（无需对比）。
 
-#### Step 3: 展示方案 → 等人确认
+#### Step 3: 展示方案，必要时确认
 
 向用户展示：
 
@@ -86,22 +94,21 @@ description: "Initialize a new project from scratch: requirements → tech stack
 1. [如有未确定的业务问题]
 ```
 
-**停下来等待人类确认。这是第一个人工门槛。**
+存在会实质改变产品方向、数据、安全、部署或主要成本的未决项时，停下来等待一次确认。请求已经足够明确时，简短展示采用的方案并直接继续。
 
 ---
 
 ### Phase B: 脚手架搭建（自动）
 
-#### Step 4: 初始化项目
+#### Step 4: 在当前根目录初始化项目
 
-根据确认的方案，执行项目初始化：
+根据确认的方案，在 Step 0 确认的当前项目根目录中原地执行初始化：
 
-1. 创建项目目录
-2. 运行对应的脚手架命令（`npm init`、`cargo init`、`go mod init` 等）
-3. 安装核心依赖（含测试框架）
-4. 创建基础目录结构
-5. 创建 `.gitignore`
-6. 初始化 git（如尚未初始化）
+1. 运行支持当前目录的脚手架命令（`npm init`、`cargo init`、`go mod init` 等）。
+2. 脚手架拒绝在含 `.compass/` 的非空目录运行时，在系统临时目录生成脚手架，检查输出后将应用文件非破坏地合并到当前根目录；不覆盖用户文件，不复制、移动或删除 `.compass/`。
+3. 安装核心依赖（含测试框架）。
+4. 创建基础目录结构和 `.gitignore`。
+5. 初始化 git（如尚未初始化）。
 
 > 此阶段 **不写业务代码**，只搭骨架。业务代码在 Phase D 用 TDD 方式写。
 
@@ -109,26 +116,24 @@ description: "Initialize a new project from scratch: requirements → tech stack
 
 ### Phase C: 初始化 Compass 上下文 + Spec（自动）
 
-#### Step 5: 确认 Compass 已复制并安装
+#### Step 5: 安装 Compass
 
-目标项目必须已经包含 `.compass/INSTALL.md`。如果不存在，停止并要求用户先把 Compass 的 `compass/` 目录复制为项目的 `.compass/`；不要从不明确的位置拼装文件。
+Step 0 已确认 `.compass/INSTALL.md` 位于当前项目根目录。读取并执行该文件：
 
-读取并执行 `.compass/INSTALL.md`：
-
-- 非破坏地合并根 `AGENTS.md`。
+- 由每个已选 platform installer 非破坏地安装该平台的必读 instructions。
 - 直接在已复制的 `.compass/context/` 中填写 L1–L5，已有内容不覆盖，也不创建第二个 context 目录。
-- 根 `AGENTS.md` 直接导航到唯一 `.compass/skills/`。
+- 由每个已选 platform installer 将 `.compass/skills/` 中的 canonical Skill 安装到该平台的 project-level native directory。
 - 根据用户选择逐个执行 `.compass/platforms/<platform>/INSTALL.md`。
-- 默认不安装 Subagent；只有用户明确选择角色时才交给平台安装器渲染。
+- 由平台安装器自动渲染只读 `sdd-reviewer`；用户不需要选择或编排。`codebase-explorer` 只有明确要求时才额外安装。
 
-#### Step 6: 构建 L1 — 代码导航
+#### Step 6: 记录最小 L1 — 只写脚手架事实
 
-读取 `.compass/context/L1-codebase-map/` 下的模板文件（`overview.md`、`features/_feature-template/README.md`、`module-map.md`、`key-files.md`），了解期望格式，然后基于刚创建的项目结构填写：
+读取 `.compass/context/L1-codebase-map/` 下的 `overview.md`、`architecture.md`、`module-map.md` 和 `key-files.md`。此时尚无业务实现，只记录能从已生成文件直接确认的事实：
 
-- `L1-codebase-map/overview.md` — 功能索引（< 60 行）
-- `L1-codebase-map/features/` — 按核心功能创建 feature 文档
-- `L1-codebase-map/module-map.md` — 模块关系（初始版本）
-- `L1-codebase-map/key-files.md` — 关键文件索引
+- `overview.md` 只记录项目身份、真实技术栈和已存在的运行/测试入口。
+- `architecture.md`、`module-map.md` 和 `key-files.md` 只写已存在的脚手架、基础设施和可执行命令。
+- 不为尚未实现的核心功能创建 `features/<name>/README.md`，不猜测文件路径、数据流或模块依赖。
+- 计划中的产品能力只写入 Step 8 的 L3 Spec；L1 只表达当前已存在的代码。
 
 #### Step 7: 构建 L2 — 编码规则
 
@@ -144,13 +149,17 @@ description: "Initialize a new project from scratch: requirements → tech stack
 - 为每个核心功能创建能力域 spec：`L3-specs/specs/<domain>/spec.md`
   - 每个 Requirement 至少 1 个 WHEN/THEN Scenario
 
+#### Step 8.5: 只读 SDD plan review
+
+`sdd-reviewer` 可用时以 `mode=plan` 检查系统边界、能力域冲突、Scenario 可观察性和验证面；Main Agent 复核引用并修正技术问题。只有发现会改变产品行为的歧义才询问用户；角色不可用时按同一检查 inline fallback。
+
 #### Step 9: 构建 L5 — 初始追溯矩阵
 
 - `L5-validation/traceability/` — 初始追溯矩阵（Spec ↔ Code ↔ Test），此时 Code/Test 列为空
 
 #### Step 10: 验证安装边界
 
-按 `.compass/INSTALL.md` 验证：根 `AGENTS.md` 保留项目原规则并直接导航到 `.compass/skills/`、没有复制第二套 Skill 或创建 Skill 软链接、每个已选平台安装器均返回结果，并且未选择角色时没有生成 Subagent 实例。
+按 `.compass/INSTALL.md` 验证：当前根目录仍是 `.compass/` 的父目录且没有嵌套项目根、每个已选 platform 的必读 instruction file 保留原规则并包含最新受管区块、每个 project-level native Skill directory 都已安装完整 Skill 和 `.compass-generated` marker、没有 Skill 软链接、每个已选 platform installer 均返回结果，且 `sdd-reviewer` 已生成或明确记录 inline fallback。同时确认 L1 只记录真实脚手架，没有把 L3 中计划的能力写成已实现功能。
 
 ---
 
@@ -177,14 +186,17 @@ description: "Initialize a new project from scratch: requirements → tech stack
 3. 创建新文件 → 查 `L2-rules/templates.md`
 4. **运行测试，确认全部通过（绿灯）**
 
-#### Step 13: 同步上下文与追溯矩阵
+#### Step 13: Review、同步上下文与追溯矩阵
 
-1. 读取 `.compass/context/doc-sync.md`，根据 Phase D 的实际代码 diff 自动校正受影响的 L1/L2；不要求用户另行触发上下文更新。
-2. 更新 `L5-validation/traceability/` — 已实现的 Scenario 标为 ✅ verified。
+1. Main Agent 运行相关测试并保存实际结果；按 `L5-validation/validation-rules.md` 检查 Scenario、assertion、生产调用链和 false pass。
+2. `sdd-reviewer` 可用时以 `mode=verify` 做只读复核。技术问题由 Main Agent 修复并重新验证；不可用时 inline fallback。
+3. Review `PASS` 后读取 `.compass/context/L1-codebase-map/features/_feature-template/README.md` 和 `.compass/context/doc-sync.md`。根据 Phase D 真实存在的生产代码与测试（包括 greenfield 中尚未纳入 Git diff 的新文件）完成 L1：为已实现能力创建 feature 文档，并从实际调用链更新 overview、architecture、module-map 和 key-files。
+4. 按 `doc-sync.md` 同步实际代码命中的其余 L1/L2，再次确认 L1 不包含未实现的计划功能；不要求用户另行触发上下文更新。
+5. 更新 `L5-validation/traceability/`；只有实际核实的 Scenario 标为 ✅ verified。
 
 ---
 
-### Phase E: 验证（需人检查）
+### Phase E: 验证与交付
 
 #### Step 14: 展示完成状态
 
@@ -198,23 +210,22 @@ description: "Initialize a new project from scratch: requirements → tech stack
 
 ### 已创建
 - [x] 项目脚手架 + 依赖安装
-- [x] 根 AGENTS.md + .compass/context/
-- [x] 根 AGENTS.md 直接导航到唯一 .compass/skills/
+- [x] 已选 platform 的必读 instructions + .compass/context/
+- [x] 已选 platform 的 project-level native directory 已安装 Compass Skills
 - [x] 基于 Spec 的测试（红灯 → 绿灯）
 - [x] 追溯矩阵已更新
 
 ### Compass 概览
 - AGENTS.md: 唯一项目规则
-- skills: 13 个权威 Skill（无复制）
-- subagents: 未安装实例
+- skills: 9 个权威 Skill（7 个核心入口 + 可选 ralph-loop、skill-creator）
+- subagents: sdd-reviewer（只读；不可用时 Main Agent inline fallback）
 - L1: overview.md + N 个 feature 文档
 - L2: global.md + testing.md + templates.md
 - L3: system.md + N 个能力域 spec
 - L5: 追溯矩阵（N 个 Scenario ✅）
 
 ### 建议的下一步
-1. 用 `/new-change` 开始下一个功能开发
-2. 用 `/review-tests` 检查测试覆盖
+- 直接描述下一个目标，由 `/develop` 完成规划、实现、review 和归档
 ```
 
-**等待人类检查确认。这是第二个人工门槛。**
+展示实际验证结果后完成，不再设置纯流程性的第二次确认。

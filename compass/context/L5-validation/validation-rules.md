@@ -80,6 +80,32 @@
 
 ## 验证流程
 
+### SDD Review 协议
+
+`develop` 的内部 closeout 和独立 `audit-tests` 使用同一测试可信度协议；Main Agent 是最终 verifier，`sdd-reviewer` 只读提供第二视角。
+
+对范围内每个 Scenario 建立一行证据：
+
+| Requirement / Scenario | Spec THEN | 测试函数 | 具体 assertion | 生产调用链 | 反模式 | 结论 |
+|:-----------------------|:----------|:---------|:---------------|:-----------|:-------|:-----|
+
+每行必须检查：
+
+1. THEN 是否有具体 assertion；仅 truthy、defined、non-null 或自比较属于弱断言。
+2. 测试输入是否真实触发 WHEN。
+3. 测试是否调用生产入口；mock 外部依赖可以，mock 被测主体不可以。
+4. 是否存在 `.only`、无理由 skip/pending、吞异常、空 snapshot 或条件永真。
+5. 删除关键实现后测试是否应当失败；不会失败说明可能 false pass。
+6. 关键 error、boundary、permission、compatibility 路径是否有 Scenario 和测试。
+7. Main Agent 是否实际运行了最小相关测试，并保留命令、退出状态和输出。
+
+判定只有两种：
+
+- `PASS`：所有范围内 Scenario 都有完整证据且无阻塞项。
+- `BLOCKED`：任一 Scenario 缺测试/证据，或命中弱断言、错位 assertion、mock 被测主体、异常跳过、失败测试、真实调用链未触达等问题。
+
+Review 的技术问题由 Main Agent 修复并重新验证；只有产品行为、兼容性或迁移决策存在冲突时才暂停询问用户。
+
 ### 单域验证（变更归档时）
 
 ```

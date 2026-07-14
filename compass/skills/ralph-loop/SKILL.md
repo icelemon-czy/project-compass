@@ -1,6 +1,6 @@
 ---
 name: ralph-loop
-description: "Run a persistent, verification-driven improvement loop around a well-scoped task. Use when: ralph loop, Ralph循环, 持续迭代, 不要停直到测试通过, keep iterating until done, repeat until tests pass, eval-driven loop, long-running autonomous improvement. Prefer objective tests or evals; do not use for open-ended design, production incidents, or work that repeatedly needs human decisions."
+description: "对有客观完成条件的任务持续迭代，直到验证通过或出现真实阻塞。Use only when the user explicitly asks for Ralph Loop, persistent iteration, or not to stop until checks pass."
 ---
 
 # Ralph Loop — 持续迭代直到可验证终点
@@ -18,6 +18,8 @@ description: "Run a persistent, verification-driven improvement loop around a we
 5. **Safety cap**：可选的最大轮次、token budget 或完成承诺；用户没有提供时不要虚构。
 
 优先从项目真实配置、`.compass/context/L2-rules/testing.md` 和现有 eval 中发现验证命令，不要猜测。能够安全推断时直接开始；缺失选择会实质改变结果，或完全没有诚实的完成判据时，只问一个阻塞问题。
+
+开放式 idea exploration 没有客观 Completion criteria，不启动 Ralph Loop；改用 `/brainstorm` 与用户收敛 design direction。
 
 ## Start persistent execution
 
@@ -41,9 +43,9 @@ description: "Run a persistent, verification-driven improvement loop around a we
 2. **Choose**：选一个失败、瓶颈或新诊断假设作为本轮目标。
 3. **Route**：需要现有 Compass 工作流时，每轮只调用一个最匹配的 Skill：
    - 单个 bug 或测试失败 → `/fix-bug`；
-   - 继续已有 change → `/continue-change`；
-   - 新需求且尚无 change → `/new-change`；
-   - 测试覆盖审查 → `/review-tests`；
+   - 开发功能、调整行为、重构，或继续已有计划内变更 → `/develop`；
+   - 创建、更新或验证 project-local Skill → `/skill-creator`；
+   - 测试可信度专项审计 → `/audit-tests`；
    - 只需定位或影响分析 → `/ask-codebase`。
 4. **Act**：在授权范围内实现或诊断。
 5. **Verify**：每次有意义的改动后重新运行相关 verifier，并直接检查输出或生成物。
@@ -60,7 +62,7 @@ description: "Run a persistent, verification-driven improvement loop around a we
 - 不用未运行、过期、局部或不可复现的结果宣称完成。
 - 不重复完全相同的失败动作；下一轮必须有新假设、新证据或不同策略。
 - 不因循环持续执行而扩大权限、修改范围、外部副作用或生产访问。
-- 不绕过 `/new-change` 的 Proposal 确认、`/review-tests` 的 Review 等人工门槛。
+- 不绕过 `/develop` 的必要业务决策、SDD review、测试证据或权限边界。
 - 不输出 completion promise，除非与它绑定的全部条件真实成立。
 - 先跑最小相关检查，再跑完成契约要求的完整回归验证。
 

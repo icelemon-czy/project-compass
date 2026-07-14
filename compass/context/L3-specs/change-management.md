@@ -1,130 +1,74 @@
-# 需求变更管理流程
+# 需求变更管理
 
-> 本文件是 AI 进行变更管理的完整参考。
-> 部署位置：`.compass/context/L3-specs/change-management.md`
->
-> 根 `AGENTS.md` 直接导航到本文件；Claude Code 的 `CLAUDE.md` 引用根 `AGENTS.md`。
+> `.compass/context/L3-specs/` 的状态与合并规则。用户只描述目标；`develop` Workflow 负责路由、验证和归档。
 
-## L3 目录结构
+## Directory contract
 
-```
-.compass/context/L3-specs/
-├── specs/                          ← 当前系统需求（truth）
-│   ├── system.md                   ← TOR（系统级顶层需求）
-│   ├── _capability-template/       ← 能力域 spec 模板
-│   └── <domain>/spec.md            ← HLR（各能力域需求，可嵌套）
-├── changes/                        ← 进行中的变更
-│   ├── _change-template/           ← 变更模板
-│   └── <name>/                     ← 每个变更一个文件夹
-│       ├── proposal.md             ← 提案（为什么 + 改什么 + 决策理由）
-│       ├── specs/<cap>/spec.md     ← delta spec（ADDED/MODIFIED/REMOVED）
-│       └── tasks.md                ← 执行步骤（checkbox）
-├── archive/                        ← 已完成变更
-└── change-management.md            ← 本文件
+```text
+L3-specs/
+├── specs/                         current confirmed behavior
+├── changes/<name>/
+│   ├── proposal.md                why, behavior decision, impact
+│   ├── specs/<capability>/spec.md delta requirements
+│   └── tasks.md                   tests first, implementation second
+├── archive/<name>/                completed change evidence
+└── change-management.md
 ```
 
-## 创建变更
+只有可观察行为、业务规则、API、schema、权限、兼容性或迁移语义发生变化时才创建 L3 change。内部重构、机械迁移、文档和不改变契约的配置修改走 lightweight path，不创建占位 Spec。
 
-当收到新需求或 bug 修复请求时，按以下步骤执行：
+## State machine
 
-### 1. 收集上下文
-
-读取项目索引和已有 spec：
-
-- `.compass/context/L1-codebase-map/overview.md` — 项目功能索引
-- `.compass/context/L3-specs/specs/system.md` — 系统级需求
-- `ls .compass/context/L3-specs/specs/` — 已有能力域
-- `ls .compass/context/L3-specs/changes/` — 进行中的变更
-
-根据需求定位涉及的功能和模块：
-
-- `.compass/context/L1-codebase-map/features/[功能名]/README.md`
-- `.compass/context/L2-rules/[模块名].md`
-- `.compass/context/L3-specs/specs/[能力域]/spec.md`（如已存在）
-
-### 2. 命名变更
-
-用 kebab-case，如 `fix-login-special-chars`、`add-csv-export`。
-
-### 3. 创建 proposal.md
-
-在 `changes/<name>/proposal.md` 中填写（参考 `_change-template/proposal.md`）：
-
-- **Why**: 为什么做、为什么是现在
-- **What Changes**: 具体变更列表
-- **Alternatives Considered**: 备选方案及选择理由
-- **Capabilities Affected**: 新增/修改的能力域
-- **Impact**: 影响范围
-
-### 4. 生成 delta spec
-
-为每个受影响的能力域创建 `changes/<name>/specs/<capability>/spec.md`：
-
-**规则**：
-
-- 新能力域 → 全部写在 `## ADDED Requirements` 下
-- 修改已有能力域 → 先读 `specs/<capability>/spec.md`，完整复制要改的 Requirement 到 `## MODIFIED Requirements`，然后修改
-- 删除需求 → 写在 `## REMOVED Requirements`，必须有 Reason 和 Migration
-- 每个 Requirement 至少 1 个 Scenario
-- Scenario 标题用 `####`（4 个 #）
-- SHALL/MUST = 强制，SHOULD = 建议，MAY = 可选
-
-### 5. 生成 tasks.md
-
-根据 proposal + delta spec 生成执行步骤：
-
-- 按依赖排序
-- checkbox 格式：`- [ ] X.Y 描述`
-- 最后一组 Verification — 从 Scenario 直接映射
-
-### 6. 提出验收问题
-
-主动提出 3-5 个需要人类确认的**业务**问题：
-
-- ✅ 业务决策（"超过 10 万条时分页还是异步？"）
-- ✅ 边界情况（"并发修改同一记录怎么处理？"）
-- ✅ 兼容性（"旧 API 调用者需要兼容吗？"）
-- ❌ 不问技术实现细节
-- ❌ 不问读代码就能知道的事
-
-**停下来等待人类回答。** 根据回答更新 delta spec 和 tasks。
-
-### 7. 等待确认
-
-展示完整的 proposal + spec + tasks。确认后：
-
-1. proposal.md 状态改为 `implementing`
-2. 更新 `.compass/context/L4-session/active-session.md` 指向该变更
-3. 开始执行 tasks.md
-
-## 归档变更
-
-变更完成并通过确认后：
-
-### 1. 合并 delta spec 到主 spec
-
-对每个受影响的能力域：
-
-- **ADDED Requirements** → 追加到主 spec 的 `## Requirements` 末尾
-- **MODIFIED Requirements** → 找到同名 Requirement，整块替换
-- **REMOVED Requirements** → 删除同名 Requirement 块
-- **新能力域**（主 spec 不存在）→ 从 `_capability-template/` 创建新的 `specs/<cap>/spec.md`
-
-### 2. 更新状态并移动
-
-1. proposal.md 状态改为 `approved`
-2. 移动 `changes/<name>/` → `archive/<name>/`
-
-### 3. 确认
-
-展示合并后的主 spec diff，让人类确认。
-
-## 状态流转
-
+```text
+drafting → implementing → pending-review → approved → archived
+                 ↑              │
+                 └ review-failed┘
 ```
-changes/<name>/ (implementing)
-    ↓ 代码完成 + 测试通过
-changes/<name>/ (pending-review)
-    ↓ 人类确认
-archive/<name>/ (approved) + delta spec 合并到 specs/
-```
+
+| From | To | Condition | Owner |
+|:-----|:---|:----------|:------|
+| — | `drafting` | 行为变更需要 proposal/delta | Main Agent via `develop` |
+| `drafting` | `implementing` | 业务歧义已解决，plan review 无阻塞项 | Main Agent |
+| `implementing` | `pending-review` | 相关测试绿灯、L2 合规检查完成 | Main Agent |
+| `pending-review` | `review-failed` | SDD review 返回阻塞项（技术问题或未解决的产品语义） | Main Agent |
+| `review-failed` | `implementing` | 开始修复 finding 或落实已确认的产品决策 | Main Agent / `fix-bug` |
+| `pending-review` | `approved` | SDD review `PASS` 且关键证据已复核 | Main Agent |
+| `approved` | `archived` | delta 合并和结构验证成功 | Main Agent |
+
+Subagent 不写状态。每次转移在 proposal 的 append-only 日志中记录证据摘要。
+
+## Create or resume
+
+1. 读取最小相关 L1、L2、主 Spec 和现有 changes，避免重复或冲突。
+2. 用 kebab-case 命名 change。
+3. 从 `_change-template/` 创建 proposal 与 tasks。
+4. Delta 规则：
+   - 新能力：`ADDED Requirements`
+   - 修改：把原 Requirement 完整复制到 `MODIFIED Requirements` 后再改
+   - 删除：`REMOVED Requirements`，记录 reason 与 migration
+5. 每个 Requirement 至少一个有可观察 WHEN/THEN 的 Scenario。
+6. Tasks 的第一组固定为 Scenario 测试，后续才是实现。
+7. 只有答案会改变产品行为、范围、兼容性或迁移时才询问用户；问题合并成一批。
+8. 恢复时交叉检查 proposal、tasks、L4、Git diff、源码和测试，以实际证据校正漂移。
+
+## Review and repair
+
+Main Agent 按 `.compass/context/L5-validation/validation-rules.md` 运行测试并复核证据。`sdd-reviewer` 可在 `plan` / `verify` 模式提供只读检查。
+
+- 技术 findings 自动进入 `review-failed → implementing` 修复并重新 review。
+- 业务语义冲突时保持 `review-failed` 并暂停；决策确认后进入 `implementing` 落实。
+- 不能把绿灯、状态字段或 traceability 标签单独当作通过依据。
+
+## Merge and archive
+
+仅在状态为 `approved` 时执行：
+
+1. ADDED 追加到主 Spec。
+2. MODIFIED 按 Requirement 整块替换，禁止句子级 patch。
+3. REMOVED 删除同名 Requirement。
+4. 新能力域从 `_capability-template/` 创建。
+5. 验证每个 Requirement 至少一个 Scenario、WHEN/THEN 完整、无孤立或重复 Requirement。
+6. 更新 L5；只有实际核实的证据标为 `verified`。
+7. 移动 `changes/<name>/` 到 `archive/<name>/`，清理指向它的 L4 session。
+
+通过 review 后，合并和归档是 `develop` 的自动后置条件，不形成额外用户命令或确认。用户明确要求只实现、不归档时例外。

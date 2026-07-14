@@ -1,4 +1,4 @@
-# L3 Specification Construction
+# L3 Spec Construction
 
 Use this reference to create or correct the system specification and capability specifications. Requirements are product truth, so confirmed user documents outrank code inference.
 

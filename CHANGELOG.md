@@ -12,18 +12,31 @@ Compass 将 `compass/` 及其中的 `INSTALL.md`、`AGENTS.md`、`context/`、`s
 
 ### Added
 
+- 新增 `/skill-creator` Skill，用于创建、更新、rename、merge、split 或验证 project-local Skill，并优先复用现有能力、同步 canonical inventory 与执行 trigger boundary 验证。
+- 新增 `/brainstorm` Skill，将尚未定型的 idea 与现有 codebase facts 结合，比较真实 alternatives 并收敛 design direction；用户要求实施时在同一任务中进入 `/develop`。
 - 新增 `/ralph-loop` Skill，以可验证完成条件驱动持续改进，并在平台支持时复用原生 goal/continuation 能力。
 - Ralph Loop 可把单轮工作路由到现有 Compass Workflow，同时保留 Proposal、Review、权限和验证边界。
+- 新增统一 `/develop` Skill，从用户目标自动推进 plan、TDD、review、context sync 和 archive。
+- 新增内置只读 `sdd-reviewer`，用 `plan` / `verify` 两种模式合并影响、Spec 和测试审查；Main Agent 保持唯一 writer。
 
 ### Changed
 
 - 将 L1/L2 上下文同步收口为代码变更 workflow 的自动收尾步骤，由 `doc-sync.md` 提供唯一规则；用户无需额外触发同步。
-- `/build-ai` 保持为已有代码库首次构建或完整重建上下文的独立入口。
-- `/git-commit` 只负责用户明确要求的提交与推送，不再承担上下文同步检查。
+- `/build-context` 保持为已有代码库首次构建或完整重建上下文的独立入口。
+- 将原 `/build-ai` 重命名为 `/build-context`，原 `/change` 重命名为 `/develop`，并缩短全部 Skill descriptions、补充互斥触发边界。
+- 只有外部契约变化才走 SDD；内部重构等走 lightweight path，不再为所有修改创建 Spec。
+- 每个已选平台默认生成只读 `sdd-reviewer`；角色不可用时 Main Agent 使用同一协议 inline fallback。
+- 将 `/review-tests` 重命名为 `/audit-tests`，明确它只负责专项测试可信度审计；默认返回结果而不写入 L5 report。
+- 普通 code review 保持为 Agent 通用能力，不新增 Compass Skill；正常开发已在 `/develop` 内部完成必要 review。
 
 ### Removed
 
-- 移除独立的 `/update-ai` Skill；加入 `/ralph-loop` 后，当前安装包包含 13 个 Skill。
+- 移除独立的 `/update-ai`；同步成为代码变更的自动后置条件。
+- 将 `/new-change`、`/continue-change` 和 `/archive-change` 合并为 `/develop`。
+- 将 `/check-changes` 合并到 `/ask-codebase`，将 `/git-init` 合并到 `/init-project`，将 `/setup-testing` 合并到 `/build-context`。
+- 移除 `/git-commit`；commit/push 继续由 Agent 通用能力在用户明确要求时执行。
+- 将 `impact-analyst`、`spec-validator`、`test-reviewer` 合并为 `sdd-reviewer`。
+- 当前安装包从 13 个 Skill 收敛为 9 个（7 个核心入口 + 可选 `/ralph-loop`、`/skill-creator`）。
 
 ## [0.4.0] — 2026-07-12
 

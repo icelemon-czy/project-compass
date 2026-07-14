@@ -1,4 +1,4 @@
-# L2 Rule Extraction
+# L2 Rule Discovery
 
 Use this reference to derive project-wide rules, file templates, testing conventions, and module contracts from real code and configuration.
 

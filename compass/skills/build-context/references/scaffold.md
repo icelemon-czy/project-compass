@@ -1,4 +1,4 @@
-# Context Scaffold and Migration
+# Compass Context Scaffold and Migration
 
 Use this reference when `.compass/context/` is new, still contains blank templates, or must absorb confirmed facts from an older context directory.
 
@@ -18,7 +18,7 @@ Compass must already be copied into the target project. Treat `.compass/INSTALL.
 - If `.compass/context/` exists, populate it in place.
 - If the whole `.compass/` directory is missing, stop and ask the user to copy `compass/` as `.compass/`.
 - If only part of L1-L5 is missing, compare against the copied package before adding anything. Do not invent a parallel template tree.
-- Do not create `.agents/skills`, `.claude/skills`, platform mirrors, manifests, or symlinks.
+- Do not create or update platform Skill directories from `build-context`; `.compass/INSTALL.md` and the selected platform installer own that deployment.
 
 ## Expected structure
 
@@ -96,7 +96,7 @@ Do not fill every file merely because it exists. Start with:
 1. `L1-codebase-map/overview.md` — a small navigation index.
 2. `L2-rules/global.md` — confirmed project-wide constraints.
 3. `L2-rules/testing.md` — real test commands and conventions.
-4. `L3-specs/change-management.md` — only when the project uses the change workflow.
+4. `L3-specs/change-management.md` — only when the project uses the `develop` workflow.
 
 Add detailed feature, infrastructure, Spec, session, and validation files only when they are useful and supported.
 
@@ -114,4 +114,4 @@ test -f .compass/context/L3-specs/specs/_capability-template/spec.md
 test -f .compass/context/L5-validation/validation-rules.md
 ```
 
-Also confirm there is no second context directory and no copied or linked Skill tree.
+Also confirm there is no second context directory. Report missing or stale platform Skill deployment separately; do not repair it from `build-context`.

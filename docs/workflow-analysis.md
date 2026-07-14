@@ -1,488 +1,150 @@
-# Compass Skill 工作流分析
+# Compass Workflow Analysis
 
-> 盘点全部 Skill + 逐个展开 workflow + 全局工作流 + 已修缺口记录。
+> 当前设计结论：减少用户要理解的入口和 handoff，同时保留 SDD、TDD、review 与追溯的不变量。
 
----
+## 一、设计判断
 
-## 零、已修复的缺口（历史记录）
+### First Principles
 
-### 第一轮（v0.3.0）
+Skill 应对应用户能够独立表达的目标，而不是内部流水线步骤。
 
-| # | 原缺口 | 补丁 | 落地文件 |
-|:--|:-------|:-----|:---------|
-| 1 | `/spec-fix` 只面向"已归档 bug"，边界模糊 | 重命名 → `/fix-bug`，统一修复入口，含 5 类分诊（代码/测试/虚假通过/Spec歧义/Spec缺失） | `compass/skills/fix-bug/SKILL.md` |
-| 2 | `/review-tests` 只做静态比对，不跑测试 | 新增 Step 0 强制跑测试，红灯自动转 `/fix-bug` | `compass/skills/review-tests/SKILL.md` |
-| 3 | 没有"虚假通过"审查 | `/review-tests` Step 3 加入 7 条反模式清单 | 同上 |
-| 4 | 状态机不完整，没有 `review-failed` | `_change-template/proposal.md` 加状态机图 + `Review Feedback` + `Known Gaps` 区段 | `compass/context/L3-specs/changes/_change-template/proposal.md` |
-| 5 | 宣传"唯一人工门槛"不准确 | 本文档第六节明确列出**两个人工门槛** | 本文档 |
+- “实现这个需求”“修复这个 bug”“解释这段架构”是用户目标。
+- “继续 change”“同步 context”“review 后归档”通常只是上一个目标的内部状态或后置条件。
+- 用户注意力是稀缺资源；Agent token 和内部迭代不是用户要管理的资源。
 
-### 第二轮（Skill 算法具体化）
+### Occam's Razor
 
-| # | 原缺口 | 补丁 | 落地文件 |
-|:--|:-------|:-----|:---------|
-| 6 | `/review-tests` "抽样验证"导致虚假通过漏检 | 完全重写：穷举主表、调用链验证、反向推理、覆盖缺口分析、确定性判定规则（9 步流程） | `review-tests/SKILL.md` |
-| 7 | 所有 Skill 的检查步骤只描述 WHAT 不描述 HOW | 当时已有的全部 Skill 均加入具体检测算法/操作命令/判定条件 | 见下方明细 |
-| 8 | `/git-commit` doc-sync 判断无具体规则 | 新增 5 条命中规则表（按变更类型→需同步文档映射） | `git-commit/SKILL.md` |
-| 9 | `/check-changes` "很久未推进"无量化 | 量化为 > 7 天 + git log 检测命令 | `check-changes/SKILL.md` |
-| 10 | `/setup-testing` "取最常见的"无算法 | 三级优先级（config > 依赖 > grep 统计）；[待确认]限 3 个且附原因 | `setup-testing/SKILL.md` |
-| 11 | `/init-project` 需求提取主观 | 7 维度 checklist + 技术选型至少 2 方案 pros/cons 对比 | `init-project/SKILL.md` |
-| 12 | `/new-change` 问题生成无维度 + L2 规则只列不查 | 问题来自 6 维度；Step 7 新增 L2 合规自检表 | `new-change/SKILL.md` |
-| 13 | `/continue-change` "代码是否存在"无操作 | grep + 命中 0 行 = 不存在 | `continue-change/SKILL.md` |
-| 14 | `/fix-bug` 分诊靠感觉 + 补 edge case 无方法 | Q1→Q6 决策树 + 边界值识别表 | `fix-bug/SKILL.md` |
-| 15 | `/archive-change` "确认 verified"无依据 + "语法完整"无规则 | 必须有 review-tests 报告；5 条结构完整性规则 | `archive-change/SKILL.md` |
-| 16 | `/build-ai` Verify 只是 checkbox | 替换为可执行 bash 验证脚本 | `build-ai/SKILL.md` |
-| 17 | `/update-ai` Step 4 "update accordingly" | 当时将 5 个子步骤改为 diff 对比 + 具体增删操作；第三轮已将整个 Skill 合并进代码变更 workflow | 已移除 |
+- 不为同一状态机创建多个入口。
+- 不用多个 Subagent role 表达同一种只读 SDD 审查能力。
+- 不复制 review、doc-sync 或 archive 规则。
+- 不因 Spec 存在就强迫所有代码修改走 SDD；只有可观察契约变化才创建 L3 change。
 
-### 第三轮（用户体验收敛）
+## 二、当前 Skill 全景
 
-从第一性原理重新判断后，项目把“上下文同步”视为代码变更的内部后置条件，而不是用户的独立目标：
+安装包包含 9 个 Skill，其中 7 个核心用户入口；`ralph-loop` 和 `skill-creator` 是显式可选 meta capability。
 
-- 保留 `/build-ai`：它服务于已有代码库的首次上下文构建或完整重建，是用户可以独立表达的目标。
-- 移除 `/update-ai`：`/new-change`、`/continue-change`、`/fix-bug` 和 `/init-project` 在产生代码变更后自动按 `context/doc-sync.md` 同步 L1/L2。
-- `/archive-change` 继续负责 L3 delta 合并，`/review-tests` 继续负责 L5 验证证据；不让一个同步步骤横跨所有层级。
-- `/git-commit` 只在用户明确要求提交时运行，不再承担文档同步门禁。
-- 用户只描述目标；Agent 内部执行同步并在结果中简短报告，不提示用户再运行另一个 Skill。
+| Skill | 用户目标 | 说明 |
+|:------|:---------|:-----|
+| `/init-project` | 从零创建项目 | 吸收 Git 初始化和初始测试规范 |
+| `/build-context` | 为已有项目构建、重建或修复 context | 独立保留；也负责定向更新 L2 testing rules |
+| `/brainstorm` | 澄清 idea、比较方案并收敛 design | 可选前置；内部复用 ask-codebase，确认实施后进入 develop |
+| `/develop` | 开发功能、调整行为或重构代码 | 内部完成 SDD/TDD/review/doc-sync/archive，并可恢复已有 change |
+| `/fix-bug` | 定位并修复行为异常 | 自动分诊 code/test/spec，并复用 review/closeout |
+| `/audit-tests` | 专项审计测试是否可信 | 只在用户明确要求检查覆盖、断言、mock、skip 或 false pass 时使用 |
+| `/ask-codebase` | 定位、解释、影响分析或查询 change 状态 | 只读；吸收原 check-changes |
+| `/ralph-loop` | 显式持续迭代到客观终点 | 可选外层执行模式，不是默认 workflow |
+| `/skill-creator` | 创建、更新或精简 project-local Skill | 可选 authoring workflow，不归入普通 develop |
 
----
+Commit/push 是 Agent 的通用能力，不属于 Compass 生命周期。只有用户明确要求时执行。
 
-## 一、Skill 全景（13 个）
+## 三、合并记录
 
-### 1. 项目初始化（4）
+| 原 Skill | 当前归属 | 原因 |
+|:---------|:---------|:-----|
+| `/git-init` | `/init-project` | 新项目初始化阶段；单独 git init 不需要 Compass 专用流程 |
+| `/setup-testing` | `/init-project` + `/build-context` | testing.md 是 L2 构建/修复的一部分 |
+| `/new-change` | `/develop` create path | 同一 change 生命周期 |
+| `/continue-change` | `/develop` resume path | resume 是状态，不是新目标 |
+| `/archive-change` | `/develop` closeout | 通过 review 后的自动后置条件 |
+| `/check-changes` | `/ask-codebase` change-status path | 本质是只读状态问答 |
+| `/update-ai` | 所有 code-changing workflow 的 doc-sync postcondition | 服务变更，不是用户目标；不能并入 build-context |
+| `/git-commit` | Agent 通用能力 | 不应污染 change lifecycle，也不能默认产生外部副作用 |
 
-| Skill | 用途 |
-|:------|:-----|
-| `/git-init` | 新仓库初始化 |
-| `/init-project` | 从零新项目：需求→选型→脚手架→安装 `.compass/`→首批 TDD |
-| `/build-ai` | 已有代码，首次安装 `.compass/` 并构建上下文 |
-| `/setup-testing` | 生成 / 更新 `L2-rules/testing.md` |
+`/audit-tests` 没有并入 `/develop` 或 `/ask-codebase`：它不是普通 code review 或代码问答，而是对测试可信度的专项审计，有独立的证据协议和 verdict。默认只向用户返回结果，不写 L5 report；只有用户明确要求保存时才落盘。
 
-### 2. 需求开发（2）
+普通 code review 是 Agent 的通用能力，不新增 Compass Skill。用户可以直接要求 review diff、PR 或文件；`/develop` 也会在交付前内部完成必要 review。
 
-| Skill | 用途 |
-|:------|:-----|
-| `/new-change` | 新功能：Proposal → Delta Spec → TDD |
-| `/continue-change` | 接续未完成的变更 |
+`/brainstorm` 保持独立，因为“先帮我想清楚”是可单独表达的用户目标。它不是 `/develop` 的 mandatory gate：明确需求直接实施；尚未定型的 idea 才先读取 `/ask-codebase` 证据、讨论 material choice，并在用户要求实施时由 Agent 自动接入 `/develop`。
 
-### 3. 审核归档（3）
+`/skill-creator` 保持为可选 meta capability：Skill authoring 有独立的 trigger、resource、validation 和 forward-test contract，不应伪装成普通 product change；概念尚未明确时可以先经过 `/brainstorm`，随后自动接续创建。
 
-| Skill | 用途 |
-|:------|:-----|
-| `/review-tests` | 跑测试 + 覆盖审查 + 虚假通过狩猎 |
-| `/archive-change` | 合并 delta → 移到 `archive/` |
-| `/check-changes` | 看所有变更状态 |
+## 四、正常用户体验
 
-### 4. 修复（1，替换原 /spec-fix）
-
-| Skill | 用途 |
-|:------|:-----|
-| `/fix-bug` | 任何"不对劲"的统一入口：自动分诊 + 按类型修复 |
-
-### 5. 代码库问答（1）
-
-| Skill | 用途 |
-|:------|:-----|
-| `/ask-codebase` | 基于已有上下文和源码回答问题，不修改项目 |
-
-### 6. 版本控制（1）
-
-| Skill | 用途 |
-|:------|:-----|
-| `/git-commit` | 用户明确要求时生成 commit message、commit 和 push |
-
-### 7. 持续执行（1）
-
-| Skill | 用途 |
-|:------|:-----|
-| `/ralph-loop` | 围绕客观 verifier 持续改进，直到成功或达到安全上限 |
-
----
-
-## 二、每个 Skill 的内部 Workflow
-
-### 2.1 `/git-init`
-
-```
-输入: 空目录 / 已有代码
+```text
+用户：未定型 idea ─→ `brainstorm` ─→ 读取 `ask-codebase` 证据 ─→ design direction
+                                                               ↓ 用户要求实施
+用户：明确目标 ───────────────────────────────────────────────→ `develop`
+                                                               ↓
+                                                SDD path 或 lightweight path
   ↓
-创建 .gitignore / README 模板
+需要 SDD：proposal + delta Spec + 必要业务决策
   ↓
-git init → git add → git commit (first commit)
+Scenario → 红灯测试 → 最小实现 → 绿灯
   ↓
-可选: 配置 remote (github/gitlab)
+Main Agent 运行测试；sdd-reviewer 只读 verify
+  ├─ 技术问题：Main Agent 修复并重新验证
+  └─ 产品歧义：只在此时询问用户
   ↓
-输出: 干净的 git 仓库
+doc-sync L1/L2 → L5 verified → delta 合并 → archive
+  ↓
+一次性交付
 ```
 
-### 2.2 `/init-project`
+用户不再被要求依次运行 review、archive、update 或 commit Skill。
 
-```
-Phase A: 需求澄清 + 技术选型        ✋ 人工确认
-  ↓
-Phase B: 脚手架（不写业务代码）
-  ↓
-Phase C: 按 `.compass/INSTALL.md` 填写 context + 写初始 Spec
-  ↓
-Phase D: 按 Spec 做 TDD
-   ├─ 从 Scenario 写测试 → 红灯
-   └─ 实现代码 → 绿灯 → 自动同步 L1/L2 → 更新追溯
-  ↓
-Phase E: 展示完成状态              ✋ 人工检查
-```
+## 五、Change 的轻重分流
 
-### 2.3 `/build-ai`
+### SDD path
 
-```
-扫描代码库 → 识别模块 / 功能
-  ↓
-构建 L1 (overview / features / key-files / module-map)
-  ↓
-构建 L2 (global / testing / templates)
-  ↓
-构建 L3 (system.md + 各 domain spec.md)
-  ↓
-构建 L5 追溯矩阵骨架
-  ↓
-通过选定平台的格式文件部署项目规则
-```
+命中任一项时使用：
 
-### 2.4 `/setup-testing`
+- 可观察业务行为变化
+- API、schema、权限或兼容性变化
+- 数据迁移或跨模块契约变化
+- 需要新增/修改/删除 Requirement
 
-```
-扫描测试文件 / 依赖 → 识别框架 (jest/pytest/go test/...)
-  ↓
-提取项目已有测试约定（命名 / 目录 / mock 策略）
-  ↓
-生成 / 更新 L2-rules/testing.md
-  ↓
-产出: 测试规范 + 反模式清单
-```
+保留 proposal、delta Spec、Scenario、TDD、review 和 archive。
 
-### 2.5 `/new-change`
+### Lightweight path
 
-```
-Step 1: 收集上下文 + 定位功能模块
-  ↓
-Step 2: 写 proposal.md (状态=implementing)
-  ↓
-Step 3: 展示 Proposal + 业务问题        ✋ 人工门槛 1：业务确认
-         问题来自 6 个维度：范围/边界/错误处理/并发/兼容/迁移
-  ↓
-Step 4: 生成 Delta Spec（ADDED/MODIFIED/REMOVED Requirements）
-  ↓
-Step 5: 生成 tasks.md（第一组固定为 Tests）
-  ↓
-Step 6: TDD — 从 Scenario 写测试 → 红灯
-  ↓
-Step 7: 实现代码 → 绿灯
-   ├─ 写代码前：强制读取 L2 规则，明列 3-5 条关键规则
-   └─ 写代码后：L2 合规自检表（逐条 ✅/🔴，有 🔴 先修）
-  ↓
-Step 8: 按 doc-sync.md 自动同步 L1/L2 → 更新 L5 追溯 → 状态改为 pending-review
-  ↓
-提示用户: 运行 /review-tests
-```
+适用于内部重构、机械迁移、文档或不改变外部契约的配置调整：
 
-### 2.6 `/continue-change`
+- 不创建 proposal 或 delta Spec。
+- 仍读取相关规则、运行真实检查并执行 doc-sync。
+- 一旦发现契约变化，升级到 SDD path。
 
-```
-读 .compass/context/L4-session/active-session.md → 确定断点
-  ↓
-读对应变更的 proposal.md + tasks.md → 找到下一步
-  ↓
-根据当前状态恢复上下文：
-  drafting → 继续 /new-change
-  implementing → 继续 TDD；代码完成后自动同步 L1/L2
-  review-failed → 读 Review Feedback → 转 /fix-bug
-  pending-review → 提示用户 /review-tests
-  approved → 提示用户 /archive-change
-```
+这解决了“加上 Spec 后所有事情都变 heavy”的根因：不是删除 Spec，而是只在 Spec 能表达真实产品契约时使用它。
 
-### 2.7 `/review-tests`（已改造 — 深度重写版）
+## 六、Subagent 设计
 
-```
-Step 0: 跑测试 + 扫描异常标记（.skip/.only/pending）
-  ├─ 红灯 → 立即转 /fix-bug，结束
-  ├─ .only → 🔴 高风险（其他测试被静默跳过）
-  └─ 全绿且无异常 → 继续
-  ↓
-Step 1: 确定审查范围 + 收集完整 Scenario 清单
-         初始化"主表"（每行 = 一个 Spec Scenario，后续步骤逐列填充）
-         列: Req | Scenario | Spec THEN | 测试函数 | 实际 assertion | 调用链 | 反模式 | 反向推理 | 结论
-  ↓
-Step 2: 逐 Scenario 定位测试（穷举，非抽样）
-  ├─ 2a: 逐字摘抄 Spec THEN（不改写不概括）
-  ├─ 2b: 定位测试函数（traceability → grep → 找不到 = ❌ 缺失）
-  └─ 2c: 逐 assertion 比对 vs Spec THEN（检查存在性 / 对齐度 / 强度）
-  ↓
-Step 3: 【新增】调用链验证（防 Mock 架空）
-  ├─ 3a: 从测试反向追踪到被测入口函数
-  └─ 3b: 确认被测函数是真实代码（mock 外部依赖 ✅ / mock 被测函数本身 🔴）
-         + 检查 test data 是否触发 Spec WHEN 条件
-  ↓
-Step 4: 虚假通过狩猎（7+N 条反模式，逐测试函数逐条标注 ✅/🔴）
-  ├─ 每条有具体检测算法（不是只看信号）
-  └─ 项目自定义反模式从 L2-rules/testing.md 追加
-  ↓
-Step 5: 【新增】反向推理 —"删掉代码还能绿吗？"
-         对每个关键 assertion 做阅读级推理
-  ├─ 会变红 → ✅ 测试有效
-  ├─ 不会变红 → 🔴 测试无效
-  └─ 不确定 → ⚠️ 需人工复核
-  ↓
-Step 6: 【新增】覆盖缺口分析
-  ├─ 6a: 代码分支无对应 Scenario → 建议补 spec + 补测试
-  └─ 6b: 边界值检查（空串/0/负数/null/超限）→ 登记缺失边界
-  ↓
-Step 7: 输出审查报告
-  ├─ 主表（每行每列必填，空列 = 缺陷）
-  ├─ 覆盖概要 / 反模式统计 / 覆盖缺口
-  └─ 结论（确定性规则，不允许 AI 自由裁量）：
-     有任何 🔴 或 ❌ → 打回
-     只有 ⚠️ → 有缺口但非阻塞
-     全部 ✅ → 通过
-  ↓
-Step 8: 状态回流
-  ✅ → pending-review → approved，提示 /archive-change
-  ❌ → pending-review → review-failed，提示 /fix-bug
-  ⚠️ → 登记到 Known Gaps，并推进到 approved
-```
+### 角色
 
-### 2.8 `/fix-bug`（新，替换 /spec-fix）
+默认只有一个内部只读角色：`sdd-reviewer`。
 
-```
-Step 0: 场景识别（看 changes/ 状态确定触发场景）
-  ↓
-Step 1: 定位 spec + feature 文档
-  ↓
-Step 2: 跑测试 + 按决策树分诊（Q1→Q6 逐步排查，非整体感觉）
-  Q1: 有测试失败吗？
-  ├─ 是 → Q2: 找到对应 Spec WHEN/THEN？
-  │   ├─ 是 → Q3: assertion 和 THEN 说的同一件事？
-  │   │   ├─ 是 → A. 代码 Bug → Step 3A
-  │   │   └─ 否 → B. 测试 Bug → Step 3B
-  │   └─ 否 → E. Spec 缺失 → Step 3C
-  └─ 否（全绿但行为错）→ Q4: Spec 中有对应 THEN？
-      ├─ 是 → C. 虚假通过 → Step 3B
-      └─ 否 → D/E. Spec 歧义或缺失 → Step 3C
-  ↓
-Step 3A 改代码 → 测试由红转绿
-Step 3B 改/加测试（含边界值表识别 edge case）→ 确认能捕获问题（必须见红灯）
-Step 3C 新建/复用 fix 变更 → delta spec → ✋ 确认 → 回 3B → 3A
-         （环检测：depth >= 2 禁止再嵌套，回溯到 parent-change）
-  ↓
-Step 5: 按 doc-sync.md 自动同步 L1/L2 + 更新 L5 追溯
-        + proposal 状态回流（review-failed → implementing → pending-review）
-  ↓
-Step 6: 输出报告（触发场景 / 根因分类 / 变更状态）
-```
+- `mode=plan`：检查影响面、行为歧义、delta Spec 和验证面。
+- `mode=verify`：按 Scenario 检查 THEN/assertion、真实生产调用、mock、skip、边界和 false pass。
 
-### 2.9 `/archive-change`
+原 `impact-analyst`、`spec-validator`、`test-reviewer` 合并到这个角色。`codebase-explorer` 只为大型只读调查保留为可选角色。
 
-```
-前置检查: 变更状态 == approved
-  ↓
-合并 Delta Spec 到 specs/<domain>/spec.md
-  ├─ ADDED → 追加
-  ├─ MODIFIED → 替换
-  └─ REMOVED → 删除
-  ↓
-移动 changes/<name>/ → archive/YYYY-MM-<name>/
-  ↓
-更新 L5 追溯（状态改为 ✅ verified）
-  ↓
-更新 proposal.md 状态 → archived
-  ↓
-输出归档摘要；只有用户明确要求时才运行 /git-commit
-```
+### Ownership
 
-### 2.10 `/check-changes`
+- Main Agent：唯一 writer、状态机 owner、测试执行者和最终 verifier。
+- Subagent：只读证据提供者，不写 Spec、代码、报告、状态或 archive。
+- 角色不可用或冲突：Main Agent 静默按同一 validation protocol inline fallback，不把安装工作交给用户。
 
-```
-ls .compass/context/L3-specs/changes/ → 所有进行中变更
-ls .compass/context/L3-specs/archive/ → 历史归档
-  ↓
-读每个 proposal.md 的状态 + 修改时间
-  ↓
-输出看板:
-  | 变更 | 状态 | 创建时间 | 最近更新 | 下一步动作 |
-```
+每个已选平台默认生成 `sdd-reviewer`。用户无需知道它是否被调用，也无需选择下一步。
 
-### 2.11 `/ask-codebase`
+## 七、质量不变量
 
-```
-根据问题选择最小上下文层级
-  ↓
-先查 L1–L5 中已有事实
-  ↓
-必要时读源码验证，不把推断写成事实
-  ↓
-带证据回答；只读问答不修改 context
-```
+入口合并不等于检查缩水：
 
-### 2.12 `/git-commit`
+1. 只有行为契约变化才创建 Spec，但创建后每个 Requirement 必须有可观察 Scenario。
+2. Scenario 必须先映射为能观察到预期失败的测试，再写实现。
+3. 写代码前读取真实 L2 规则，完成后逐条检查。
+4. 绿灯不是通过证明；必须检查具体 assertion 和真实生产调用链。
+5. weak assertion、mock 被测主体、skip/only、吞异常、空 snapshot 和 false pass 都是阻塞项。
+6. 技术 review finding 自动修复并重新验证；产品语义冲突才打扰用户。
+7. L1/L2 按实际 diff 自动同步；L3 由 change 合并；L5 只记录实际核实的证据。
+8. 只有 review `PASS` 才能自动 archive。
+9. Commit/push 只在用户明确要求时发生。
 
-```
-Step 1: git status + git diff HEAD → 总结变更
-  ↓
-Step 1.5: README 检查（非 README 变更但 README 没改 → 警告）
-  ↓
-Step 2: git add -A → commit → push (带 proxy)
-  ↓
-输出: commit hash + branch
-```
+## 八、人工门槛
 
-### 2.13 `/ralph-loop`
+固定的流程确认被移除。只保留两类真实门槛：
 
-```
-定义 Objective + Completion criteria + Verifier + Scope + Safety cap
-  ↓
-Measure 当前基线
-  ↓
-选择一个最小推进，并按需路由到一个现有 Compass Skill
-  ↓
-Act → Verify → 直接检查证据
-  ↓
-├─ 全部条件成立 → success
-├─ 未成立且有新假设 → 下一轮
-├─ 达到上限 → honest incomplete report
-└─ 人工门槛/权限/外部依赖 → 暂停并报告
-```
+| 门槛 | 何时出现 |
+|:-----|:---------|
+| 产品决策 | 不同答案会改变范围、行为、兼容性、迁移或主要成本 |
+| 权限/外部副作用 | 需要新增权限、访问外部系统、部署、发布或 push |
 
----
-
-## 三、状态机（修正后）
-
-```
-drafting ──→ implementing ──→ pending-review ──→ approved ──→ archived
-   ↑              ↑ ↑              │
-   │              │ └──────────────┘
-   │              │   review 打回
-   │              │   (review-failed → implementing)
-   │              │
-   └──────────────┘
-     spec 歧义回退（走 /fix-bug Step 3C）
-```
-
-| 状态 | 进入条件 | 下一状态 | 谁推进 |
-|:-----|:--------|:---------|:-------|
-| `drafting` | `/new-change` 启动 | `implementing`（业务确认后） | 人 |
-| `implementing` | Proposal 确认 / review 打回 | `pending-review`（绿灯后） | AI |
-| `pending-review` | TDD 完成 | `approved` / `review-failed` | AI → Reviewer |
-| `review-failed` | `/review-tests` 打回 | `implementing`（走 /fix-bug） | Reviewer → AI |
-| `approved` | Review 通过 | `archived`（归档后） | Reviewer |
-| `archived` | `/archive-change` 完成 | — | AI |
-
----
-
-## 四、完整工作流（修正版）
-
-```
-┌────────────────────────────────────────────────────────────┐
-│ 项目启动（一次性）                                            │
-│  /git-init → /init-project 或 /build-ai → /setup-testing    │
-└────────────────────────────────────────────────────────────┘
-                         ↓
-┌────────────────────────────────────────────────────────────┐
-│ 日常开发循环                                                  │
-└────────────────────────────────────────────────────────────┘
-                         ↓
-                   /new-change
-                         ↓
-             Proposal ──✋ 人工门槛 1：业务确认
-                         ↓
-      Delta Spec → 红灯测试 → 绿灯代码 → 自动同步 L1/L2
-                         ↓
-                  pending-review
-                         ↓
-                  /review-tests
-              （跑测试 + 覆盖审查 + 虚假通过狩猎）
-                         ↓
-           ┌─────────────┼─────────────┬──────────────┐
-           ↓             ↓             ↓              ↓
-        ❌ 测试红      ✅ 全绿齐全    ⚠️ 覆盖不足    ⚠️ 虚假通过
-           ↓             ↓             ↓              ↓
-       /fix-bug     ✋ 门槛 2      登记 Known     /fix-bug
-                (自动分诊)   → approved      Gaps → approved  (Step 3B)
-                     ↓             ↓
-                   修完回到       /archive-change
-                 pending-review           ↓
-                        交付结果
-               （明确要求时才 /git-commit）
-                            ↓
-                    → 下一个 /new-change
-
-┌────────────────────────────────────────────────────────────┐
-│ 辅助 Skill（随时触发）                                        │
-│   /continue-change — 接续昨天的工作                           │
-│   /check-changes   — 看所有变更进度                           │
-│   /fix-bug         — 任何时候发现问题                         │
-│   /ask-codebase    — 定位、解释和影响分析                     │
-│   /ralph-loop      — 用 verifier 驱动持续迭代                  │
-│   /git-commit      — 提交代码                                │
-└────────────────────────────────────────────────────────────┘
-```
-
----
-
-## 五、Skill 之间的调用关系
-
-```
-/new-change ──→ pending-review ──→ /review-tests
-                                      │
-                         ┌────────────┼────────────┐
-                         ↓            ↓            ↓
-         ✅ approved        ❌ /fix-bug   ⚠️ approved
-          │                 │
-       /archive-change          └──→ 回到 pending-review
-
-/continue-change 会读状态机 → 自动判断该调 /new-change 还是 /fix-bug 还是 /review-tests
-
-/ralph-loop 作为外层执行器 → 每轮选择一个现有 Skill → 运行 verifier → 未达标则继续
-
-产生代码变更的 workflow → 完成前自动按 doc-sync.md 同步 L1/L2
-
-用户明确要求提交 → /git-commit
-```
-
----
-
-## 六、两个人工门槛
-
-| 门槛 | 所在 Skill | 决策内容 | 典型耗时 |
-|:-----|:----------|:---------|:---------|
-| **1. Proposal 确认** | `/new-change` | 业务决策：这个需求要不要做、怎么做 | 几分钟 |
-| **2. Review 批准** | `/review-tests` | 质量决策：测试够不够、有没有虚假通过、可不可以归档 | 几分钟到几十分钟 |
-
-> 第 3 类（Spec 歧义时）会在 `/fix-bug` Step 3C 出现一次**临时门槛**，因为修 spec 本质上是业务决策。但这是例外情况，不是常规流程的固定门槛。
-
-其余全部自动化：写 spec、写测试、写代码、分诊、修 bug、归档、同步上下文。提交只在用户明确要求时执行。
-
----
-
-## 七、虚假通过反模式清单（Reviewer 必过）
-
-这是 `/review-tests` Step 4 的核心检查表，**每条都要逐一过，每条必须标注 ✅ 通过 / 🔴 命中**：
-
-| # | 反模式 | 检测算法（AI 必须按此操作） | 风险 |
-|:--|:-------|:--------------------------|:-----|
-| 1 | **断言缺失** | 在测试函数体内 grep `assert\|expect\|should\|verify`。数量 = 0 → 命中 | 🔴 |
-| 2 | **断言太弱** | 列出所有 assertion。任何一个只做 `toBeTruthy()\|toBeDefined()\|toBeNotNull()\|!= null\|>= 0` 而不比对具体预期值 → 命中 | 🔴 |
-| 3 | **Happy path only** | 统计该 Requirement 下所有 Scenario。只有 1 个正常路径 test，缺 edge/error path → 命中 | 🔴 |
-| 4 | **Mock 了要测的东西** | 调用链验证（Step 3b）已检查。mock 被测函数本身 → 命中 | 🔴 |
-| 5 | **Assertion 绕开 spec THEN** | 比对"Spec THEN"列和"实际 assertion"列。验证的不是同一件事 → 命中 | 🟡 |
-| 6 | **条件永真** | `expect(x).toBe(x)` / `expect(true).toBe(true)` / 空 snapshot → 命中 | 🔴 |
-| 7 | **吞异常** | try-catch 中 catch 块为空 / 只有 console.log / 没有 expect → 命中 | 🔴 |
-
-> 第 8+ 条：项目可在 `.compass/context/L2-rules/testing.md` 的"自定义反模式"区段追加。前 7 条是底线，不可删除。
-
-**每个测试函数的输出格式**：
-
-```
-| # | 反模式 | 结果 | 证据 |
-|:--|:-------|:-----|:-----|
-| 1 | 断言缺失 | ✅ 通过 | 2 个 expect |
-| 2 | 断言太弱 | 🔴 命中 | `expect(result).toBeTruthy()` 应改为具体值 |
-| ... | ... | ... | ... |
-```
-
-发现任何一条 🔴 → 打回 → `/fix-bug` Step 3B。
+技术选型、内部 review、context sync 和 archive 不因“流程到了这一步”而要求用户确认。

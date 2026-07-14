@@ -1,6 +1,6 @@
 ---
 name: ask-codebase
-description: "Answer questions about the codebase: locate features, explain architecture, analyze change impact. Use when: 在哪, where is, 怎么工作, how does it work, 为什么这样设计, why designed this way, 改了会影响什么, what will break, 代码在哪, find code, 架构, architecture, 影响分析, impact analysis, explain, 解释"
+description: "只读回答代码库问题：定位代码、解释架构、分析影响、追溯需求或测试、查看变更进度。Use for factual codebase questions and status queries; not for brainstorming future designs or modifying files."
 ---
 
 # Ask Codebase — 代码库问答（定位 / 架构 / 影响分析）
@@ -17,6 +17,7 @@ description: "Answer questions about the codebase: locate features, explain arch
 | **规则查询** | "新建 Service 应该什么格式"、"错误处理规范" | L2 global + templates + module rules |
 | **需求追溯** | "这个功能的 spec 在哪"、"谁要求加的这个功能" | L3 specs + archive |
 | **测试定位** | "这个功能的测试在哪"、"哪些 Scenario 没测" | L5 traceability |
+| **变更状态** | "现在做到哪了"、"有哪些 change" | L3 changes/archive + L4 session |
 
 ## Prerequisites
 
@@ -35,6 +36,7 @@ description: "Answer questions about the codebase: locate features, explain arch
 | C: 变更影响 | "改了会"、"影响"、"删掉"、"break"、"安全吗" | → Step 2C |
 | D: 规则查询 | "规范"、"怎么写"、"模板"、"约定"、"convention" | → Step 2D |
 | E: 需求/测试追溯 | "spec"、"需求"、"谁要求"、"测试在哪"、"覆盖" | → Step 2E |
+| F: 变更状态 | "状态"、"进度"、"有哪些变更"、"in progress" | → Step 2F |
 
 > 如果不确定类型，默认走 A（代码定位），因为大多数问题的根源是"找不到代码在哪"。
 
@@ -186,11 +188,20 @@ description: "Answer questions about the codebase: locate features, explain arch
 | `add-password-validation` | 2024-01 | 增加了空密码校验 |
 ```
 
+### Step 2F: 变更状态
+
+1. 枚举 `L3-specs/changes/`，读取每个 proposal 的状态与 Why。
+2. 从 tasks.md 统计完成项；用实际源码、Git diff 和相关测试校正明显漂移。
+3. 读取 L4 active session 了解断点，并列出 archive 中最近完成的 change。
+4. 输出按 `drafting / implementing / review-failed / pending-review / approved` 分组的简洁看板，每项只给目的、进度和真实下一阶段。
+
+本步骤只读。用户随后要求继续时，由 `/develop` 自动从状态恢复；不要让用户选择下一条内部 Workflow 命令。
+
 ### Step 3: 补充源码搜索（当 .compass/context/ 文档不够时）
 
 如果 Step 2 从 `.compass/context/` 文档中未找到足够信息：
 
-1. 用 `grep -rn` / `find` 在源码中搜索
+1. 用 `rg` / `rg --files` 在源码中搜索
 2. 读取找到的源码文件，提取关键信息
 3. **标记为"来自源码直接搜索，非 .compass/context/ 文档"**，指出具体漂移；本次只读问答不修改 `.compass/context/`
 
@@ -205,9 +216,10 @@ description: "Answer questions about the codebase: locate features, explain arch
 1. **直接回答**（2-5 句话，先给结论）
 2. **详细信息**（按 Step 2 的输出格式）
 3. **相关操作建议**（如适用）：
-   - 如果用户可能想修改 → 提示 `/new-change` 或 `/continue-change`
+   - 如果用户想基于现状探索未来 design 或比较方案 → 在同一任务中转入 `/brainstorm`
+   - 如果用户明确想修改或继续 → 说明可直接描述目标，由 `/develop` 端到端处理
    - 如果发现 `.compass/context/` 文档缺失/过期 → 标记具体漂移；只读问答不修改，后续代码变更 Workflow 自动同步
-   - 如果发现测试缺口 → 提示 `/review-tests`
+   - 只有用户想专项判断测试是否可信时 → 提示 `/audit-tests`
 
 ## 反模式
 
@@ -215,4 +227,4 @@ description: "Answer questions about the codebase: locate features, explain arch
 - ❌ 只回答"在 src/ 目录下"（必须给到具体文件和行号级别）
 - ❌ 猜测架构决策原因（必须引用 archive/ 的 proposal 或标明"无记录"）
 - ❌ 影响分析只说"可能有影响"（必须列出具体文件和依赖路径）
-- ❌ 回答完就结束，不提示下一步操作（每次回答都要给 actionable 建议）
+- ❌ 无论是否有用都强塞下一步命令；只在用户目标自然延伸时给一句可执行建议

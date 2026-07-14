@@ -1,18 +1,18 @@
 ---
-name: build-ai
-description: "Build or rebuild Compass L1-L5 project context from source code, configuration, tests, and confirmed requirements. Use when: setup ai context, build ai docs, 构建AI上下文, 初始化上下文, brownfield onboarding, rebuild project map, generate L1 L2 L3 L5"
+name: build-context
+description: "为已有代码库构建、重建或修复 Compass 项目上下文，也可单独更新测试规范。Use for brownfield onboarding or context maintenance; not for creating a new project or implementing code changes."
 ---
 
 # Build Compass Project Context
 
-在已经复制到目标项目的 `.compass/` 中初始化或重建项目上下文。安装、平台入口、Skill 部署和可选 Subagent 渲染由 `.compass/INSTALL.md` 负责；本 Skill 只构建 `.compass/context/`。
+在已经复制到目标项目的 `.compass/` 中初始化或重建项目上下文。安装、平台入口、Skill 部署和 Subagent 渲染由 `.compass/INSTALL.md` 负责；本 Skill 只构建 `.compass/context/`。
 
 ## Non-negotiable boundaries
 
 - 保留已有且仍有效的项目事实，增量更新，不用空模板覆盖。
 - 只把源码、配置、测试、Git 历史、用户文档或用户确认过的内容写成事实。
 - 无法确认的内容标记为 `[待确认：...]`；代码推断的需求不能冒充已确认需求。
-- 默认由当前 Agent 完成分析。只有用户明确要求且平台已安装对应角色时，才委派可独立的功能分析。
+- 默认由当前 Agent 完成构建。`sdd-reviewer` 服务 change 的只读 SDD 检查，不参与 context 写入。
 - 不复制 Skill、不创建 Skill 软链接、不修改平台配置。
 
 ## References
@@ -52,6 +52,8 @@ description: "Build or rebuild Compass L1-L5 project context from source code, c
 
 读取 `references/l2-rules.md`。从代码、lint、构建和测试配置中提取可执行规则；规则必须有证据，项目没有一致模式时保留待确认，不要发明规范。
 
+用户只要求建立或更新测试规范时，直接走本步骤的 testing 部分：检查真实依赖、配置、CI、测试文件和可执行命令，只更新 `L2-rules/testing.md`。不要为了这一目标重建其他层，也不要求用户运行独立 setup Skill。
+
 ### Step 5: Build L3 when requirements exist
 
 读取 `references/l3-specs.md`。优先使用用户提供或确认的需求。只有代码时可以形成待确认草案，但必须先让用户确认能力域和业务行为，再将其视为正式 Spec。
@@ -86,7 +88,7 @@ test -f .compass/context/L5-validation/validation-rules.md
 - L2 规则均能追溯到代码或配置。
 - L3 明确区分已确认需求、文档未实现需求和代码推断草案。
 - L5 没有未经检查的 `verified` 结论。
-- 没有修改 `.compass/skills/` 之外的 Skill 副本，也没有生成 Subagent。
+- 没有修改 `.compass/skills/` 之外的 Skill 副本，也没有由本 Skill 生成或修改平台 Subagent 文件。
 
 ## Output
 

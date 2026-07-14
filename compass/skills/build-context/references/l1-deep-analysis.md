@@ -1,4 +1,4 @@
-# L1 Deep Analysis
+# L1 Codebase Deep Analysis
 
 Use this reference after L1 discovery to construct feature documentation, infrastructure documentation, runtime architecture, module contracts, coupling maps, and cross-feature task recipes.
 

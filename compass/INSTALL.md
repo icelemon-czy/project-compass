@@ -23,7 +23,7 @@ projectA/
 └── ...Project A files
 ```
 
-安装完成后，项目使用 `.compass/skills/` 作为唯一 Skill 内容源。复制来的 `context/` 就是项目上下文，直接在其中填写事实；不再存在单独的 `context-template/`。四个 Subagent 角色定义保持可选，默认不生成任何实例。
+安装完成后，`.compass/skills/` 保留 canonical Skill source，每个已选平台由自己的 installer 将完整 Skill directory 安装到该平台的 project-level native directory。复制来的 `context/` 就是项目上下文，直接在其中填写事实；不再存在单独的 `context-template/`。每个已选平台默认生成一个只读 `sdd-reviewer`，作为 `develop` 的内部实现细节；用户不需要选择或编排它。
 
 ## 不可违反的安全规则
 
@@ -33,8 +33,10 @@ projectA/
 - 安装前先读取目标项目现有规则、配置和 Git 状态。
 - 不覆盖已有根 `AGENTS.md`、`CLAUDE.md`、`opencode.json` 或已有的项目上下文。
 - 不删除旧 `.ai/`、旧 Skill 或其他历史文件；先迁移、验证并报告，再由用户决定是否删除。
-- 不复制 13 个 Skill 到多个目录，也不创建任何 Skill 软链接。Agent 直接从 `.compass/skills/` 读取所需 `SKILL.md`。
-- 默认不安装 Subagent，不创建 `.codex/agents/`、`.claude/agents/` 或 `.opencode/agents/`。
+- `.compass/skills/` 是唯一可编辑的 canonical source；平台 Skill directory 是 installer 管理的 generated copy，不得反向作为 source。
+- Skill 必须安装到已选平台的 project-level native directory，不创建 Skill 软链接，也不修改 global Skill directory。
+- 已有同名平台 Skill 没有 `.compass-generated` marker 时不得覆盖；记录 conflict 并继续处理其他 Skill。
+- `sdd-reviewer` 必须保持只读，Main Agent 是唯一 writer 和状态 owner。角色文件冲突或平台不支持时记录 inline fallback，不覆盖用户文件，也不阻断公共安装。
 - 遇到无法安全合并的现有文件时停止该项操作并向用户说明，不要猜测。
 
 ## Step 1：安装前检查
@@ -51,7 +53,7 @@ projectA/
    - 旧 `.ai/`
    - 由此前安装产生的 `.compass/context/` 项目事实
 5. 用户需要 Codex、Claude Code、OpenCode 中的哪些平台。能从请求明确判断时直接采用；无法判断时询问一次。
-6. 用户是否明确要求安装某些 Subagent 角色。没有明确要求时，所选角色列表必须为空。
+6. 可选 Subagent 只识别用户明确要求的 `codebase-explorer`；不要主动让用户选择。内置角色列表固定为 `sdd-reviewer`。
 
 ## Step 2：填写或迁移项目上下文
 
@@ -72,9 +74,9 @@ projectA/
 3. 更新新目录内部仍指向 `.ai/` 的当前路径引用。
 4. 保留原 `.ai/`，在最终报告中列为“待用户确认清理”。
 
-## Step 3：合并项目 AGENTS.md
+## Step 3：准备 platform instructions
 
-规则基线位于 `.compass/AGENTS.md`，由以下标记包围：
+Canonical instructions source 位于 `.compass/AGENTS.md`，由以下标记包围：
 
 ```text
 <!-- compass:start -->
@@ -82,27 +84,30 @@ projectA/
 <!-- compass:end -->
 ```
 
-处理目标项目根 `AGENTS.md`：
+本步骤只定义统一的受管 merge 规则；实际 destination 由 Step 5 的 platform installer 决定。
 
-- 不存在：创建文件并写入完整 Compass 标记区块。
-- 已存在但没有标记区块：保留全部原内容，在合适位置追加区块。
-- 已存在标记区块：只更新两个标记之间的内容，保留标记外的项目规则。
+1. Destination 不存在时创建文件并写入完整受管区块。
+2. Destination 已存在但没有受管区块时，保留全部原内容并追加区块。
+3. Destination 已存在受管区块时，只更新两个 marker 之间的内容，保留 marker 外的平台或用户规则。
+4. Destination 是软链接、包含重复 marker 或无法安全编辑时，不替换、不猜测，停止该平台并报告 conflict。
+5. 不通过 import 或第二个 instruction file 间接加载 canonical source；每个平台的必读文件直接包含受管区块。
 
-合并后必须确认根 `AGENTS.md` 同时保留原项目规则和 Compass 区块。
+## Step 4：准备 Skill deployment
 
-## Step 4：直接使用唯一 Skill 源
-
-唯一 Skill 内容源：
+Canonical Skill source：
 
 ```text
-.compass/skills/
+.compass/skills/<skill>/
 ```
 
-不创建 `.agents/skills`、`.claude/skills` 或其他平台 Skill 目录。
+本步骤只确认 source inventory 和统一的受管 copy 规则；实际 destination 及安装操作由 Step 5 的 platform installer 负责。
 
-- 工作流规则只保存在 `.compass/skills/`。
-- 根 `AGENTS.md` 已要求 Agent 在任务匹配工作流时直接读取相应 `SKILL.md`。
-- Agent 必须按 Skill 的名称和 description 判断该读哪个 `SKILL.md`，再按其中导航只读取当前任务需要的 `references/`；不复制、不链接、不生成镜像。
+1. 只把包含合法 `SKILL.md` 的一级子目录识别为待安装 Skill。
+2. 递归复制整个 Skill directory，包括 `references/`、`scripts/` 和 `assets/`；不只复制 `SKILL.md`。
+3. Destination 不存在时创建 copy，并在 destination Skill directory 写入 `.compass-generated` marker，内容记录对应 `.compass/skills/<skill>/` source。
+4. Destination 已有 `.compass-generated` marker 时，将它作为 generated artifact 从 canonical source 完整更新；不得把 destination 的修改反向合并到 source。
+5. Destination 已存在但没有 marker 时不覆盖、不合并，记录该 Skill conflict。
+6. 不创建软链接，不向 `$HOME` 或其他 global Skill directory 安装。
 
 ## Step 5：执行平台安装器
 
@@ -117,26 +122,28 @@ projectA/
 执行规则：
 
 1. 先完成本文件 Step 2–4，再运行平台安装器。
-2. 把 Step 1 得到的 Subagent 角色列表传给每个平台安装器；默认传空列表。
-3. 平台安装器独占该平台入口、配置、Subagent 渲染和平台验证规则；不要在这里自行猜测格式。
+2. 向每个平台安装器传入内置角色 `sdd-reviewer`，再追加 Step 1 得到的可选角色；默认列表不是空，而是 `[sdd-reviewer]`。
+3. 平台安装器独占该平台 instruction destination、native Skill destination、Subagent 渲染和平台验证规则；不要在这里自行猜测格式。
 4. 已选择多个平台时依次执行，分别保存创建、合并、跳过、冲突和验证结果。
-5. 任一平台安装器缺失或发生无法安全合并的冲突时，不得静默跳过；停止该平台并向用户报告。
+5. 平台入口或配置发生无法安全合并的冲突时，停止该平台并报告。仅 `sdd-reviewer` 目标文件冲突时不覆盖，记录 inline fallback 后继续安装。
 
 ## Step 6：公共验证
 
 逐项检查：
 
-- [ ] 目标项目根 `AGENTS.md` 存在。
-- [ ] 原有 `AGENTS.md` 内容没有丢失。
-- [ ] Compass 标记区块只出现一次。
+- [ ] 每个已选平台的必读 instruction file 已由对应 platform installer 创建或合并。
+- [ ] 每个受管 instruction file 的原有内容没有丢失，Compass 标记区块只出现一次。
+- [ ] Platform installer 只修改已选平台需要的 destination；Codex 与 OpenCode 共用根 `AGENTS.md` 时只合并同一个受管区块。
 - [ ] `.compass/context/` 存在，包含 L1–L5，且没有第二个 context 目录。
 - [ ] 已有项目上下文没有被空白模板覆盖。
-- [ ] `.compass/skills/` 包含 13 个 `SKILL.md`。
-- [ ] Agent 能从根 `AGENTS.md` 找到并读取 `.compass/skills/`。
-- [ ] Skill 自带的 `references/` 仍位于同一 Skill 目录，且能按 `SKILL.md` 导航读取。
-- [ ] 没有第二份复制的内置 Skill 内容。
-- [ ] 没有 `.agents/skills`、`.claude/skills` 或其他 Skill 软链接。
-- [ ] 未明确选择 Subagent 时，没有生成任何平台 Subagent 文件。
+- [ ] `.compass/skills/` 包含 9 个 `SKILL.md`。
+- [ ] 每个已选平台的 native Skill directory 都包含从 `.compass/skills/` 安装的 9 个 Skill，或逐项记录了未覆盖的同名 conflict。
+- [ ] 每个 generated Skill directory 都包含 `.compass-generated` marker。
+- [ ] Skill 自带的 `references/`、`scripts/` 和 `assets/` 已随 Skill directory 完整安装。
+- [ ] 没有 Skill 软链接，也没有修改 global Skill directory。
+- [ ] 未选择的平台没有被创建 Skill directory 或写入 Skill。
+- [ ] 每个支持的已选平台已生成只读 `sdd-reviewer`，或明确记录无 Subagent 的 inline fallback。
+- [ ] 未明确选择可选角色时，没有生成 `codebase-explorer`。
 - [ ] 每个已选平台的 `INSTALL.md` 均已执行并返回验证结果。
 - [ ] 平台已有配置和用户内容没有丢失。
 - [ ] Git diff 不包含无关或无法解释的修改。
@@ -170,6 +177,5 @@ projectA/
 只有用户明确要求卸载时才执行：
 
 1. 对每个已安装平台，先读取并执行对应 `platforms/<platform>/INSTALL.md` 中的“移除”章节。
-2. 从根 `AGENTS.md` 删除 Compass 标记区块，保留其他规则。
-3. `.compass/context/` 属于项目上下文，默认保留。
-4. 最后是否删除整个 `.compass/` 必须由用户确认。
+2. `.compass/context/` 属于项目上下文，默认保留。
+3. 最后是否删除整个 `.compass/` 必须由用户确认。

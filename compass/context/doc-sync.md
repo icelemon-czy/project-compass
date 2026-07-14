@@ -3,7 +3,7 @@
 > 本文件是产生代码变更的 Workflow 在完成前同步 `.compass/context/` 的唯一参考。
 > 部署位置：`.compass/context/doc-sync.md`
 >
-> `new-change`、`continue-change`、`fix-bug` 和其他代码变更 Workflow 自动引用本文件；用户不需要单独触发上下文更新。
+> `develop`、`fix-bug`、`init-project` 和其他代码变更 Workflow 自动引用本文件；用户不需要单独触发上下文更新。
 
 ## 适用范围
 
@@ -11,7 +11,7 @@
 
 - L3 Spec 由 `change-management.md` 的归档流程更新。
 - L5 验证证据由 Review Workflow 更新。
-- 首次构建或整体重建上下文使用独立的 `build-ai` Skill。
+- 首次构建或整体重建上下文使用独立的 `build-context` Skill。
 
 ## 何时触发
 

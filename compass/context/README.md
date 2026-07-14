@@ -9,7 +9,7 @@ This directory becomes a project's `.compass/context/` when `compass/` is copied
 | `L1-codebase-map/overview.md` | Required | Small feature and navigation index |
 | `L2-rules/global.md` | Required | Confirmed project-wide constraints |
 | `L2-rules/testing.md` | Required | Real test commands and conventions |
-| `L3-specs/change-management.md` | Required only when using the change workflow | Change states and transition rules |
+| `L3-specs/change-management.md` | Required only when using the `develop` workflow | Change states and transition rules |
 
 ## Optional layers
 

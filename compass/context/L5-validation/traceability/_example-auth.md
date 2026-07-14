@@ -31,8 +31,8 @@
 - `REQ-001 连续失败锁定` 5+ 次边界 → 待 `changes/lockout-hardening/` 补齐
 - `REQ-002 Refresh token 失效跳登录` → 待 `changes/refresh-fallback/` 覆盖
 
-## 反模式检查（对照 /review-tests 7 条）
+## 反模式检查（对照 /audit-tests）
 
 | 测试文件:行 | 反模式 | 备注 |
 |:-----------|:-------|:-----|
-| — | — | 最近一次 /review-tests 未发现命中 |
+| — | — | 最近一次 /audit-tests 未发现命中 |
