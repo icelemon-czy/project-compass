@@ -1,49 +1,146 @@
 # Compass
 
-> [中文版](README.zh.md) · [Changelog](CHANGELOG.md) · [Version](VERSION)
+> [Changelog](CHANGELOG.md) · [Version](VERSION)
 
-A copyable AI-assisted development kit for **Codex**, **Claude Code**, and **OpenCode**.
+**面向 AI coding Agent 的 project-local operating layer。**
 
-The only directory copied into a target project is [`compass/`](compass/). It contains the project-rule baseline, L1–L5 context, 9 Skills, a built-in read-only SDD reviewer, an optional explorer role, and platform installers. Repository documentation stays here for maintainers.
+Compass 把普通 repository 变成 **Codex**、**Claude Code** 和 **OpenCode** 能够持续理解、修改并验证的工作环境。只需把一个 directory 复制进 project，Agent 就会安装 project rule、构建持久的 L1–L5 context、暴露 goal-oriented Skill，并为 behavior change 配置只读 reviewer。
 
-Compass exposes goal-oriented entry points. A normal `develop` task handles planning, TDD, review, context sync, and archival internally; users do not chain workflow commands.
+Compass 要解决的问题，不是 Agent 会不会写 code，而是它能否持续工作：不反复重新发现 codebase，不为每个 task 临时发明一套 Workflow，不在 session 之间丢失 project rule，也不把一份绿色 test summary 当成充分 evidence。
 
-For an idea that is not yet defined, `brainstorm` uses `ask-codebase` to gather current-state evidence, converges on a direction, and moves into `develop` only when the user asks to implement it.
+Compass 把这些工作知识留在 project 内：
 
-Ordinary code review remains a built-in Agent capability: ask for a review directly. Use `audit-tests` only for a dedicated assessment of test coverage and trustworthiness.
+- **Context 可持续：**architecture、constraint、Spec、session state 和 validation evidence 都位于 `.compass/context/`。
+- **用户只表达 goal：**开发 feature、修复 bug、调查 code 和审计 test 是 entry point；review、context sync 和 archive 是内部 stage。
+- **Workflow 匹配 change：**observable contract change 使用 SDD + TDD；不改变 behavior 的工作走 lightweight path。
+- **Ownership 清晰：**Main Agent 是唯一 writer；内置 `sdd-reviewer` 只读提供 independent evidence。
+- **Installation 保持 project-local：**不依赖 CLI，不安装 global Skill，也不创建 Skill symlink。
 
-Use `skill-creator` to create or revise project-local Skills; it does not install third-party Skills or modify the global environment by default.
+## 如何工作
 
-## Install in a project
+用户描述想得到的 outcome。对于日常 product work，Compass 按下面的主线完成 routing 和内部 handoff：
 
-For a new Project A, copy the package directory itself. Do not run this command when Project A already has `.compass/`.
+```mermaid
+flowchart TD
+    A["User goal"] --> B{"请求属于哪类 work？"}
+    B -->|未定型 idea| C["brainstorm"]
+    C -->|用户要求实施| D["develop"]
+    B -->|feature、behavior change 或 refactor| D
+    B -->|behavior 异常| E["fix-bug"]
+    B -->|codebase question 或 impact analysis| F["ask-codebase"]
+    D --> G{"observable contract 是否变化？"}
+    G -->|是| H["SDD：proposal + Scenario + TDD"]
+    G -->|否| I["Lightweight implementation"]
+    H --> J["运行 test + 只读 review"]
+    I --> J
+    E --> J
+    J --> K["同步 context + closeout"]
+```
+
+一次正常的 `develop` 会自动推进 plan、implementation、test、review、context sync 和 closeout，不要求用户串联 Workflow command。真正的 product decision 和 permission boundary 仍会交还用户；内部 state transition 不会打扰用户。
+
+Compass 不会因为 Workflow 结束就自动 commit 或 push。它们仍是 Agent 的 general capability，只有用户明确要求时才执行。
+
+## 安装到 project
+
+### 1. 复制 package
+
+从 Compass source checkout 中，把现有 [`compass/`](compass/) 复制到目标 project root，并命名为 `.compass/`：
 
 ```bash
 cp -R /path/to/project-compass/compass /path/to/projectA/.compass
 ```
 
-Then ask the Agent working in Project A:
+这条 command 只用于首次 installation。如果目标 project 已经存在 `.compass/`，不要覆盖；先比较现有 installation，并按照其中 `INSTALL.md` 的 migration rule 处理。
 
-> Read `.compass/INSTALL.md` and install Compass for the current project.
+### 2. 让 Agent 安装
 
-The Agent merges the rule baseline with existing project rules, fills the copied L1–L5 context in place, and delegates platform-specific work to each selected platform's `INSTALL.md`. It does not create a second context directory or duplicate Skills. Each selected platform receives the read-only `sdd-reviewer`; the Main Agent remains the sole writer.
+用准备启用的 Agent 打开目标 project，然后说，例如：
+
+> 请阅读 `.compass/INSTALL.md`，为当前 project 安装 Codex 版 Compass；保留已有 project file，并报告所有 conflict。
+
+需要多个 platform 时一次写明全部 platform。如果 request 没有说明 platform，Agent 也无法安全推断，installer 只会集中询问一次。
+
+Agent 会：
+
+1. 写入前检查 repository、existing instruction 和 Git status；
+2. 在 `.compass/context/` 中填写最小且有用的 project context；
+3. 把 Compass 的 marked rule block 合并进所选 platform 的 native instruction file；
+4. 从 canonical `.compass/skills/` 把全部 9 个 Skill 复制到 platform 的 project-level Skill directory；
+5. 安装只读 `sdd-reviewer`，或记录 inline fallback；
+6. 验证结果并报告 created、updated、skipped 和 conflicting file。
+
+如果 installation report 提示 Skill discovery 需要刷新，请新建 Agent session 后再开始使用。
+
+## 使用 Compass
+
+直接用 natural language 提出 request 即可；下表中的 Skill name 用来说明 routing model。
+
+| User goal | Entry point | Request 示例 |
+|:----------|:------------|:-------------|
+| 从零创建 project | `init-project` | “创建一个使用 PostgreSQL 的轻量 issue tracker。” |
+| 为已有 codebase 构建或修复 context | `build-context` | “为这个 repository 构建 Compass context。” |
+| 实施前梳理 idea | `brainstorm` | “帮我想清楚 offline mode 应该怎么设计。” |
+| 开发 feature、调整 behavior 或 refactor | `develop` | “给 report page 增加 export filter。” |
+| 诊断并修复一个 bug 或 failing test | `fix-bug` | “修复 webhook 重复投递。” |
+| 定位 code、解释 architecture 或分析 impact | `ask-codebase` | “authorization 在哪里执行，谁会调用它？” |
+| 专项审计 test coverage 与 trustworthiness | `audit-tests` | “检查 checkout test 会不会 false-pass。” |
+| 持续迭代到 objective check 通过 | `ralph-loop` | “使用 Ralph Loop，直到 migration test 通过。” |
+| 创建或修订 project-local Skill | `skill-creator` | “合并这两个职责重叠的 project Skill。” |
+
+前 7 个是常用 goal-oriented capability。`ralph-loop` 和 `skill-creator` 是显式 meta capability：只有 request 明确需要 persistent iteration 或 Skill authoring 时才会运行。普通 code review 仍是 Agent 的基础能力，直接要求 review 即可；`audit-tests` 用于 test quality 专项评估，不替代普通 review。
+
+更详细的 routing、SDD/lightweight 分流、quality invariant 和 Skill 合并理由见 [Workflow Analysis](docs/workflow-analysis.md)。
+
+## Project context
+
+Compass context 不是 document dump。每一层回答不同问题，并且只写入由 source code、configuration、test 或已确认 requirement 支持的 fact。
+
+| Layer | 回答的问题 | 常见 content |
+|:------|:-----------|:-------------|
+| **L1 — Codebase Map** | 在哪里，如何连接？ | feature map、architecture、entry point、dependency |
+| **L2 — Rules** | change 必须遵守什么 constraint？ | coding rule、module boundary、真实 test command |
+| **L3 — Specs** | 预期或正在改变什么 behavior？ | system requirement、capability Spec、active change |
+| **L4 — Session** | 哪些 work 需要跨 session 恢复？ | 当前 state、decision、下一项已验证 action |
+| **L5 — Validation** | 哪些内容真正核实过？ | Scenario traceability、test design、review evidence |
+
+Project 不需要填满所有 optional file。先建立最小可用 context，只在 navigation、change management 或 verification 确实需要时继续深入。准确的 minimum set 和 layer rule 见 [`compass/context/README.md`](compass/context/README.md)。
+
+## 安装后的文件
+
+`.compass/` 始终是 canonical、可编辑的 source。各 platform 的 native Skill 和 Subagent 是带 Compass marker 的 generated copy；遇到没有 marker 的同名 existing file 时，installer 会保留它并报告 conflict。
+
+| Platform | Project instruction | Generated Skill | Read-only reviewer |
+|:---------|:--------------------|:----------------|:-------------------|
+| Codex | `AGENTS.md` | `.agents/skills/` | `.codex/agents/sdd-reviewer.toml` |
+| Claude Code | `CLAUDE.md` | `.claude/skills/` | `.claude/agents/sdd-reviewer.md` |
+| OpenCode | `AGENTS.md` | `.opencode/skills/` | `.opencode/agents/sdd-reviewer.md` |
+
+同时选择 Codex 和 OpenCode 时，两者复用 root `AGENTS.md` 中同一个 marked block。Optional `codebase-explorer` 只有用户明确要求时才安装。
 
 ## Copyable package
 
+目标 project 只需要 [`compass/`](compass/)：
+
 ```text
 compass/
-├── AGENTS.md       baseline merged into the target project's root AGENTS.md
-├── INSTALL.md      Agent-executable installation and migration contract
-├── context/        L1–L5 blank context, filled in place for each project
-├── skills/         9 canonical Skills (7 core entries + optional ralph-loop and skill-creator)
-├── subagents/      built-in sdd-reviewer + optional codebase-explorer
-└── platforms/      Codex, Claude Code, and OpenCode installers and templates
-    ├── codex/INSTALL.md
-    ├── claude-code/INSTALL.md
-    └── opencode/INSTALL.md
+├── AGENTS.md       带 marker 的 project-rule baseline
+├── INSTALL.md      non-destructive installation 与 migration contract
+├── context/        原地填写的 L1–L5 project context
+├── skills/         9 个 Skill 的 canonical source
+├── subagents/      built-in reviewer 与 optional explorer contract
+└── platforms/      Codex、Claude Code、OpenCode installer 与 template
 ```
 
-`docs/` is source-repository maintenance material. It is intentionally not part of the copied package.
+Repository root 的 [`docs/`](docs/) 是 maintainer material，刻意不包含在复制给目标 project 的 package 中。Release 和 compatibility change 见 [Changelog](CHANGELOG.md)。
+
+## 安全与维护
+
+- Installation 只合并 marked block，并保留 marker 外的 existing content。
+- 不覆盖没有 marker 的同名 Skill 或 Subagent。
+- 不修改 global Skill directory，也不创建 Skill symlink。
+- 修改 `.compass/skills/` 中的 canonical Skill 后，重新执行所选 platform installer 来刷新 generated copy。
+- 把 `.compass/context/` 视为 project knowledge；uninstall 时默认保留，除非用户明确要求删除。
 
 ## License
 
