@@ -12,7 +12,7 @@
 
 - Claude Code 原生读取根 `CLAUDE.md`；本 installer 将 canonical instructions 直接合并到该文件。
 - 不通过 `@AGENTS.md` 或其他 instruction file 间接加载规则。
-- `.compass/skills/` 是 canonical source；Claude Code 的 project Skill 安装到 `.claude/skills/<skill>/`。
+- `.compass/skills/` 是本次 installation source；Claude Code 的 project Skill 安装到 `.claude/skills/<skill>/`。
 - 按总 installer 的受管 copy 规则安装 Skill，不创建软链接，也不写入 personal Skill directory。
 - Main Agent 是唯一 writer；所有生成角色保持 read-only。
 
@@ -31,7 +31,7 @@
 .claude/skills/<skill>/
 ```
 
-保留 `.claude/skills/` 中其他名称的用户 Skill。遇到无 `.compass-generated` marker 的同名 Skill 时跳过该项并报告 conflict，不影响其他 Skill 和 Subagent 安装。
+保留 `.claude/skills/` 中其他名称的用户 Skill。同名 Skill 与 source 完全一致时复用；存在 legacy `.compass-generated` 时按总 installer 的 migration rule 更新并删除 marker；其他内容不同的同名 Skill 跳过并报告 conflict，不影响其他 Skill 和 Subagent 安装。
 
 ## Step 3：渲染内置与可选 Subagent
 
@@ -50,7 +50,7 @@ Skill 和 Subagent 文件在当前 Claude Code session 启动后才安装或更�
 - [ ] 根 `CLAUDE.md` 包含且只包含一个最新 Compass 受管区块。
 - [ ] 原有 `CLAUDE.md` 内容没有丢失。
 - [ ] 新受管区块没有创建或依赖 `@AGENTS.md` import，旧 Compass import 区块已迁移。
-- [ ] `.claude/skills/` 中每个无 conflict 的 Compass Skill 都包含 `SKILL.md`、完整 resources 和 `.compass-generated` marker。
+- [ ] `.claude/skills/` 中每个无 conflict 的 Compass Skill 都包含 `SKILL.md` 和完整 resources，且没有 installer metadata file。
 - [ ] 没有覆盖用户自建的同名 Skill，没有创建 Skill 软链接或修改 personal Skill directory。
 - [ ] `sdd-reviewer` 已生成且保持只读，或明确记录 inline fallback。
 - [ ] 未明确选择时没有生成 `codebase-explorer`。
@@ -64,7 +64,13 @@ Skill 和 Subagent 文件在当前 Claude Code session 启动后才安装或更�
 ```text
 claude-code
 - Instructions：根 CLAUDE.md（created / updated / reused）
-- Skills：.claude/skills/（installed / updated / conflict）
+- Skill destination：.claude/skills/
+- Skills installed：...
+- Skills reused：...
+- Skills migrated：...（legacy marker removed）
+- Skills conflict：...
+- Skill metadata file：none
+- Subagents：...
 - 创建：...
 - 更新：...
 - 跳过：...
@@ -79,7 +85,7 @@ claude-code
 只有总安装器正在执行用户明确要求的卸载时才处理：
 
 1. 从根 `CLAUDE.md` 删除 Compass 标记区块，保留其他内容；文件只剩空白时才删除它。
-2. 只删除包含 `.compass-generated` marker 的 `.claude/skills/<skill>/`；保留用户 Skill。
+2. Skill 不含 ownership marker；列出待移除的 `.claude/skills/<skill>/`，只有用户逐项明确确认后才删除，否则保留并报告 manual cleanup。
 3. 只删除带 `compass:generated` 标记的 `.claude/agents/*.md`。
 4. 保留用户自建 agent、settings 和其他 `.claude/` 内容。
 

@@ -66,7 +66,7 @@ Agent 会：
 1. 写入前检查 repository、existing instruction 和 Git status；
 2. 在 `.compass/context/` 中填写最小且有用的 project context；
 3. 把 Compass 的 marked rule block 合并进所选 platform 的 native instruction file；
-4. 从 canonical `.compass/skills/` 把全部 9 个 Skill 复制到 platform 的 project-level Skill directory；
+4. 从 installation staging 的 `.compass/skills/` 把全部 9 个 Skill 复制到 platform 的 project-level Skill directory；
 5. 安装只读 `sdd-reviewer`，或记录 inline fallback；
 6. 验证结果并报告 created、updated、skipped 和 conflicting file。
 
@@ -108,9 +108,9 @@ Project 不需要填满所有 optional file。先建立最小可用 context，�
 
 ## 安装后的文件
 
-`.compass/` 始终是 canonical、可编辑的 source。各 platform 的 native Skill 和 Subagent 是带 Compass marker 的 generated copy；遇到没有 marker 的同名 existing file 时，installer 会保留它并报告 conflict。
+安装完成后，`.compass/` 只保留 `context/`。各 platform 的 native Skill 是不附加 marker、README 或 manifest 的 plain copy；同名 Skill 内容完全一致时复用，内容不同时 installer 保留 existing file 并报告 conflict。Subagent 仍使用文件内的 generated marker 支持安全更新与移除。
 
-| Platform | Project instruction | Generated Skill | Read-only reviewer |
+| Platform | Project instruction | Installed Skill | Read-only reviewer |
 |:---------|:--------------------|:----------------|:-------------------|
 | Codex | `AGENTS.md` | `.agents/skills/` | `.codex/agents/sdd-reviewer.toml` |
 | Claude Code | `CLAUDE.md` | `.claude/skills/` | `.claude/agents/sdd-reviewer.md` |
@@ -127,7 +127,7 @@ compass/
 ├── AGENTS.md       带 marker 的 project-rule baseline
 ├── INSTALL.md      non-destructive installation 与 migration contract
 ├── context/        原地填写的 L1–L5 project context
-├── skills/         9 个 Skill 的 canonical source
+├── skills/         9 个 Skill 的 installation source
 ├── subagents/      built-in reviewer 与 optional explorer contract
 └── platforms/      Codex、Claude Code、OpenCode installer 与 template
 ```
@@ -137,9 +137,9 @@ Repository root 的 [`docs/`](docs/) 是 maintainer material，刻意不包含�
 ## 安全与维护
 
 - Installation 只合并 marked block，并保留 marker 外的 existing content。
-- 不覆盖没有 marker 的同名 Skill 或 Subagent。
+- 不覆盖内容不同的同名 Skill，也不覆盖没有 generated marker 的同名 Subagent。
 - 不修改 global Skill directory，也不创建 Skill symlink。
-- 修改 `.compass/skills/` 中的 canonical Skill 后，重新执行所选 platform installer 来刷新 generated copy。
+- Skill copy 不附加 ownership marker 或其他 installer metadata；后续更新需要重新取得 Compass installation source，内容不同时先报告 conflict。
 - 把 `.compass/context/` 视为 project knowledge；uninstall 时默认保留，除非用户明确要求删除。
 
 ## License

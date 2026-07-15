@@ -23,7 +23,26 @@ projectA/
 └── ...Project A files
 ```
 
-安装完成后，`.compass/skills/` 保留 canonical Skill source，每个已选平台由自己的 installer 将完整 Skill directory 安装到该平台的 project-level native directory。复制来的 `context/` 就是项目上下文，直接在其中填写事实；不再存在单独的 `context-template/`。每个已选平台默认生成一个只读 `sdd-reviewer`，作为 `develop` 的内部实现细节；用户不需要选择或编排它。
+`.compass/` 在安装期间同时承载 installation source 和项目上下文。Installer 必须先将 instructions、Skill 和 Subagent materialize 到每个已选平台的 project-level native destination，再完成验证，最后删除 `.compass/` 中除 `context/` 之外的全部 installation source。
+
+安装完成后的稳定产物只有：
+
+```text
+projectA/
+├── .compass/
+│   └── context/
+│       ├── L1-codebase-map/
+│       ├── L2-rules/
+│       ├── L3-specs/
+│       ├── L4-session/
+│       └── L5-validation/
+├── AGENTS.md or CLAUDE.md
+├── platform-native Skill directories
+├── platform-native Subagent files
+└── ...Project A files
+```
+
+复制来的 `context/` 就是项目上下文，直接在其中填写事实；不再存在单独的 `context-template/`。每个已选平台默认生成一个只读 `sdd-reviewer`，作为 `develop` 的内部实现细节；用户不需要选择或编排它。`.compass/AGENTS.md`、`.compass/INSTALL.md`、`.compass/skills/`、`.compass/subagents/` 和 `.compass/platforms/` 都是 installation staging，不是安装后的项目接口。
 
 ## 不可违反的安全规则
 
@@ -32,10 +51,10 @@ projectA/
 - 如果 `.compass/` 在本次安装前已存在，禁止用复制命令覆盖它；先检查差异并请求用户决定合并方式。
 - 安装前先读取目标项目现有规则、配置和 Git 状态。
 - 不覆盖已有根 `AGENTS.md`、`CLAUDE.md`、`opencode.json` 或已有的项目上下文。
-- 不删除旧 `.ai/`、旧 Skill 或其他历史文件；先迁移、验证并报告，再由用户决定是否删除。
-- `.compass/skills/` 是唯一可编辑的 canonical source；平台 Skill directory 是 installer 管理的 generated copy，不得反向作为 source。
+- 不删除旧 `.ai/`、用户 Skill 或其他历史文件；先迁移、验证并报告，再由用户决定是否删除。Step 7 规定的 installation staging cleanup 不受此条限制。
+- 当前 installation staging 中的 `.compass/skills/` 是本次 Skill deployment source；平台 Skill directory 是 plain copy，不得反向作为 source。安装完成后的更新必须重新取得 Compass installation source。
 - Skill 必须安装到已选平台的 project-level native directory，不创建 Skill 软链接，也不修改 global Skill directory。
-- 已有同名平台 Skill 没有 `.compass-generated` marker 时不得覆盖；记录 conflict 并继续处理其他 Skill。
+- 已有同名平台 Skill 与本次 source 完全一致时复用；内容不同时不得自动覆盖，记录 conflict 并继续处理其他 Skill。
 - `sdd-reviewer` 必须保持只读，Main Agent 是唯一 writer 和状态 owner。角色文件冲突或平台不支持时记录 inline fallback，不覆盖用户文件，也不阻断公共安装。
 - 遇到无法安全合并的现有文件时停止该项操作并向用户说明，不要猜测。
 
@@ -76,7 +95,7 @@ projectA/
 
 ## Step 3：准备 platform instructions
 
-Canonical instructions source 位于 `.compass/AGENTS.md`，由以下标记包围：
+本次安装的 instructions source 位于 `.compass/AGENTS.md`，由以下标记包围：
 
 ```text
 <!-- compass:start -->
@@ -90,11 +109,11 @@ Canonical instructions source 位于 `.compass/AGENTS.md`，由以下标记包�
 2. Destination 已存在但没有受管区块时，保留全部原内容并追加区块。
 3. Destination 已存在受管区块时，只更新两个 marker 之间的内容，保留 marker 外的平台或用户规则。
 4. Destination 是软链接、包含重复 marker 或无法安全编辑时，不替换、不猜测，停止该平台并报告 conflict。
-5. 不通过 import 或第二个 instruction file 间接加载 canonical source；每个平台的必读文件直接包含受管区块。
+5. 不通过 import 或第二个 instruction file 间接加载 installation source；每个平台的必读文件直接包含受管区块。
 
 ## Step 4：准备 Skill deployment
 
-Canonical Skill source：
+本次安装的 Skill source：
 
 ```text
 .compass/skills/<skill>/
@@ -104,10 +123,11 @@ Canonical Skill source：
 
 1. 只把包含合法 `SKILL.md` 的一级子目录识别为待安装 Skill。
 2. 递归复制整个 Skill directory，包括 `references/`、`scripts/` 和 `assets/`；不只复制 `SKILL.md`。
-3. Destination 不存在时创建 copy，并在 destination Skill directory 写入 `.compass-generated` marker，内容记录对应 `.compass/skills/<skill>/` source。
-4. Destination 已有 `.compass-generated` marker 时，将它作为 generated artifact 从 canonical source 完整更新；不得把 destination 的修改反向合并到 source。
-5. Destination 已存在但没有 marker 时不覆盖、不合并，记录该 Skill conflict。
-6. 不创建软链接，不向 `$HOME` 或其他 global Skill directory 安装。
+3. Destination 不存在时创建完整 copy；不要附加 marker、README、manifest 或其他 Skill-local metadata file。
+4. Destination 已存在且递归内容与本次 source 完全一致时直接复用，不重写文件。
+5. 旧安装若包含 `.compass-generated`，只在本次 migration 中把它作为 legacy ownership evidence：从本次 source 完整更新 Skill 后删除该 marker，且不创建替代 metadata file。
+6. Destination 已存在、没有 legacy marker 且内容与 source 不同时，不覆盖、不合并，记录该 Skill conflict。只有用户明确批准替换该具体 Skill 时才可更新。
+7. 不创建软链接，不向 `$HOME` 或其他 global Skill directory 安装。
 
 ## Step 5：执行平台安装器
 
@@ -138,7 +158,7 @@ Canonical Skill source：
 - [ ] 已有项目上下文没有被空白模板覆盖。
 - [ ] `.compass/skills/` 包含 9 个 `SKILL.md`。
 - [ ] 每个已选平台的 native Skill directory 都包含从 `.compass/skills/` 安装的 9 个 Skill，或逐项记录了未覆盖的同名 conflict。
-- [ ] 每个 generated Skill directory 都包含 `.compass-generated` marker。
+- [ ] 每个已安装 Skill directory 都没有 `.compass-generated`、额外 README、manifest 或其他 installer metadata file。
 - [ ] Skill 自带的 `references/`、`scripts/` 和 `assets/` 已随 Skill directory 完整安装。
 - [ ] 没有 Skill 软链接，也没有修改 global Skill directory。
 - [ ] 未选择的平台没有被创建 Skill directory 或写入 Skill。
@@ -148,7 +168,26 @@ Canonical Skill source：
 - [ ] 平台已有配置和用户内容没有丢失。
 - [ ] Git diff 不包含无关或无法解释的修改。
 
-## Step 7：最终报告
+## Step 7：清理 installation staging
+
+只有 Step 6 的公共验证已经完成，且每个创建、更新、跳过或 conflict 都有明确结果时，才执行 cleanup。Cleanup 是安装成功的一部分，不能跳过。
+
+1. 保留完整 `.compass/context/`，包括 L1–L5、`README.md`、`doc-sync.md` 和已经填写的项目事实。
+2. 删除 `.compass/` 下除 `context/` 之外的所有一级 entry，包括 `AGENTS.md`、`INSTALL.md`、`skills/`、`subagents/`、`platforms/` 以及 installation package 中其他 source-only entry。删除目录或 symlink 时不得跟随到 `.compass/` 外部。
+3. 确认 `.compass/` 的直接子项只有 `context/`；不得保留 installer、canonical copy、cache、manifest 或临时文件。
+4. 再次确认平台 instructions、native Skill 和 Subagent 仍存在，且不通过 import、symlink 或 runtime path 依赖已删除的 installation source。
+5. 如果 Step 6 未完成或 cleanup 无法安全执行，不得报告“安装完成”；保留 installation staging，报告 incomplete 状态和具体 blocker，供下一次重试。
+
+安装完成后的 `.compass/` 必须满足：
+
+```text
+.compass/
+└── context/
+```
+
+## Step 8：最终报告
+
+最终对话报告是唯一的 installation record。不要为了保存安装结果在项目中创建 marker、manifest、report Markdown 或其他 metadata file。
 
 向用户报告：
 
@@ -157,25 +196,30 @@ Canonical Skill source：
 - 项目根目录：...
 - 启用平台：...
 - 平台结果：
-  - codex：...
+  - codex：
+    - Instructions：created / updated / reused / conflict
+    - Skills installed：skill-a, skill-b, ...
+    - Skills reused：...
+    - Skills migrated：...（如有，legacy marker 已删除）
+    - Skills conflict：...
+    - Subagents：...
   - claude-code：...
   - opencode：...
-- 安装的 Subagent：...
-- 创建：...
-- 合并：...
-- 复用：...
-- 跳过：...
 - 冲突或待确认：...
 - 旧路径待清理：...
+- 最终产物：platform instructions、native Skills、native Subagents、.compass/context/
+- Installation metadata file：none
+- Installation staging cleanup：completed（.compass/ 仅保留 context/）
 - 验证结果：...
 ```
 
-不得只回复“安装完成”。
+每个已选 platform 必须逐项列出 Skill name；没有对应结果时写 `none`，不要省略字段。不得只回复“安装完成”。
 
 ## 移除
 
 只有用户明确要求卸载时才执行：
 
-1. 对每个已安装平台，先读取并执行对应 `platforms/<platform>/INSTALL.md` 中的“移除”章节。
-2. `.compass/context/` 属于项目上下文，默认保留。
-3. 最后是否删除整个 `.compass/` 必须由用户确认。
+1. 目标项目不会保留 platform installer。重新取得与待卸载版本兼容的 Compass installation package，并从临时 staging 中读取对应 `platforms/<platform>/INSTALL.md` 的“移除”章节。
+2. 对每个已安装平台执行移除规则。Instructions 与 Subagent 只按各自的 inline generated marker 删除；Skill 没有 ownership metadata，不得自动删除，必须列出具体路径并取得用户明确确认。
+3. 删除本次卸载使用的临时 installation staging，不要把它留在目标项目中。
+4. `.compass/context/` 属于项目上下文，默认保留；只有用户明确要求删除项目上下文时才删除整个 `.compass/`。

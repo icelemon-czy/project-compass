@@ -84,7 +84,7 @@ description: "创建、更新或精简当前项目的 Skill，明确 trigger bou
 3. Body 无 unfinished marker、placeholder、无效 link 或超过 500 行的无必要内容。
 4. Relative reference 能从 `SKILL.md` 正确解析。
 5. Rename 后没有 current stale reference，Skill inventory count 与 filesystem 一致。
-6. 已选 platform 的 generated copy 与 canonical Skill source 一致，或已明确记录无 marker 的同名 Skill conflict。
+6. 已选 platform 的 Skill copy 与本次 Skill source 一致，或已明确记录内容不同的同名 Skill conflict。
 7. `git diff --check` 或等价 whitespace check 通过。
 
 环境提供官方 validator 时先运行。Validator 因 missing dependency 无法启动时，不额外安装 dependency；执行等价结构检查并在结果中如实说明。

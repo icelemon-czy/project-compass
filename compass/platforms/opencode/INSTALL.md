@@ -12,7 +12,7 @@
 
 - OpenCode 原生读取项目根 `AGENTS.md`，基础安装不需要创建或修改 `opencode.json`。
 - 不通过 `opencode.json.instructions` 再加载一次根 `AGENTS.md`。
-- `.compass/skills/` 是 canonical source；OpenCode 的 project Skill 安装到 `.opencode/skills/<skill>/`。
+- `.compass/skills/` 是本次 installation source；OpenCode 的 project Skill 安装到 `.opencode/skills/<skill>/`。
 - 按总 installer 的受管 copy 规则安装 Skill，不创建软链接，也不写入 global Skill directory。
 - Main Agent 是唯一 writer；所有生成角色保持 read-only。
 
@@ -30,7 +30,7 @@
 .opencode/skills/<skill>/
 ```
 
-即使 OpenCode 兼容其他 Skill location，本 installer 也只管理 `.opencode/skills/`，避免 platform ownership 不清。保留其中其他名称的用户 Skill；遇到无 `.compass-generated` marker 的同名 Skill 时跳过该项并报告 conflict，不影响其他 Skill 和 Subagent 安装。
+即使 OpenCode 兼容其他 Skill location，本 installer 也只管理 `.opencode/skills/`，避免 platform ownership 不清。保留其中其他名称的用户 Skill；同名 Skill 与 source 完全一致时复用；存在 legacy `.compass-generated` 时按总 installer 的 migration rule 更新并删除 marker；其他内容不同的同名 Skill 跳过并报告 conflict，不影响其他 Skill 和 Subagent 安装。
 
 如果 Skill 在当前 OpenCode session 启动后才安装或更新，最终报告提醒用户在新 session 中验证 Skill discovery；本轮仍须完成 filesystem validation。
 
@@ -49,7 +49,7 @@
 - [ ] 根 `AGENTS.md` 包含且只包含一个最新 Compass 受管区块，原有规则没有丢失。
 - [ ] 没有创建或修改 `opencode.json` / `opencode.jsonc`。
 - [ ] 没有通过 instructions 重复加载根 `AGENTS.md`。
-- [ ] `.opencode/skills/` 中每个无 conflict 的 Compass Skill 都包含 `SKILL.md`、完整 resources 和 `.compass-generated` marker。
+- [ ] `.opencode/skills/` 中每个无 conflict 的 Compass Skill 都包含 `SKILL.md` 和完整 resources，且没有 installer metadata file。
 - [ ] 没有覆盖用户自建的同名 Skill，没有创建 Skill 软链接或修改 global Skill directory。
 - [ ] `sdd-reviewer` 已生成且保持 read-only，或明确记录 inline fallback。
 - [ ] 未明确选择时没有生成 `codebase-explorer`。
@@ -63,7 +63,13 @@
 ```text
 opencode
 - Instructions：根 AGENTS.md（created / updated / reused）
-- Skills：.opencode/skills/（installed / updated / conflict）
+- Skill destination：.opencode/skills/
+- Skills installed：...
+- Skills reused：...
+- Skills migrated：...（legacy marker removed）
+- Skills conflict：...
+- Skill metadata file：none
+- Subagents：...
 - 创建：...
 - 更新：...
 - 跳过：...
@@ -78,7 +84,7 @@ opencode
 只有总安装器正在执行用户明确要求的卸载时才处理：
 
 1. 如果没有仍在使用根 `AGENTS.md` 受管区块的其他已安装平台，从根 `AGENTS.md` 删除 Compass 区块并保留其他规则；文件只剩空白时才删除它。
-2. 只删除包含 `.compass-generated` marker 的 `.opencode/skills/<skill>/`；保留用户 Skill。
+2. Skill 不含 ownership marker；列出待移除的 `.opencode/skills/<skill>/`，只有用户逐项明确确认后才删除，否则保留并报告 manual cleanup。
 3. 只删除带 `compass:generated` 标记的 `.opencode/agents/*.md`。
 4. 保留用户自建 agent、`opencode.json`、`opencode.jsonc` 和其他 `.opencode/` 内容。
 5. 受管目录变空时可删除对应空目录；不要删除仍有其他内容的 `.opencode/`。
