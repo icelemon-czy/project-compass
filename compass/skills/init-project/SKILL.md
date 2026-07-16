@@ -125,6 +125,7 @@ Step 0 已确认 `.compass/INSTALL.md` 位于当前项目根目录。读取并�
 - 由每个已选 platform installer 将 `.compass/skills/` 中的 installation source 安装到该平台的 project-level native directory。
 - 根据用户选择逐个执行 `.compass/platforms/<platform>/INSTALL.md`。
 - 由平台安装器自动渲染只读 `sdd-reviewer`；用户不需要选择或编排。`codebase-explorer` 只有明确要求时才额外安装。
+- 如果项目位于 Git worktree，将 `/.compass/`、已选 platform 的根 `AGENTS.md` / `CLAUDE.md`、每个 Compass Skill 和 generated Subagent 精确 path 写入 local `info/exclude` 受管区块。
 
 #### Step 6: 记录最小 L1 — 只写脚手架事实
 
@@ -159,7 +160,7 @@ Step 0 已确认 `.compass/INSTALL.md` 位于当前项目根目录。读取并�
 
 #### Step 10: 验证安装边界
 
-按 `.compass/INSTALL.md` 验证：当前根目录仍是 `.compass/` 的父目录且没有嵌套项目根、每个已选 platform 的必读 instruction file 保留原规则并包含最新受管区块、每个 project-level native Skill directory 都已安装完整 Skill 且没有 installer metadata file、没有 Skill 软链接、每个已选 platform installer 均返回结果，且 `sdd-reviewer` 已生成或明确记录 inline fallback。同时确认 L1 只记录真实脚手架，没有把 L3 中计划的能力写成已实现功能。
+按 `.compass/INSTALL.md` 验证：当前根目录仍是 `.compass/` 的父目录且没有嵌套项目根、每个已选 platform 的必读 instruction file 保留原规则并包含最新受管区块、每个 project-level native Skill directory 都已安装完整 Skill 且没有 installer metadata file、没有 Skill 软链接、每个已选 platform installer 均返回结果，且 `sdd-reviewer` 已生成或明确记录 inline fallback。Git worktree 还要确认 local `info/exclude` 受管区块覆盖 `/.compass/`、已选 platform 根 instruction、Compass Skills 和 generated Subagents，且没有修改 shared `.gitignore`。同时确认 L1 只记录真实脚手架，没有把 L3 中计划的能力写成已实现功能。
 
 ---
 
@@ -212,6 +213,7 @@ Step 0 已确认 `.compass/INSTALL.md` 位于当前项目根目录。读取并�
 - [x] 项目脚手架 + 依赖安装
 - [x] 已选 platform 的必读 instructions + .compass/context/
 - [x] 已选 platform 的 project-level native directory 已安装 Compass Skills
+- [x] Git local exclude 已覆盖全部 Compass installation path（非 Git 项目为 not applicable）
 - [x] 基于 Spec 的测试（红灯 → 绿灯）
 - [x] 追溯矩阵已更新
 

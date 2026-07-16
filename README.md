@@ -68,7 +68,10 @@ Agent 会：
 3. 把 Compass 的 marked rule block 合并进所选 platform 的 native instruction file；
 4. 从 installation staging 的 `.compass/skills/` 把全部 9 个 Skill 复制到 platform 的 project-level Skill directory；
 5. 安装只读 `sdd-reviewer`，或记录 inline fallback；
-6. 验证结果并报告 created、updated、skipped 和 conflicting file。
+6. 把 `/.compass/` 以及已选 platform 的 `AGENTS.md` / `CLAUDE.md`、Compass Skill 和 Subagent 精确 path 全部写入 repository-local `.git/info/exclude` 受管区块；
+7. 验证结果并报告 created、updated、skipped 和 conflicting file。
+
+Local exclude 不会修改团队共享的 `.gitignore`，也不会隐藏已经 tracked 的文件。已选 platform 的 `AGENTS.md` 或 `CLAUDE.md` 无论是新建还是 merge existing content，installer 都会写入 local exclude；如果它已 tracked，最终报告会明确说明该 pattern 已写入但 Git 仍会显示文件变更。
 
 如果 installation report 提示 Skill discovery 需要刷新，请新建 Agent session 后再开始使用。
 
@@ -118,6 +121,8 @@ Project 不需要填满所有 optional file。先建立最小可用 context，�
 
 同时选择 Codex 和 OpenCode 时，两者复用 root `AGENTS.md` 中同一个 marked block。Optional `codebase-explorer` 只有用户明确要求时才安装。
 
+Git 项目中，上表实际安装的根 instruction、每个 Compass Skill 和每个 generated Subagent 会连同 `/.compass/` 写入 local `info/exclude`。Installer 只写具体 Skill/Subagent path，不会整体 ignore `.agents/`、`.claude/`、`.codex/` 或 `.opencode/`。
+
 ## Copyable package
 
 目标 project 只需要 [`compass/`](compass/)：
@@ -137,6 +142,7 @@ Repository root 的 [`docs/`](docs/) 是 maintainer material，刻意不包含�
 ## 安全与维护
 
 - Installation 只合并 marked block，并保留 marker 外的 existing content。
+- `.compass/` 与已选 platform 的全部 Compass 文档和 artifact 只写入 repository-local Git exclude，不修改 shared `.gitignore` 或 tracked-file index flag。
 - 不覆盖内容不同的同名 Skill，也不覆盖没有 generated marker 的同名 Subagent。
 - 不修改 global Skill directory，也不创建 Skill symlink。
 - Skill copy 不附加 ownership marker 或其他 installer metadata；后续更新需要重新取得 Compass installation source，内容不同时先报告 conflict。

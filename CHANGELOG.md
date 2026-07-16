@@ -12,6 +12,7 @@ Compass 将 `compass/` 及其中的 `INSTALL.md`、`AGENTS.md`、`context/`、`s
 
 ### Added
 
+- Installation 会在 repository-local `.git/info/exclude` 中维护 Compass 受管区块，写入 `/.compass/` 以及已选 platform 的 `AGENTS.md` / `CLAUDE.md`、Compass Skill 和 generated Subagent 精确 path，不修改 shared `.gitignore` 或 tracked-file index flag。
 - 新增 `/skill-creator` Skill，用于创建、更新、rename、merge、split 或验证 project-local Skill，并优先复用现有能力、同步 canonical inventory 与执行 trigger boundary 验证。
 - 新增 `/brainstorm` Skill，将尚未定型的 idea 与现有 codebase facts 结合，比较真实 alternatives 并收敛 design direction；用户要求实施时在同一任务中进入 `/develop`。
 - 新增 `/ralph-loop` Skill，以可验证完成条件驱动持续改进，并在平台支持时复用原生 goal/continuation 能力。

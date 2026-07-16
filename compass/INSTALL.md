@@ -42,6 +42,8 @@ projectA/
 └── ...Project A files
 ```
 
+如果目标项目是 Git worktree，installer 还必须在该 repository 的 local `info/exclude` 中维护一个 Compass 受管区块，使上述 `.compass/`、已选 platform instructions、Skills 和 Subagents 不进入项目的共享 Git 变更。该区块位于 Git metadata，不是 worktree 中的 installation artifact。
+
 复制来的 `context/` 就是项目上下文，直接在其中填写事实；不再存在单独的 `context-template/`。每个已选平台默认生成一个只读 `sdd-reviewer`，作为 `develop` 的内部实现细节；用户不需要选择或编排它。`.compass/AGENTS.md`、`.compass/INSTALL.md`、`.compass/skills/`、`.compass/subagents/` 和 `.compass/platforms/` 都是 installation staging，不是安装后的项目接口。
 
 ## 不可违反的安全规则
@@ -51,11 +53,13 @@ projectA/
 - 如果 `.compass/` 在本次安装前已存在，禁止用复制命令覆盖它；先检查差异并请求用户决定合并方式。
 - 安装前先读取目标项目现有规则、配置和 Git 状态。
 - 不覆盖已有根 `AGENTS.md`、`CLAUDE.md`、`opencode.json` 或已有的项目上下文。
-- 不删除旧 `.ai/`、用户 Skill 或其他历史文件；先迁移、验证并报告，再由用户决定是否删除。Step 7 规定的 installation staging cleanup 不受此条限制。
+- 不删除旧 `.ai/`、用户 Skill 或其他历史文件；先迁移、验证并报告，再由用户决定是否删除。Step 8 规定的 installation staging cleanup 不受此条限制。
 - 当前 installation staging 中的 `.compass/skills/` 是本次 Skill deployment source；平台 Skill directory 是 plain copy，不得反向作为 source。安装完成后的更新必须重新取得 Compass installation source。
 - Skill 必须安装到已选平台的 project-level native directory，不创建 Skill 软链接，也不修改 global Skill directory。
 - 已有同名平台 Skill 与本次 source 完全一致时复用；内容不同时不得自动覆盖，记录 conflict 并继续处理其他 Skill。
 - `sdd-reviewer` 必须保持只读，Main Agent 是唯一 writer 和状态 owner。角色文件冲突或平台不支持时记录 inline fallback，不覆盖用户文件，也不阻断公共安装。
+- 将 `.compass/` 和每个已选 platform 实际安装的 instruction、Skill 与 Subagent 精确 path 写入 local Git exclude；不得忽略整个 platform parent directory，不得写入未安装的 conflict path。
+- 不修改项目 `.gitignore`，不使用 `skip-worktree` 或 `assume-unchanged` 隐藏 tracked file。
 - 遇到无法安全合并的现有文件时停止该项操作并向用户说明，不要猜测。
 
 ## Step 1：安装前检查
@@ -73,6 +77,7 @@ projectA/
    - 由此前安装产生的 `.compass/context/` 项目事实
 5. 用户需要 Codex、Claude Code、OpenCode 中的哪些平台。能从请求明确判断时直接采用；无法判断时询问一次。
 6. 可选 Subagent 只识别用户明确要求的 `codebase-explorer`；不要主动让用户选择。内置角色列表固定为 `sdd-reviewer`。
+7. 目标项目是否位于 Git worktree 中。如果是，使用 `git rev-parse --git-path info/exclude` 取得实际 local exclude path，并检查其是否为 symlink、是否已有 Compass marker 以及哪些候选 artifact 已经 tracked。不要假设 Git metadata 一定位于目标根的实体 `.git/` directory。
 
 ## Step 2：填写或迁移项目上下文
 
@@ -147,7 +152,37 @@ projectA/
 4. 已选择多个平台时依次执行，分别保存创建、合并、跳过、冲突和验证结果。
 5. 平台入口或配置发生无法安全合并的冲突时，停止该平台并报告。仅 `sdd-reviewer` 目标文件冲突时不覆盖，记录 inline fallback 后继续安装。
 
-## Step 6：公共验证
+## Step 6：维护 local Git exclude
+
+本步只修改 repository-local Git metadata，不修改会被共享的 `.gitignore`。目标是将 `.compass/` 与已选 platform 的全部 Compass installation artifact 收口到一个可幂等更新的受管区块。
+
+受管 marker 固定为：
+
+```text
+# compass:local-exclude:start
+...
+# compass:local-exclude:end
+```
+
+### Path inventory
+
+| Artifact | 写入条件 | Pattern |
+|:---------|:---------|:--------|
+| Compass context 与 installation staging | 始终 | `/.compass/` |
+| Platform instruction | 已选 platform 的 instruction 结果为 created、updated 或 reused；即使文件还有 marker 外内容也写入 | `/AGENTS.md` 或 `/CLAUDE.md` |
+| Platform Skill | 该具体 Skill 的平台结果为 installed、reused 或 migrated；conflict 不写入 | 例如 `/.agents/skills/develop/` |
+| Platform Subagent | 该具体文件存在 Compass generated marker；fallback 或无 marker conflict 不写入 | 例如 `/.codex/agents/sdd-reviewer.toml` |
+
+执行规则：
+
+1. 如果目标不是 Git worktree，记录 `not applicable` 并继续；不创建 `.git/` 或 `.gitignore`。
+2. 根据本轮已选 platform 的真实安装结果生成 inventory。只写入 repository-root anchored 的精确 pattern，directory pattern 以 `/` 结尾；不写 `/.agents/`、`/.claude/`、`/.codex/` 或 `/.opencode/` 这类宽泛 parent pattern。
+3. 如果受管区块不存在，在保留现有 exclude content 的前提下追加一个区块；如果恰好存在一个完整区块，只替换 marker 之间的 inventory 并去重。已存在的用户 pattern 和 comment 原样保留。
+4. 受管 marker 缺失、顺序错误或重复，或 local exclude 本身是 symlink 时，不改写该文件，将 installation 标记为 incomplete 并报告 conflict。
+5. 对每个 inventory path 使用 `git check-ignore --no-index -v -- <path>` 验证命中本受管区块。同时确认 conflict path 没有被新增的宽泛 pattern 意外覆盖。
+6. `info/exclude` 不影响 tracked file。已 tracked 的 instruction 或其他 Compass artifact 仍按 inventory 写入 pattern，但不运行 `git update-index`；保留其 Git 变更可见，并在最终报告列入 `tracked Compass paths still visible`。
+
+## Step 7：公共验证
 
 逐项检查：
 
@@ -166,17 +201,20 @@ projectA/
 - [ ] 未明确选择可选角色时，没有生成 `codebase-explorer`。
 - [ ] 每个已选平台的 `INSTALL.md` 均已执行并返回验证结果。
 - [ ] 平台已有配置和用户内容没有丢失。
+- [ ] Git worktree 中的 local exclude 包含且只包含一个 Compass 受管区块，其 inventory 覆盖 `/.compass/` 以及本轮已选 platform 实际安装的 instruction、Skill 和 Subagent。非 Git 项目已记录 `not applicable`。
+- [ ] Local exclude 中原有的用户 pattern 没有丢失，conflict path 和宽泛 platform parent directory 没有被新增到受管区块。
+- [ ] 安装没有修改 `.gitignore`、没有设置 `skip-worktree` 或 `assume-unchanged`；tracked Compass path 仍可见的限制已被记录。
 - [ ] Git diff 不包含无关或无法解释的修改。
 
-## Step 7：清理 installation staging
+## Step 8：清理 installation staging
 
-只有 Step 6 的公共验证已经完成，且每个创建、更新、跳过或 conflict 都有明确结果时，才执行 cleanup。Cleanup 是安装成功的一部分，不能跳过。
+只有 Step 7 的公共验证已经完成，且每个创建、更新、跳过或 conflict 都有明确结果时，才执行 cleanup。Cleanup 是安装成功的一部分，不能跳过。
 
 1. 保留完整 `.compass/context/`，包括 L1–L5、`README.md`、`doc-sync.md` 和已经填写的项目事实。
 2. 删除 `.compass/` 下除 `context/` 之外的所有一级 entry，包括 `AGENTS.md`、`INSTALL.md`、`skills/`、`subagents/`、`platforms/` 以及 installation package 中其他 source-only entry。删除目录或 symlink 时不得跟随到 `.compass/` 外部。
 3. 确认 `.compass/` 的直接子项只有 `context/`；不得保留 installer、canonical copy、cache、manifest 或临时文件。
 4. 再次确认平台 instructions、native Skill 和 Subagent 仍存在，且不通过 import、symlink 或 runtime path 依赖已删除的 installation source。
-5. 如果 Step 6 未完成或 cleanup 无法安全执行，不得报告“安装完成”；保留 installation staging，报告 incomplete 状态和具体 blocker，供下一次重试。
+5. 如果 Step 7 未完成或 cleanup 无法安全执行，不得报告“安装完成”；保留 installation staging，报告 incomplete 状态和具体 blocker，供下一次重试。
 
 安装完成后的 `.compass/` 必须满足：
 
@@ -185,9 +223,9 @@ projectA/
 └── context/
 ```
 
-## Step 8：最终报告
+## Step 9：最终报告
 
-最终对话报告是唯一的 installation record。不要为了保存安装结果在项目中创建 marker、manifest、report Markdown 或其他 metadata file。
+最终对话报告是唯一的 installation report。除 Git metadata 中必需的 local exclude 受管区块外，不要为了保存安装结果在 worktree 中创建 marker、manifest、report Markdown 或其他 metadata file。
 
 向用户报告：
 
@@ -208,7 +246,10 @@ projectA/
 - 冲突或待确认：...
 - 旧路径待清理：...
 - 最终产物：platform instructions、native Skills、native Subagents、.compass/context/
-- Installation metadata file：none
+- Local Git exclude：updated / reused / not applicable / conflict
+- Excluded Compass paths：...
+- Tracked Compass paths still visible：...
+- Installation manifest/report file：none
 - Installation staging cleanup：completed（.compass/ 仅保留 context/）
 - 验证结果：...
 ```
@@ -223,3 +264,4 @@ projectA/
 2. 对每个已安装平台执行移除规则。Instructions 与 Subagent 只按各自的 inline generated marker 删除；Skill 没有 ownership metadata，不得自动删除，必须列出具体路径并取得用户明确确认。
 3. 删除本次卸载使用的临时 installation staging，不要把它留在目标项目中。
 4. `.compass/context/` 属于项目上下文，默认保留；只有用户明确要求删除项目上下文时才删除整个 `.compass/`。
+5. 如果存在 Compass local exclude 受管区块，只移除已经实际删除或已不再属于 Compass installation 的 artifact pattern；仍保留的 Skill 和 `.compass/context/` 继续保留对应 pattern。区块变空时只删除该区块，不改动其他 local exclude content。
