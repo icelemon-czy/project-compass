@@ -11,6 +11,7 @@ Compass 是给 AI coding Agent 用的**项目模板**：复制进仓库，让 Cu
 | [doc/context_design.md](doc/context_design.md) | `compass/context/` 的 design |
 | [doc/hooks_design.md](doc/hooks_design.md) | `compass/hooks/` 的 design |
 | [doc/platforms_design.md](doc/platforms_design.md) | `compass/platforms/` 的 design |
+| [doc/skills_design.md](doc/skills_design.md) | `compass/skills/` 的 design |
 | [doc/subagents_design.md](doc/subagents_design.md) | `compass/subagents/` 的 design |
 | [doc/templates_design.md](doc/templates_design.md) | `compass/templates/` 的 design |
 

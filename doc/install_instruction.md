@@ -13,6 +13,7 @@ projectA/
 │   ├── context/
 │   │   ├── README.md
 │   │   └── cli-worker.md
+│   ├── skills/
 │   ├── subagents/
 │   ├── hooks/
 │   ├── platforms/
@@ -33,16 +34,17 @@ projectA/
 ├── AGENTS.md or CLAUDE.md
 ├── README.md
 ├── doc/
+├── 已选平台的 Compass Skill（brainstorm、ralph-loop、skill-creator）
 ├── 可选 platform-native Subagent files
 ├── planner-native CLI worker hooks（仅判定 enabled 时）
 └── ...Project A files
 ```
 
-如果目标项目是 Git worktree，还要在该 repository 的 local `info/exclude` 中维护 Compass 受管区块，使 `.compass/`、已选 platform instructions、Subagents 和已安装 hook 不进入共享 Git 变更。**不要**把根 `README.md` 或 `doc/` 写入 exclude。
+如果目标项目是 Git worktree，还要在该 repository 的 local `info/exclude` 中维护 Compass 受管区块，使 `.compass/`、已选 platform instructions、Skills、Subagents 和已安装 hook 不进入共享 Git 变更。**不要**把根 `README.md` 或 `doc/` 写入 exclude。
 
 复制来的 `context/` 只承载 `cli-worker.md` 和本目录 README。不要在其中填写项目描述或 design。默认不生成 Subagent；`codebase-explorer` 只有用户明确要求时才安装。Planner platform 是 Codex、Cursor 和 OpenCode。Claude Code 是 worker platform：当前 session 已经在 Claude Code 里时不安装 CLI worker hook。
 
-`.compass/AGENTS.md`、`.compass/subagents/`、`.compass/hooks/`、`.compass/platforms/` 和 `.compass/templates/` 都是 installation staging，不是安装后的项目接口。
+`.compass/AGENTS.md`、`.compass/skills/`、`.compass/subagents/`、`.compass/hooks/`、`.compass/platforms/` 和 `.compass/templates/` 都是 installation staging，不是安装后的项目接口。
 
 ## 不可违反的安全规则
 
@@ -52,13 +54,14 @@ projectA/
 - 安装前先读取目标项目现有规则、配置和 Git 状态。
 - 不覆盖已有根 `AGENTS.md`、`CLAUDE.md`、`opencode.json` 或 `doc/` 下的已有文件。根 `README.md` 按 `.compass/templates/README.md` 整理结构，保留原有事实，不编造产品内容。
 - 不删除旧 `.ai/`、用户自建 Skill 或其他历史文件；先报告，再由用户决定是否删除。Step 8 规定的 staging cleanup 不受此条限制。
-- 不为 Compass 创建平台 Skill directory，不修改 global Skill directory。用户自建 Skill 全部保留。
+- `.compass/skills/` 是本次 Skill source，只含 `brainstorm`、`ralph-loop`、`skill-creator`。安装到已选平台的 project-level directory，不创建软链接，不修改 global Skill directory。同名用户 Skill 内容不同时不覆盖。
+- 用户自建其他 Skill 全部保留。
 - 不在 `.compass/context/` 填写项目描述或 design；除 `cli-worker.md` 与 `README.md` 外不在该目录新建项目文档。
 - 若 `.compass/context/` 里已有旧层文件：保留不删，报告 leftover，不要当成项目知识，也不要复制进 `doc/`。
 - CLI worker 是否可调用只在本次安装判定一次，并写入 `.compass/context/cli-worker.md`。不为这个再询问用户。
 - 只有 `status=enabled` 时才给已选 planner 平台安装 worker hook。Claude Code 永不安装该 hook。
 - Hook 从 canonical source 按平台迁移；不写入 user-global hook directory，不创建软链接。
-- 将 `.compass/` 和每个已选 platform 实际安装的 instruction、Subagent 与 hook 精确 path 写入 local Git exclude；不得忽略整个 platform parent directory；不得 exclude `README.md` 或 `doc/`。
+- 将 `.compass/` 和每个已选 platform 实际安装的 instruction、Skill、Subagent 与 hook 精确 path 写入 local Git exclude；不得忽略整个 platform parent directory；不得 exclude `README.md` 或 `doc/`。
 - 不修改项目 `.gitignore`，不使用 `skip-worktree` 或 `assume-unchanged` 隐藏 tracked file。
 - 遇到无法安全合并的现有文件时停止该项操作并向用户说明，不要猜测。
 
@@ -68,7 +71,7 @@ projectA/
 
 1. 当前目标项目根目录。
 2. `.compass/.git/` 不存在。
-3. `.compass/AGENTS.md`、`context/`、`hooks/cli-worker/`、`platforms/` 和 `templates/` 均存在。
+3. `.compass/AGENTS.md`、`context/`、`skills/`、`hooks/cli-worker/`、`platforms/` 和 `templates/` 均存在；`.compass/skills/` 含 `brainstorm`、`ralph-loop`、`skill-creator` 三个 `SKILL.md`。
 4. 当前项目是否已有：
    - 根 `AGENTS.md` / `CLAUDE.md` / `opencode.json`
    - 根 `README.md`
@@ -108,9 +111,18 @@ projectA/
 4. Destination 是软链接、包含重复 marker 或无法安全编辑时，不替换、不猜测，停止该平台并报告 conflict。
 5. 不要把 CLI worker 调用步骤写进 instruction file；触发器是 hook。
 
+## Skill copy 规则
+
+Source：`.compass/skills/`，只安装 `brainstorm`、`ralph-loop`、`skill-creator`。
+
+1. 只把含合法 `SKILL.md` 的上述三个一级子目录识别为待安装 Skill。
+2. 递归复制整个 Skill directory；不只复制 `SKILL.md`。
+3. Destination 不存在时创建完整 copy；与 source 完全一致时复用；内容不同时不覆盖，记录 conflict。
+4. 不创建软链接，不写入 global Skill directory，不把 CLI worker 步骤写进 Skill。
+
 ## Step 4：执行平台安装器
 
-总安装器不实现平台专用文件格式。根据 Step 1 选择的平台，逐个读取并完整执行对应安装器的 instruction / 可选 Subagent 步骤。Hook 步骤留到 Step 5 判定之后。
+总安装器不实现平台专用文件格式。根据 Step 1 选择的平台，逐个读取并完整执行对应安装器的 instruction / Skill / 可选 Subagent 步骤。Hook 步骤留到 Step 5 判定之后。
 
 | Platform | Kind | Installer |
 |:---------|:-----|:----------|
@@ -123,7 +135,7 @@ projectA/
 
 1. 先完成本文件 Step 2–3，再运行平台安装器。
 2. 向每个平台安装器传入 Step 1 得到的可选角色；默认列表为空。不要默认生成 reviewer。
-3. 平台安装器独占该平台 instruction destination、Subagent 渲染和平台验证规则。
+3. 平台安装器独占该平台 instruction destination、native Skill destination、Subagent 渲染和平台验证规则。
 4. 已选择多个平台时依次执行，分别保存结果。
 5. 平台入口无法安全合并时停止该平台并报告。仅可选 Subagent 冲突时不覆盖，记录 fallback 后继续。
 6. 本步不要安装 CLI worker hook。
@@ -200,6 +212,7 @@ Planner platforms：Codex、Cursor、OpenCode。
 | Platform Subagent | 该具体文件存在 Compass generated marker | 例如 `/.codex/agents/codebase-explorer.toml` |
 | CLI worker hook script | 该文件已安装 | 例如 `/.cursor/hooks/cli-worker.py` |
 | CLI worker hook registration | Compass 已写入或更新该文件 | 例如 `/.cursor/hooks.json`、`/.codex/hooks.json`、`/.opencode/plugins/compass-cli-worker.js` |
+| Platform Skill | 该 Skill 结果为 installed 或 reused；conflict 不写入 | 例如 `/.cursor/skills/brainstorm/` |
 
 不要写入 `/README.md` 或 `/doc/`。
 
@@ -221,9 +234,12 @@ Planner platforms：Codex、Cursor、OpenCode。
 - [ ] `status=enabled` 时每个已选 planner 已安装 worker hook，或逐项记录 fallback；否则没有 Compass worker hook。
 - [ ] Claude Code 没有 CLI worker hook。
 - [ ] 未明确选择时没有生成 Subagent。
+- [ ] `.compass/skills/` 含 `brainstorm`、`ralph-loop`、`skill-creator` 三个 `SKILL.md`。
+- [ ] 每个已选平台已安装这三个 Skill，或逐项记录了未覆盖的同名 conflict。
+- [ ] 没有 Skill 或 hook 软链接，也没有修改 global Skill directory。
 - [ ] 根 `README.md` 已按 `.compass/templates/README.md` 整理（或由该模版新建）；原有事实没有丢失。
 - [ ] `doc/` 下已有文件没有被覆盖，也没有编造 feature design。
-- [ ] Git worktree 的 local exclude 覆盖 `/.compass/` 以及本轮实际安装的 instruction、Subagent 和 hook；没有 exclude `README.md` 或 `doc/`。
+- [ ] Git worktree 的 local exclude 覆盖 `/.compass/` 以及本轮实际安装的 instruction、Skill、Subagent 和 hook；没有 exclude `README.md` 或 `doc/`。
 - [ ] 没有修改 `.gitignore`，没有 hook 软链接。
 
 ## Step 8：清理 installation staging
@@ -231,7 +247,7 @@ Planner platforms：Codex、Cursor、OpenCode。
 1. 保留 `.compass/context/`（`cli-worker.md` 与 `README.md`）。
 2. 删除 `.compass/` 下除 `context/` 之外的所有一级 entry。
 3. 确认 `.compass/` 的直接子项只有 `context/`。
-4. 再次确认平台 instructions 和已安装 hook 仍存在。
+4. 再次确认平台 instructions、native Skill 和已安装 hook 仍存在。
 
 ```text
 .compass/
@@ -247,6 +263,7 @@ Planner platforms：Codex、Cursor、OpenCode。
 - 平台结果：
   - cursor：
     - Instructions：created / updated / reused / conflict
+    - Skills：brainstorm, ralph-loop, skill-creator（installed / reused / conflict）
     - Subagents：none / ...
     - Hooks：installed / skipped / fallback / conflict / none
   - ...
@@ -255,7 +272,7 @@ Planner platforms：Codex、Cursor、OpenCode。
 - 文档骨架：README copied / reshaped / already matched
 - context leftover 或 .ai leftover：...
 - 冲突或待确认：...
-- 最终产物：platform instructions、optional Subagents、optional planner hooks、.compass/context/cli-worker.md
+- 最终产物：platform instructions、native Skills、optional Subagents、optional planner hooks、.compass/context/cli-worker.md
 - Local Git exclude：updated / reused / not applicable / conflict
 - Excluded Compass paths：...
 - Tracked Compass paths still visible：...
@@ -271,6 +288,7 @@ Planner platforms：Codex、Cursor、OpenCode。
 
 1. 重新取得兼容的 Compass 模板，按本文执行各平台“移除”章节。
 2. Instructions、Subagent 与 generated hook 只按 marker 或可识别 command path 删除。
-3. 不删除根 `README.md` 或 `doc/`。
-4. `.compass/context/` 默认保留（`cli-worker.md` 与 `README.md`）；用户明确要求时才删除整个 `.compass/`。`.compass/context/cli-worker.lock` 是 runtime 锁，卸载 hook 时可删。
-5. 更新 local exclude：只移除已删除的 artifact pattern。
+3. Compass Skill 不含 ownership marker；列出各已选平台 native Skill path，只有用户逐项确认后才删除。
+4. 不删除根 `README.md` 或 `doc/`。
+5. `.compass/context/` 默认保留（`cli-worker.md` 与 `README.md`）；用户明确要求时才删除整个 `.compass/`。`.compass/context/cli-worker.lock` 是 runtime 锁，卸载 hook 时可删。
+6. 更新 local exclude：只移除已删除的 artifact pattern。

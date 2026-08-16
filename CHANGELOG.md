@@ -1,6 +1,6 @@
 # Changelog
 
-Compass 将 `compass/` 及其中的 `AGENTS.md`、`context/`、`subagents/`、`hooks/` 和 `platforms/` 视为模板公共接口；安装说明在 `doc/install_instruction.md`。fork 使用者请按本文件判断是否需要 rebase。
+Compass 将 `compass/` 及其中的 `AGENTS.md`、`context/`、`skills/`、`subagents/`、`hooks/` 和 `platforms/` 视为模板公共接口；安装说明在 `doc/install_instruction.md`。fork 使用者请按本文件判断是否需要 rebase。
 
 版本号采用 [Semantic Versioning](https://semver.org/)：
 
@@ -12,16 +12,16 @@ Compass 将 `compass/` 及其中的 `AGENTS.md`、`context/`、`subagents/`、`h
 
 ## [0.6.0] — 2026-08-16
 
-项目知识在目标仓库自己的 README 和 `doc/`。安装器留下平台规则、可选 CLI worker hook，以及 `.compass/context/` 下的 `cli-worker.md` 与 README。
+项目知识在目标仓库自己的 README 和 `doc/`。安装器留下平台规则、三个 Skill（`brainstorm`、`ralph-loop`、`skill-creator`）、可选 CLI worker hook，以及 `.compass/context/` 下的 `cli-worker.md` 与 README。
 
 ### Removed
 
-- 删除全部 Compass Skill（含 `/develop`、`/fix-bug`、`/build-context`、`/init-project` 等）。
+- 删除 `/develop`、`/fix-bug`、`/ask-codebase`、`/build-context`、`/init-project`、`/audit-tests`。
 - 删除 L1–L5 context 模板、`doc-sync.md` 和默认 `sdd-reviewer`。
-- 安装器不再向平台 Skill directory 复制 Compass Skill。
 
 ### Changed
 
+- 安装包保留 `/brainstorm`、`/ralph-loop`、`/skill-creator`；它们读目标仓库 README 和 `doc/`。安装时复制到各已选平台的 project-level Skill directory。
 - 项目知识约定改为目标仓库的 README 和 `doc/`（`doc/<feature>_design.md` 每模块一份；`doc/todo.md` 可选）。安装器不覆盖、不编造。
 - `AGENTS.md` 写入该约定；`.compass/context/` 留下 `cli-worker.md` 与目录 README。
 - CLI worker 锁文件改为 `.compass/context/cli-worker.lock`。
