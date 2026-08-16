@@ -26,6 +26,7 @@ Compass 将 `compass/` 及其中的 `AGENTS.md`、`context/`、`subagents/`、`h
 - `AGENTS.md` 写入该约定；`.compass/context/` 留下 `cli-worker.md` 与目录 README。
 - CLI worker 锁文件改为 `.compass/context/cli-worker.lock`。
 - 根 README 只说明 Compass 是什么，并 refer 到 `doc/` 下各模板部件的 design；安装说明在 `doc/install_instruction.md`。`compass/` 只承载模板副本。
+- `compass/templates/` 提供目标仓库的 README 骨架（Document map 指向 `doc/<feature>_design.md`）；安装时缺失则复制，已有则按模版整理结构。
 - 删除维护者目录 `docs/`。Compass 自己的 design 放在 `doc/`。
 - 新增根 `LICENSE`（MIT）。
 

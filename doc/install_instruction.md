@@ -2,7 +2,7 @@
 
 这是 Compass 的安装 design。没有安装脚本。本文在源码仓 `doc/`，不进入 `compass/` 模板。
 
-把 `compass/` 复制为目标项目的 `.compass/` 之后，以那个项目为根执行下列 Step。下文 `.compass/` 一律指目标项目里的副本。安装器不覆盖、不编造目标仓库的 README 或 `doc/`。
+把 `compass/` 复制为目标项目的 `.compass/` 之后，以那个项目为根执行下列 Step。下文 `.compass/` 一律指目标项目里的副本。安装器不编造 `doc/` 下的 feature design；根 README 按模版整理结构。
 
 ## 目标
 
@@ -15,7 +15,8 @@ projectA/
 │   │   └── cli-worker.md
 │   ├── subagents/
 │   ├── hooks/
-│   └── platforms/
+│   ├── platforms/
+│   └── templates/
 ├── README.md
 ├── doc/
 └── ...Project A files
@@ -41,7 +42,7 @@ projectA/
 
 复制来的 `context/` 只承载 `cli-worker.md` 和本目录 README。不要在其中填写项目描述或 design。默认不生成 Subagent；`codebase-explorer` 只有用户明确要求时才安装。Planner platform 是 Codex、Cursor 和 OpenCode。Claude Code 是 worker platform：当前 session 已经在 Claude Code 里时不安装 CLI worker hook。
 
-`.compass/AGENTS.md`、`.compass/subagents/`、`.compass/hooks/` 和 `.compass/platforms/` 都是 installation staging，不是安装后的项目接口。
+`.compass/AGENTS.md`、`.compass/subagents/`、`.compass/hooks/`、`.compass/platforms/` 和 `.compass/templates/` 都是 installation staging，不是安装后的项目接口。
 
 ## 不可违反的安全规则
 
@@ -49,7 +50,7 @@ projectA/
 - `.compass/` 内不得包含它自己的 `.git/`。发现嵌套 Git 仓库时停止安装，要求用户确认后重新复制或移除该元数据。
 - 如果 `.compass/` 在本次安装前已存在，禁止用复制命令覆盖它；先检查差异并请求用户决定合并方式。
 - 安装前先读取目标项目现有规则、配置和 Git 状态。
-- 不覆盖已有根 `AGENTS.md`、`CLAUDE.md`、`opencode.json`、根 `README.md` 或 `doc/` 下的已有文件。
+- 不覆盖已有根 `AGENTS.md`、`CLAUDE.md`、`opencode.json` 或 `doc/` 下的已有文件。根 `README.md` 按 `.compass/templates/README.md` 整理结构，保留原有事实，不编造产品内容。
 - 不删除旧 `.ai/`、用户自建 Skill 或其他历史文件；先报告，再由用户决定是否删除。Step 8 规定的 staging cleanup 不受此条限制。
 - 不为 Compass 创建平台 Skill directory，不修改 global Skill directory。用户自建 Skill 全部保留。
 - 不在 `.compass/context/` 填写项目描述或 design；除 `cli-worker.md` 与 `README.md` 外不在该目录新建项目文档。
@@ -67,7 +68,7 @@ projectA/
 
 1. 当前目标项目根目录。
 2. `.compass/.git/` 不存在。
-3. `.compass/AGENTS.md`、`context/`、`hooks/cli-worker/` 和 `platforms/` 均存在。
+3. `.compass/AGENTS.md`、`context/`、`hooks/cli-worker/`、`platforms/` 和 `templates/` 均存在。
 4. 当前项目是否已有：
    - 根 `AGENTS.md` / `CLAUDE.md` / `opencode.json`
    - 根 `README.md`
@@ -82,8 +83,10 @@ projectA/
 
 不要把项目描述写进 `.compass/context/`。
 
-- 根 `README.md` 和 `doc/` 是项目知识。已有内容全部保留，安装器不覆盖、不改写。
-- 缺失时 **不要** 由安装器编造产品 README 或 feature design。在最终报告里列出缺失项，由后续普通工作按 `AGENTS.md` 补齐。
+- `doc/` 下已有文件全部保留，安装器不覆盖、不改写、不编造 feature design。
+- 根 `README.md` 不存在时，从 `.compass/templates/README.md` 复制到项目根。
+- 根 `README.md` 已存在时，按 `.compass/templates/README.md` 整理：开头写目的，用 Document map 标出 `doc/<feature>_design.md` 这一层。原有目的、已有 `doc/` 条目和 License 留下；模块设计不要写回 README，应落到对应 design 或只在 map 里 refer。
+- 整理后的 README 进 Git，不写进 local exclude。
 - `cli-worker.md` 到 Step 5 再写。
 - 若存在旧 `.ai/` 或 `.compass/context/` 下除 `cli-worker.md` / `README.md` 以外的文件：保留不删，报告 leftover；不要迁移进 context，也不要复制成第二份 design。
 
@@ -218,7 +221,8 @@ Planner platforms：Codex、Cursor、OpenCode。
 - [ ] `status=enabled` 时每个已选 planner 已安装 worker hook，或逐项记录 fallback；否则没有 Compass worker hook。
 - [ ] Claude Code 没有 CLI worker hook。
 - [ ] 未明确选择时没有生成 Subagent。
-- [ ] 根 `README.md` 和 `doc/` 没有被安装器覆盖。
+- [ ] 根 `README.md` 已按 `.compass/templates/README.md` 整理（或由该模版新建）；原有事实没有丢失。
+- [ ] `doc/` 下已有文件没有被覆盖，也没有编造 feature design。
 - [ ] Git worktree 的 local exclude 覆盖 `/.compass/` 以及本轮实际安装的 instruction、Subagent 和 hook；没有 exclude `README.md` 或 `doc/`。
 - [ ] 没有修改 `.gitignore`，没有 hook 软链接。
 
@@ -248,8 +252,7 @@ Planner platforms：Codex、Cursor、OpenCode。
   - ...
 - CLI worker：enabled / disabled / not-applicable
 - CLI worker reason：...
-- 项目知识：README.md ... / doc/ ...
-- 缺失项目知识（安装器未编造）：...
+- 文档骨架：README copied / reshaped / already matched
 - context leftover 或 .ai leftover：...
 - 冲突或待确认：...
 - 最终产物：platform instructions、optional Subagents、optional planner hooks、.compass/context/cli-worker.md
