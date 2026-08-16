@@ -1,6 +1,6 @@
 # Changelog
 
-Compass 将 `compass/` 及其中的 `INSTALL.md`、`AGENTS.md`、`context/`、`skills/`、`subagents/`、`hooks/` 和 `platforms/` 视为当前的**公共接口**。fork 使用者请按本文件判断是否需要 rebase。
+Compass 将 `compass/` 及其中的 `INSTALL.md`、`AGENTS.md`、`context/`、`subagents/`、`hooks/` 和 `platforms/` 视为当前的**公共接口**。本分支不包含 `skills/`。fork 使用者请按本文件判断是否需要 rebase。
 
 版本号采用 [Semantic Versioning](https://semver.org/)：
 
@@ -9,6 +9,22 @@ Compass 将 `compass/` 及其中的 `INSTALL.md`、`AGENTS.md`、`context/`、`s
 - **PATCH** — 措辞修订、拼写、语义不变的澄清
 
 ## [Unreleased]
+
+## [0.6.0] — 2026-08-16
+
+本版本是 **Compass simplify** 分支。完整 L1–L5 + Skill + SDD 仍在 `main`。
+
+### Removed
+
+- 删除全部 Compass Skill（含 `/develop`、`/fix-bug`、`/build-context`、`/init-project` 等）。
+- 删除 L1–L5 context 模板、`doc-sync.md` 和默认 `sdd-reviewer`。
+- 安装器不再向平台 Skill directory 复制 Compass Skill。
+
+### Changed
+
+- 项目知识约定改为根 `README.md`、`doc/<feature>_design.md`（每模块一份）和 `doc/todo.md`。
+- `AGENTS.md` 写入该约定；`.compass/context/` 只保留 `cli-worker.md`。
+- CLI worker 锁文件改为 `.compass/context/cli-worker.lock`。
 
 ## [0.5.0] — 2026-08-16
 

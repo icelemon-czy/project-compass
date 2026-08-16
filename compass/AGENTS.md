@@ -1,4 +1,16 @@
 <!-- compass:start -->
+## Project Knowledge
+
+项目知识只存在仓库里的这一份，不要再写进 `.compass/context/`，也不要另建 Spec / L1–L5 / proposal。
+
+| 文件 | 职责 |
+|:-----|:-----|
+| 根 `README.md` | 项目是什么、怎么跑、模块怎么切 |
+| `doc/<feature>_design.md` | 每个大功能模块一份 design，只此一份 |
+| `doc/todo.md` | 当前要做的事、进行中、已完成 |
+
+开始工作前先读 README、相关 design 和 todo。改完代码后：行为变了只更新对应那份 design；任务状态变了只更新 `doc/todo.md`。没有相关 design 时先写 `doc/<feature>_design.md`，不要复制第二份。
+
 ## Language Style
 
 维护任何 agent-facing document 时，动词使用中文，核心名词使用 English。
@@ -21,7 +33,7 @@
 ### Implementation
 
 - 先确认 source of truth，再开始 implementation；当 source of truth 与 implementation 冲突时，先标记 conflict 并向 user 说明。
-- 不要修改 source of truth 或 design artifact，除非 user 明确要求。
+- 不要修改 source of truth 或 design artifact，除非 user 明确要求，或本次改动已经改变了对应行为。
 - 保持现有 code structure、design style 和 layer boundary；优先沿用已有 module、helper、pattern，不为了局部便利新增 layer。
 - 抽离 code 中的 config：将可变环境、路径、selector、timeout、feature flag、prompt 参数等放到已有 config boundary。
 
@@ -29,7 +41,7 @@
 
 生成或修订 test 时：
 
-- 先读取相关 source of truth 和 test instruction。
+- 先读取相关 source of truth 和测试命令（优先 README / design，其次项目配置）。
 - 测试 behavior 和 user-visible contract，避免 overfit implementation detail。
 - 避免把 test 绑定到 brittle selector、临时 copy、内部 helper 调用顺序、mock 的无关字段或当前代码的 bug。
 - 使用最小必要 fixture 和 assertion；每个 assertion 都应对应真实 requirement、risk 或 regression。
