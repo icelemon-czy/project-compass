@@ -26,6 +26,7 @@ Compass must already be copied into the target project. Treat `.compass/INSTALL.
 .compass/context/
 ├── README.md
 ├── doc-sync.md
+├── cli-worker.md
 ├── L1-codebase-map/
 │   ├── overview.md
 │   ├── architecture.md

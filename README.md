@@ -4,7 +4,7 @@
 
 **面向 AI coding Agent 的 project-local operating layer。**
 
-Compass 把普通 repository 变成 **Codex**、**Claude Code** 和 **OpenCode** 能够持续理解、修改并验证的工作环境。只需把一个 directory 复制进 project，Agent 就会安装 project rule、构建持久的 L1–L5 context、暴露 goal-oriented Skill，并为 behavior change 配置只读 reviewer。
+Compass 把普通 repository 变成 **Codex**、**Cursor**、**Claude Code** 和 **OpenCode** 能够持续理解、修改并验证的工作环境。只需把一个 directory 复制进 project，Agent 就会安装 project rule、构建持久的 L1–L5 context、暴露 goal-oriented Skill，并为 behavior change 配置只读 reviewer。
 
 Compass 要解决的问题，不是 Agent 会不会写 code，而是它能否持续工作：不反复重新发现 codebase，不为每个 task 临时发明一套 Workflow，不在 session 之间丢失 project rule，也不把一份绿色 test summary 当成充分 evidence。
 
@@ -13,8 +13,8 @@ Compass 把这些工作知识留在 project 内：
 - **Context 可持续：**architecture、constraint、Spec、session state 和 validation evidence 都位于 `.compass/context/`。
 - **用户只表达 goal：**开发 feature、修复 bug、调查 code 和审计 test 是 entry point；review、context sync 和 archive 是内部 stage。
 - **Workflow 匹配 change：**observable contract change 使用 SDD + TDD；不改变 behavior 的工作走 lightweight path。
-- **Ownership 清晰：**Main Agent 是唯一 writer；内置 `sdd-reviewer` 只读提供 independent evidence。
-- **Installation 保持 project-local：**不依赖 CLI，不安装 global Skill，也不创建 Skill symlink。
+- **Ownership 清晰：**Main Agent 拥有状态机；内置 `sdd-reviewer` 只读提供 independent evidence。Planner 上若安装时判定 Claude Code CLI 可调用，hook 把平台正要做的那次动作 pass 给 `claude` CLI。
+- **Installation 保持 project-local：**不依赖 Compass CLI，不安装 global Skill，也不创建 Skill symlink。
 
 ## 如何工作
 
@@ -57,7 +57,7 @@ cp -R /path/to/project-compass/compass /path/to/projectA/.compass
 
 用准备启用的 Agent 打开目标 project，然后说，例如：
 
-> 请阅读 `.compass/INSTALL.md`，为当前 project 安装 Codex 版 Compass；保留已有 project file，并报告所有 conflict。
+> 请阅读 `.compass/INSTALL.md`，为当前 project 安装 Cursor 版 Compass；保留已有 project file，并报告所有 conflict。
 
 需要多个 platform 时一次写明全部 platform。如果 request 没有说明 platform，Agent 也无法安全推断，installer 只会集中询问一次。
 
@@ -68,8 +68,9 @@ Agent 会：
 3. 把 Compass 的 marked rule block 合并进所选 platform 的 native instruction file；
 4. 从 installation staging 的 `.compass/skills/` 把全部 9 个 Skill 复制到 platform 的 project-level Skill directory；
 5. 安装只读 `sdd-reviewer`，或记录 inline fallback；
-6. 把 `/.compass/` 以及已选 platform 的 `AGENTS.md` / `CLAUDE.md`、Compass Skill 和 Subagent 精确 path 全部写入 repository-local `.git/info/exclude` 受管区块；
-7. 验证结果并报告 created、updated、skipped 和 conflicting file。
+6. 判定本机能否调用 Claude Code CLI，写入 `.compass/context/cli-worker.md`；`enabled` 时把 `hooks/cli-worker` 迁到 planner 的 native hook dest；
+7. 把 `/.compass/` 以及已选 platform 的 `AGENTS.md` / `CLAUDE.md`、Compass Skill、Subagent 和已安装 hook 精确 path 全部写入 repository-local `.git/info/exclude` 受管区块；
+8. 验证结果并报告 created、updated、skipped 和 conflicting file。
 
 Local exclude 不会修改团队共享的 `.gitignore`，也不会隐藏已经 tracked 的文件。已选 platform 的 `AGENTS.md` 或 `CLAUDE.md` 无论是新建还是 merge existing content，installer 都会写入 local exclude；如果它已 tracked，最终报告会明确说明该 pattern 已写入但 Git 仍会显示文件变更。
 
@@ -113,15 +114,16 @@ Project 不需要填满所有 optional file。先建立最小可用 context，�
 
 安装完成后，`.compass/` 只保留 `context/`。各 platform 的 native Skill 是不附加 marker、README 或 manifest 的 plain copy；同名 Skill 内容完全一致时复用，内容不同时 installer 保留 existing file 并报告 conflict。Subagent 仍使用文件内的 generated marker 支持安全更新与移除。
 
-| Platform | Project instruction | Installed Skill | Read-only reviewer |
-|:---------|:--------------------|:----------------|:-------------------|
-| Codex | `AGENTS.md` | `.agents/skills/` | `.codex/agents/sdd-reviewer.toml` |
-| Claude Code | `CLAUDE.md` | `.claude/skills/` | `.claude/agents/sdd-reviewer.md` |
-| OpenCode | `AGENTS.md` | `.opencode/skills/` | `.opencode/agents/sdd-reviewer.md` |
+| Platform | Project instruction | Installed Skill | Read-only reviewer | CLI worker hook |
+|:---------|:--------------------|:----------------|:-------------------|:----------------|
+| Codex | `AGENTS.md` | `.agents/skills/` | `.codex/agents/sdd-reviewer.toml` | `.codex/hooks.json` + `.codex/hooks/cli-worker.py`（仅 enabled） |
+| Cursor | `AGENTS.md` | `.cursor/skills/` | `.cursor/agents/sdd-reviewer.md` | `.cursor/hooks.json` + `.cursor/hooks/cli-worker.py`（仅 enabled） |
+| OpenCode | `AGENTS.md` | `.opencode/skills/` | `.opencode/agents/sdd-reviewer.md` | `.opencode/plugins/compass-cli-worker.js` + `.opencode/hooks/cli-worker.py`（仅 enabled） |
+| Claude Code | `CLAUDE.md` | `.claude/skills/` | `.claude/agents/sdd-reviewer.md` | 不安装（当前进程就是 worker） |
 
-同时选择 Codex 和 OpenCode 时，两者复用 root `AGENTS.md` 中同一个 marked block。Optional `codebase-explorer` 只有用户明确要求时才安装。
+同时选择 Codex、Cursor 或 OpenCode 时，共用 root `AGENTS.md` 中同一个 marked block。Optional `codebase-explorer` 只有用户明确要求时才安装。CLI worker 在安装时探测 `claude`；不可调用则 planner 自己做 implementation，不追问、不安装 hook。
 
-Git 项目中，上表实际安装的根 instruction、每个 Compass Skill 和每个 generated Subagent 会连同 `/.compass/` 写入 local `info/exclude`。Installer 只写具体 Skill/Subagent path，不会整体 ignore `.agents/`、`.claude/`、`.codex/` 或 `.opencode/`。
+Git 项目中，上表实际安装的根 instruction、每个 Compass Skill、每个 generated Subagent 和已安装 hook 会连同 `/.compass/` 写入 local `info/exclude`。Installer 只写具体 path，不会整体 ignore `.agents/`、`.claude/`、`.codex/`、`.cursor/` 或 `.opencode/`。
 
 ## Copyable package
 
@@ -131,10 +133,11 @@ Git 项目中，上表实际安装的根 instruction、每个 Compass Skill 和�
 compass/
 ├── AGENTS.md       带 marker 的 project-rule baseline
 ├── INSTALL.md      non-destructive installation 与 migration contract
-├── context/        原地填写的 L1–L5 project context
+├── context/        原地填写的 L1–L5 project context 与 cli-worker 判定
 ├── skills/         9 个 Skill 的 installation source
 ├── subagents/      built-in reviewer 与 optional explorer contract
-└── platforms/      Codex、Claude Code、OpenCode installer 与 template
+├── hooks/          CLI worker hook source；按平台迁移
+└── platforms/      Codex、Cursor、Claude Code、OpenCode installer 与 template
 ```
 
 Repository root 的 [`docs/`](docs/) 是 maintainer material，刻意不包含在复制给目标 project 的 package 中。Release 和 compatibility change 见 [Changelog](CHANGELOG.md)。
@@ -143,8 +146,8 @@ Repository root 的 [`docs/`](docs/) 是 maintainer material，刻意不包含�
 
 - Installation 只合并 marked block，并保留 marker 外的 existing content。
 - `.compass/` 与已选 platform 的全部 Compass 文档和 artifact 只写入 repository-local Git exclude，不修改 shared `.gitignore` 或 tracked-file index flag。
-- 不覆盖内容不同的同名 Skill，也不覆盖没有 generated marker 的同名 Subagent。
-- 不修改 global Skill directory，也不创建 Skill symlink。
+- 不覆盖内容不同的同名 Skill，也不覆盖没有 generated marker 的同名 Subagent 或 hook。
+- 不修改 global Skill / hook directory，也不创建 Skill 或 hook symlink。
 - Skill copy 不附加 ownership marker 或其他 installer metadata；后续更新需要重新取得 Compass installation source，内容不同时先报告 conflict。
 - 把 `.compass/context/` 视为 project knowledge；uninstall 时默认保留，除非用户明确要求删除。
 

@@ -1,20 +1,21 @@
 # Codex Platform Installer
 
-> 本文件由 `.compass/INSTALL.md` 调用，只负责 Codex 的项目入口、project Skill 和只读 Subagent 适配。
+> 本文件由 `.compass/INSTALL.md` 调用，只负责 Codex 的项目入口、project Skill、只读 Subagent 和可选 CLI worker hook 适配。
 
 ## 输入
 
 - 目标项目根目录。
 - 已准备好的 `.compass/AGENTS.md`、`.compass/context/` 和 `.compass/skills/`。
 - Subagent 角色列表；默认包含内置只读 `sdd-reviewer`，可追加用户明确要求的 `codebase-explorer`。
+- 总 installer 在 Step 6 判定 CLI worker 之后，若 `status=enabled`，再调用本文件的 hook 步骤。
 
 ## 平台边界
 
 - Codex 直接读取项目根 `AGENTS.md`，基础安装不需要创建 `.codex/config.toml`。
 - `.compass/skills/` 是本次 installation source；Codex 的 project Skill 安装到 `.agents/skills/<skill>/`。
 - 按总 installer 的受管 copy 规则安装 Skill，不创建软链接，也不写入 global Skill directory。
-- 不修改已有 `.codex/config.toml`。
-- Main Agent 是唯一 writer；所有生成角色保持 read-only。
+- 不修改已有 `.codex/config.toml`。CLI worker hook 只写入 `.codex/hooks.json` 与 `.codex/hooks/`。
+- Main Agent 负责状态机；生成角色保持 read-only。
 
 ## Step 1：安装 Codex project instructions
 
@@ -62,6 +63,45 @@
 - [ ] 每个已生成 TOML 都包含 `name`、`description` 和 `developer_instructions`。
 - [ ] 没有覆盖无 Compass 标记的已有 agent 文件。
 
+## Step 5：安装 CLI worker hook（仅 `enabled`）
+
+只有总 installer 传入 `cli-worker=enabled` 时才执行本步。否则报告 `Hooks：skipped` 并跳过。
+
+1. 读取 `.compass/hooks/cli-worker/CONTRACT.md` 与 `run.py`。
+2. 将 `run.py` 完整复制到 `.codex/hooks/cli-worker.py`；设置可执行；不创建软链接。
+3. 在 `.codex/hooks.json` 中 merge Compass 条目。识别条件：`command` 包含 `.codex/hooks/cli-worker.py`。保留用户 hook；无法安全 merge 时不覆盖整份文件，记录 fallback。不要改 `.codex/config.toml`。
+
+```json
+{
+  "description": "Compass CLI worker hooks.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|apply_patch|Edit|Write|Delete",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .codex/hooks/cli-worker.py --format codex",
+            "statusMessage": "Compass CLI worker",
+            "timeout": 660
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+4. Destination 不存在时创建上述最小文件。已存在时只更新或追加 Compass 那一条。
+5. 不写入 `~/.codex/hooks.json`。最终报告提醒：Codex 可能要求用 `/hooks` trust 新 hook，本轮 filesystem validation 仍须完成。
+
+### Hook 验证
+
+- [ ] `.codex/hooks/cli-worker.py` 存在且含 `compass:generated hook=cli-worker`。
+- [ ] `.codex/hooks.json` 含 Compass cli-worker `PreToolUse` 条目。
+- [ ] 没有修改 `.codex/config.toml`。
+- [ ] 用户原有 hook 没有丢失。
+
 ## 返回总安装器
 
 报告：
@@ -76,6 +116,7 @@ codex
 - Skills conflict：...
 - Skill metadata file：none
 - Subagents：...
+- Hooks：installed / skipped / fallback / conflict
 - 创建：...
 - 更新：...
 - 跳过：...
@@ -92,10 +133,12 @@ codex
 1. 如果没有仍在使用根 `AGENTS.md` 受管区块的其他已安装平台，从根 `AGENTS.md` 删除 Compass 区块并保留其他规则；文件只剩空白时才删除它。
 2. Skill 不含 ownership marker；列出待移除的 `.agents/skills/<skill>/`，只有用户逐项明确确认后才删除，否则保留并报告 manual cleanup。
 3. 只删除带 `compass:generated` 标记的 `.codex/agents/*.toml`。
-4. 保留用户自建 agent 和 `.codex/config.toml`。
-5. 受管目录变空时可删除对应空目录；不要删除仍有其他内容的 `.agents/` 或 `.codex/`。
+4. 删除 `.codex/hooks/cli-worker.py`；从 `.codex/hooks.json` 只移除 command 指向该脚本的条目；文件因此变空且没有用户 hook 时才删除它。
+5. 保留用户自建 agent 和 `.codex/config.toml`。
+6. 受管目录变空时可删除对应空目录；不要删除仍有其他内容的 `.agents/` 或 `.codex/`。
 
 ## 官方参考
 
 - [Codex Subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents)
 - [Codex Skills](https://learn.chatgpt.com/docs/customization/overview)
+- [Codex Hooks](https://developers.openai.com/codex/hooks)

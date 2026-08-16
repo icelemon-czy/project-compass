@@ -15,6 +15,7 @@
 - `.compass/skills/` 是本次 installation source；Claude Code 的 project Skill 安装到 `.claude/skills/<skill>/`。
 - 按总 installer 的受管 copy 规则安装 Skill，不创建软链接，也不写入 personal Skill directory。
 - Main Agent 是唯一 writer；所有生成角色保持 read-only。
+- 不安装 CLI worker hook。当前 session 已经是 Claude Code，不能再套一层 `claude` CLI。
 
 ## Step 1：安装 Claude Code 入口
 
@@ -56,6 +57,7 @@ Skill 和 Subagent 文件在当前 Claude Code session 启动后才安装或更�
 - [ ] 未明确选择时没有生成 `codebase-explorer`。
 - [ ] 每个已生成 agent 文件都有合法 frontmatter 和 generated 标记。
 - [ ] 没有覆盖无 Compass 标记的已有 agent 文件。
+- [ ] 没有写入 Claude Code settings 或 `.claude/` 下的 CLI worker hook。
 
 ## 返回总安装器
 
@@ -71,6 +73,7 @@ claude-code
 - Skills conflict：...
 - Skill metadata file：none
 - Subagents：...
+- Hooks：skipped（Claude Code is the worker）
 - 创建：...
 - 更新：...
 - 跳过：...

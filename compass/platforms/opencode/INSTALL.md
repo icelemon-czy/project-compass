@@ -1,12 +1,13 @@
 # OpenCode Platform Installer
 
-> 本文件由 `.compass/INSTALL.md` 调用，只负责 OpenCode 的项目入口、project Skill 和只读 Subagent 适配。
+> 本文件由 `.compass/INSTALL.md` 调用，只负责 OpenCode 的项目入口、project Skill、只读 Subagent 和可选 CLI worker hook 适配。
 
 ## 输入
 
 - 目标项目根目录。
 - 已准备好的 `.compass/AGENTS.md`、`.compass/context/` 和 `.compass/skills/`。
 - Subagent 角色列表；默认包含内置只读 `sdd-reviewer`，可追加用户明确要求的 `codebase-explorer`。
+- 总 installer 在 Step 6 判定 CLI worker 之后，若 `status=enabled`，再调用本文件的 hook 步骤。
 
 ## 平台边界
 
@@ -14,7 +15,8 @@
 - 不通过 `opencode.json.instructions` 再加载一次根 `AGENTS.md`。
 - `.compass/skills/` 是本次 installation source；OpenCode 的 project Skill 安装到 `.opencode/skills/<skill>/`。
 - 按总 installer 的受管 copy 规则安装 Skill，不创建软链接，也不写入 global Skill directory。
-- Main Agent 是唯一 writer；所有生成角色保持 read-only。
+- CLI worker 以本地 plugin 形式安装到 `.opencode/plugins/`，不修改 `opencode.json` / `opencode.jsonc`。
+- Main Agent 负责状态机；生成角色保持 read-only。
 
 ## Step 1：安装 OpenCode project instructions
 
@@ -56,6 +58,21 @@
 - [ ] 每个已生成 agent 文件都有 `description`、`mode: subagent`、权限配置和 generated 标记。
 - [ ] 没有覆盖无 Compass 标记的已有 agent 文件。
 
+## Step 5：安装 CLI worker hook（仅 `enabled`）
+
+只有总 installer 传入 `cli-worker=enabled` 时才执行本步。否则报告 `Hooks：skipped` 并跳过。OpenCode 没有通用 `hooks.json`；本地 plugin 就是它的 hook dest。
+
+1. 读取 `.compass/hooks/cli-worker/CONTRACT.md` 与 `run.py`。
+2. 将 `run.py` 完整复制到 `.opencode/hooks/cli-worker.py`；设置可执行；不创建软链接。
+3. 将 `.compass/platforms/opencode/compass-cli-worker.js` 安装到 `.opencode/plugins/compass-cli-worker.js`。目标不存在时创建；已有文件含 `compass:generated hook=cli-worker` 时更新；无 marker 且内容不同时不覆盖，记录 fallback。
+4. 不修改 `opencode.json` / `opencode.jsonc`，不写入 `~/.config/opencode/plugins/`。
+
+### Hook 验证
+
+- [ ] `.opencode/hooks/cli-worker.py` 存在且含 `compass:generated hook=cli-worker`。
+- [ ] `.opencode/plugins/compass-cli-worker.js` 存在且含 generated 标记，或已记录 fallback。
+- [ ] 没有修改 `opencode.json` / `opencode.jsonc`。
+
 ## 返回总安装器
 
 报告：
@@ -70,6 +87,7 @@ opencode
 - Skills conflict：...
 - Skill metadata file：none
 - Subagents：...
+- Hooks：installed / skipped / fallback / conflict
 - 创建：...
 - 更新：...
 - 跳过：...
@@ -86,11 +104,13 @@ opencode
 1. 如果没有仍在使用根 `AGENTS.md` 受管区块的其他已安装平台，从根 `AGENTS.md` 删除 Compass 区块并保留其他规则；文件只剩空白时才删除它。
 2. Skill 不含 ownership marker；列出待移除的 `.opencode/skills/<skill>/`，只有用户逐项明确确认后才删除，否则保留并报告 manual cleanup。
 3. 只删除带 `compass:generated` 标记的 `.opencode/agents/*.md`。
-4. 保留用户自建 agent、`opencode.json`、`opencode.jsonc` 和其他 `.opencode/` 内容。
-5. 受管目录变空时可删除对应空目录；不要删除仍有其他内容的 `.opencode/`。
+4. 删除 `.opencode/hooks/cli-worker.py`；只删除带 `compass:generated hook=cli-worker` 的 `.opencode/plugins/compass-cli-worker.js`。
+5. 保留用户自建 agent、`opencode.json`、`opencode.jsonc` 和其他 `.opencode/` 内容。
+6. 受管目录变空时可删除对应空目录；不要删除仍有其他内容的 `.opencode/`。
 
 ## 官方参考
 
 - [OpenCode rules](https://opencode.ai/docs/rules)
 - [OpenCode skills](https://opencode.ai/docs/skills)
 - [OpenCode agents](https://opencode.ai/docs/agents/)
+- [OpenCode plugins](https://opencode.ai/docs/plugins/)

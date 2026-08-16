@@ -19,6 +19,7 @@ The section contains only portable project rules. Do not duplicate detailed cont
 | Platform | Project instructions | Project Skill directory | Platform installer |
 |:---------|:---------------------|:------------------------|:-------------------|
 | Codex | Root `AGENTS.md` | `.agents/skills/` | `.compass/platforms/codex/INSTALL.md` |
+| Cursor | Root `AGENTS.md` | `.cursor/skills/` | `.compass/platforms/cursor/INSTALL.md` |
 | Claude Code | Root `CLAUDE.md` | `.claude/skills/` | `.compass/platforms/claude-code/INSTALL.md` |
 | OpenCode | Root `AGENTS.md` | `.opencode/skills/` | `.compass/platforms/opencode/INSTALL.md` |
 
@@ -34,5 +35,6 @@ Check without overwriting user content:
 4. The selected platform's installer has completed its own checks.
 5. The selected platform's native Skill directory contains the managed Compass Skills and no Skill symlink.
 6. The built-in read-only `sdd-reviewer` exists for each supported selected platform or the installer recorded inline fallback; optional `codebase-explorer` exists only when explicitly selected.
+7. `.compass/context/cli-worker.md` has a filled `status` of `enabled`, `disabled`, or `not-applicable`. `build-context` must not rewrite that file.
 
 If any of these fail during a context-only request, report the installation problem separately instead of silently changing platform files.

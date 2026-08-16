@@ -10,6 +10,7 @@ This directory becomes a project's `.compass/context/` when `compass/` is copied
 | `L2-rules/global.md` | Required | Confirmed project-wide constraints |
 | `L2-rules/testing.md` | Required | Real test commands and conventions |
 | `L3-specs/change-management.md` | Required only when using the `develop` workflow | Change states and transition rules |
+| `cli-worker.md` | Filled by installer | Whether planner platforms may invoke Claude Code CLI |
 
 ## Optional layers
 
@@ -20,3 +21,5 @@ This directory becomes a project's `.compass/context/` when `compass/` is copied
 - Add L5 traceability, test specs, and reports only for evidence that has actually been checked.
 
 Do not treat an empty field or example as project knowledge or a verification result. Keep optional files empty until they become useful; do not create a second context directory.
+
+`cli-worker.md` is written by installation, not by `build-context`. Ordinary product work must not change its `status`.

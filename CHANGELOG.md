@@ -1,6 +1,6 @@
 # Changelog
 
-Compass 将 `compass/` 及其中的 `INSTALL.md`、`AGENTS.md`、`context/`、`skills/`、`subagents/` 和 `platforms/` 视为当前的**公共接口**。fork 使用者请按本文件判断是否需要 rebase。
+Compass 将 `compass/` 及其中的 `INSTALL.md`、`AGENTS.md`、`context/`、`skills/`、`subagents/`、`hooks/` 和 `platforms/` 视为当前的**公共接口**。fork 使用者请按本文件判断是否需要 rebase。
 
 版本号采用 [Semantic Versioning](https://semver.org/)：
 
@@ -10,15 +10,20 @@ Compass 将 `compass/` 及其中的 `INSTALL.md`、`AGENTS.md`、`context/`、`s
 
 ## [Unreleased]
 
+## [0.5.0] — 2026-08-16
+
 ### Added
 
-- Installation 会在 repository-local `.git/info/exclude` 中维护 Compass 受管区块，写入 `/.compass/` 以及已选 platform 的 `AGENTS.md` / `CLAUDE.md`、Compass Skill 和 generated Subagent 精确 path，不修改 shared `.gitignore` 或 tracked-file index flag。
+- 新增 Cursor platform installer：根 `AGENTS.md`、`.cursor/skills/`、只读 `.cursor/agents/sdd-reviewer.md`。
+- Installation 会在本机判定 Claude Code CLI 是否可调用，并把结果写入 `.compass/context/cli-worker.md`。
+- Planner platform（Codex / Cursor / OpenCode）在 `enabled` 时从 `compass/hooks/cli-worker/` 迁移 native hook，拦截 implementation 并改为调用 `claude` CLI 做同一件工作。Claude Code 不安装该 hook。
+- Installation 会在 repository-local `.git/info/exclude` 中维护 Compass 受管区块，写入 `/.compass/` 以及已选 platform 的 `AGENTS.md` / `CLAUDE.md`、Compass Skill、generated Subagent 和已安装 hook 精确 path，不修改 shared `.gitignore` 或 tracked-file index flag。
 - 新增 `/skill-creator` Skill，用于创建、更新、rename、merge、split 或验证 project-local Skill，并优先复用现有能力、同步 canonical inventory 与执行 trigger boundary 验证。
 - 新增 `/brainstorm` Skill，将尚未定型的 idea 与现有 codebase facts 结合，比较真实 alternatives 并收敛 design direction；用户要求实施时在同一任务中进入 `/develop`。
 - 新增 `/ralph-loop` Skill，以可验证完成条件驱动持续改进，并在平台支持时复用原生 goal/continuation 能力。
 - Ralph Loop 可把单轮工作路由到现有 Compass Workflow，同时保留 Proposal、Review、权限和验证边界。
 - 新增统一 `/develop` Skill，从用户目标自动推进 plan、TDD、review、context sync 和 archive。
-- 新增内置只读 `sdd-reviewer`，用 `plan` / `verify` 两种模式合并影响、Spec 和测试审查；Main Agent 保持唯一 writer。
+- 新增内置只读 `sdd-reviewer`，用 `plan` / `verify` 两种模式合并影响、Spec 和测试审查；Main Agent 保持状态机 owner。
 
 ### Changed
 
@@ -29,6 +34,7 @@ Compass 将 `compass/` 及其中的 `INSTALL.md`、`AGENTS.md`、`context/`、`s
 - 每个已选平台默认生成只读 `sdd-reviewer`；角色不可用时 Main Agent 使用同一协议 inline fallback。
 - 将 `/review-tests` 重命名为 `/audit-tests`，明确它只负责专项测试可信度审计；默认返回结果而不写入 L5 report。
 - 普通 code review 保持为 Agent 通用能力，不新增 Compass Skill；正常开发已在 `/develop` 内部完成必要 review。
+- 支持平台现为 Codex、Cursor、Claude Code 与 OpenCode。
 
 ### Removed
 
@@ -38,6 +44,12 @@ Compass 将 `compass/` 及其中的 `INSTALL.md`、`AGENTS.md`、`context/`、`s
 - 移除 `/git-commit`；commit/push 继续由 Agent 通用能力在用户明确要求时执行。
 - 将 `impact-analyst`、`spec-validator`、`test-reviewer` 合并为 `sdd-reviewer`。
 - 当前安装包从 13 个 Skill 收敛为 9 个（7 个核心入口 + 可选 `/ralph-loop`、`/skill-creator`）。
+
+### Compatibility
+
+- Skill 名称和 L1–L5 语义结构保持不变。
+- CLI worker 默认关闭，除非安装时探测到可调用的 `claude`。
+- Hook 是新的一类受管 artifact；不修改 `.codex/config.toml` 或 `opencode.json`。
 
 ## [0.4.0] — 2026-07-12
 

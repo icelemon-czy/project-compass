@@ -72,6 +72,7 @@ Commit/push 是 Agent 的通用能力，不属于 Compass 生命周期。只有�
 Scenario → 红灯测试 → 最小实现 → 绿灯
   ↓
 Main Agent 运行测试；sdd-reviewer 只读 verify
+  ├─ CLI worker enabled：implementation 由 hook 交给 `claude` CLI
   ├─ 技术问题：Main Agent 修复并重新验证
   └─ 产品歧义：只在此时询问用户
   ↓
@@ -118,13 +119,24 @@ doc-sync L1/L2 → L5 verified → delta 合并 → archive
 
 ### Ownership
 
-- Main Agent：唯一 writer、状态机 owner、测试执行者和最终 verifier。
+- Main Agent：状态机 owner、最终 verifier；未启用 CLI worker 时也是 implementation writer。
 - Subagent：只读证据提供者，不写 Spec、代码、报告、状态或 archive。
+- CLI worker：仅当安装判定 `enabled` 时，由 hook 调用 Claude Code CLI 写 implementation；失败是 blocker，不能悄悄改回本地实现。
 - 角色不可用或冲突：Main Agent 静默按同一 validation protocol inline fallback，不把安装工作交给用户。
 
 每个已选平台默认生成 `sdd-reviewer`。用户无需知道它是否被调用，也无需选择下一步。
 
-## 七、质量不变量
+## 七、CLI worker
+
+Implementation 的执行替换不是新 Skill，也不是新 Subagent。Canonical source 在 `compass/hooks/cli-worker/`，和 Skill / agent 一样按平台迁移。
+
+- 安装时判定本机 `claude` 是否可调用，结论写入 `.compass/context/cli-worker.md`。不为这个再问用户。
+- `enabled` 时，Codex / Cursor / OpenCode 安装 native hook；planner 正要执行的那次 tool call 由 hook 直接 pass 给 `claude` CLI 做同一件动作。
+- `disabled` 不装 hook，planner 自己写代码。
+- Claude Code 不装这只 hook，避免 `claude` 套 `claude`。
+- Skill 只定义用户目标；`AGENTS.md` 不承担触发。X 是平台 pending tool call。verify / doc-sync / archive 仍在 planner Main Agent。
+
+## 八、质量不变量
 
 入口合并不等于检查缩水：
 
@@ -138,7 +150,7 @@ doc-sync L1/L2 → L5 verified → delta 合并 → archive
 8. 只有 review `PASS` 才能自动 archive。
 9. Commit/push 只在用户明确要求时发生。
 
-## 八、人工门槛
+## 九、人工门槛
 
 固定的流程确认被移除。只保留两类真实门槛：
 

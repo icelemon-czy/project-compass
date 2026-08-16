@@ -31,7 +31,7 @@ description: "对有客观完成条件的任务持续迭代，直到验证通过
    - 没有未完成 goal：创建包含 Objective、Completion criteria、Verifier、Scope 和停止条件的 goal。
 2. 只有用户明确提供 token budget 时才设置 token budget。
 3. 平台没有持久 goal/continuation 能力时，在当前运行中执行同一循环，并明确说明无法保证跨 turn 自动续跑。
-4. 不修改平台配置，不安装 hook，不创建第二份 Skill 来增强持续性。
+4. 不修改平台配置，不为本 Skill 安装 Stop hook 或复制 Skill。CLI worker hook 由 installer 拥有；本循环不得另装持续性 hook。
 
 用户指定最大轮次时，把目标定义为“最多执行 N 轮”。达到上限但底层任务未完成时，循环本身可以结束，但必须把底层任务报告为 incomplete，不能伪装成成功。
 

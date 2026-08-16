@@ -1,0 +1,12 @@
+---
+name: "{{SUBAGENT_ID}}"
+description: "{{SUBAGENT_DESCRIPTION}}"
+model: inherit
+readonly: true
+---
+
+<!-- compass:generated role={{SUBAGENT_ID}} -->
+
+{{SUBAGENT_INSTRUCTIONS}}
+
+Do not modify files or external state. Return evidence and uncertainty to the parent agent.
