@@ -1,6 +1,6 @@
 # OpenCode Platform Installer
 
-> 本文件由 `.compass/INSTALL.md` 调用，只负责 OpenCode 的项目入口、可选 Subagent 和可选 CLI worker hook。本版本不安装 Compass Skill。
+> 本文件由 Compass 源码仓 `doc/install_instruction.md` 调用，只负责 OpenCode 的项目入口、可选 Subagent 和可选 CLI worker hook。
 
 ## 输入
 
@@ -13,20 +13,16 @@
 
 - OpenCode 原生读取项目根 `AGENTS.md`，基础安装不需要创建或修改 `opencode.json`。
 - 不通过 `opencode.json.instructions` 再加载一次根 `AGENTS.md`。
-- 不安装 Compass Skill，不创建 `.opencode/skills/` 来承载 Compass Skill。
+- 不修改用户自建 Skill，也不写入 `~/.config/opencode` 的 Skill directory。
 - CLI worker 以本地 plugin 形式安装到 `.opencode/plugins/`，不修改 `opencode.json` / `opencode.jsonc`。
 
 ## Step 1：安装 OpenCode project instructions
 
 1. 检查项目是否已有根 `AGENTS.md`、`opencode.json`、`opencode.jsonc`、`.opencode/agents/`。
-2. 按 `.compass/INSTALL.md` Step 3 的受管 merge 规则，将 `.compass/AGENTS.md` 区块安装到根 `AGENTS.md`。
+2. 按源码仓 `doc/install_instruction.md` Step 3 的受管 merge 规则，将 `.compass/AGENTS.md` 区块安装到根 `AGENTS.md`。
 3. 已有 OpenCode 配置和 marker 外的根 `AGENTS.md` 内容全部保留。
 
-## Step 2：跳过 Compass Skill
-
-报告 `Skills：none`。不要复制 Skill，不要新建 `.opencode/skills/`。
-
-## Step 3：渲染可选 Subagent
+## Step 2：渲染可选 Subagent
 
 角色列表为空时跳过。对每个已选择角色：
 
@@ -36,15 +32,14 @@
 4. 将结果写入 `.opencode/agents/<role>.md`。
 5. 目标文件不存在时创建；存在 Compass generated 标记时更新；存在但没有标记时不覆盖，报告 inline fallback。
 
-## Step 4：验证
+## Step 3：验证
 
-- [ ] 根 `AGENTS.md` 包含且只包含一个最新 Compass 受管区块，且含 Project Knowledge 约定。
+- [ ] 根 `AGENTS.md` 包含且只包含一个最新 Compass 受管区块。
 - [ ] 没有创建或修改 `opencode.json` / `opencode.jsonc`。
-- [ ] 没有为 Compass 创建或写入 `.opencode/skills/`。
 - [ ] 未明确选择时没有生成 Subagent。
 - [ ] 没有覆盖无 Compass 标记的已有 agent 文件。
 
-## Step 5：安装 CLI worker hook（仅 `enabled`）
+## Step 4：安装 CLI worker hook（仅 `enabled`）
 
 只有总 installer 传入 `cli-worker=enabled` 时才执行本步。否则报告 `Hooks：skipped` 并跳过。OpenCode 没有通用 `hooks.json`；本地 plugin 就是它的 hook dest。
 
@@ -64,7 +59,6 @@
 ```text
 opencode
 - Instructions：根 AGENTS.md（created / updated / reused）
-- Skills：none
 - Subagents：none / ...
 - Hooks：installed / skipped / fallback / conflict
 - 创建：...

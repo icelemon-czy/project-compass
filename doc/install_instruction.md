@@ -1,31 +1,27 @@
-# Compass Installation Contract
+# 安装
 
-> 本文件供安装 Agent 阅读和执行。Compass 不提供安装脚本；Agent 必须根据目标项目的现状进行非破坏安装。
->
-> 本版本是 **simplify**：不安装 Compass Skill，不填写 L1–L5。项目知识在根 `README.md`、`doc/<feature>_design.md` 和 `doc/todo.md`。
+这是 Compass 的安装 design。没有安装脚本。本文在源码仓 `doc/`，不进入 `compass/` 模板。
+
+把 `compass/` 复制为目标项目的 `.compass/` 之后，以那个项目为根执行下列 Step。下文 `.compass/` 一律指目标项目里的副本。安装器不覆盖、不编造目标仓库的 README 或 `doc/`。
 
 ## 目标
-
-用户已将 `compass/` 复制为目标项目的 `.compass/`：
 
 ```text
 projectA/
 ├── .compass/
-│   ├── INSTALL.md
 │   ├── AGENTS.md
 │   ├── context/
+│   │   ├── README.md
 │   │   └── cli-worker.md
 │   ├── subagents/
 │   ├── hooks/
 │   └── platforms/
 ├── README.md
 ├── doc/
-│   ├── todo.md
-│   └── <feature>_design.md
 └── ...Project A files
 ```
 
-`.compass/` 在安装期间承载 installation source。Installer 必须先将 instructions 和可选 Subagent materialize 到每个已选平台的 native destination，判定 CLI worker，必要时再安装 planner hook，完成验证，最后删除 `.compass/` 中除 `context/` 之外的全部 installation source。
+`.compass/` 在安装期间承载模板副本。先把 instructions 和可选 Subagent materialize 到每个已选平台的 native destination，判定 CLI worker，必要时再安装 planner hook，完成验证，最后删除 `.compass/` 中除 `context/` 之外的全部 staging。
 
 安装完成后的稳定产物只有：
 
@@ -41,11 +37,11 @@ projectA/
 └── ...Project A files
 ```
 
-如果目标项目是 Git worktree，installer 还必须在该 repository 的 local `info/exclude` 中维护一个 Compass 受管区块，使 `.compass/`、已选 platform instructions、Subagents 和已安装 hook 不进入项目的共享 Git 变更。**不要**把根 `README.md` 或 `doc/` 写入 exclude；它们是项目知识，应当被 Git 跟踪。
+如果目标项目是 Git worktree，还要在该 repository 的 local `info/exclude` 中维护 Compass 受管区块，使 `.compass/`、已选 platform instructions、Subagents 和已安装 hook 不进入共享 Git 变更。**不要**把根 `README.md` 或 `doc/` 写入 exclude。
 
-复制来的 `context/` 只用于 `cli-worker.md`。不要在其中填写项目描述、design 或 todo。默认不生成 Subagent；`codebase-explorer` 只有用户明确要求时才安装。Planner platform 是 Codex、Cursor 和 OpenCode。Claude Code 是 worker platform：当前 session 已经在 Claude Code 里时不安装 CLI worker hook。
+复制来的 `context/` 只承载 `cli-worker.md` 和本目录 README。不要在其中填写项目描述或 design。默认不生成 Subagent；`codebase-explorer` 只有用户明确要求时才安装。Planner platform 是 Codex、Cursor 和 OpenCode。Claude Code 是 worker platform：当前 session 已经在 Claude Code 里时不安装 CLI worker hook。
 
-`.compass/AGENTS.md`、`.compass/INSTALL.md`、`.compass/subagents/`、`.compass/hooks/` 和 `.compass/platforms/` 都是 installation staging，不是安装后的项目接口。
+`.compass/AGENTS.md`、`.compass/subagents/`、`.compass/hooks/` 和 `.compass/platforms/` 都是 installation staging，不是安装后的项目接口。
 
 ## 不可违反的安全规则
 
@@ -54,9 +50,10 @@ projectA/
 - 如果 `.compass/` 在本次安装前已存在，禁止用复制命令覆盖它；先检查差异并请求用户决定合并方式。
 - 安装前先读取目标项目现有规则、配置和 Git 状态。
 - 不覆盖已有根 `AGENTS.md`、`CLAUDE.md`、`opencode.json`、根 `README.md` 或 `doc/` 下的已有文件。
-- 不删除旧 `.ai/`、用户 Skill 或其他历史文件；先报告，再由用户决定是否删除。Step 8 规定的 installation staging cleanup 不受此条限制。
-- **不安装 Compass Skill。** 不创建平台 Skill directory 来承载 Compass Skill，不创建 Skill 软链接，也不修改 global Skill directory。用户自建 Skill 全部保留。
-- 不创建 L1–L5、Spec、proposal 或 `.compass/context/` 下除 `cli-worker.md` 与 `README.md` 以外的项目文档。
+- 不删除旧 `.ai/`、用户自建 Skill 或其他历史文件；先报告，再由用户决定是否删除。Step 8 规定的 staging cleanup 不受此条限制。
+- 不为 Compass 创建平台 Skill directory，不修改 global Skill directory。用户自建 Skill 全部保留。
+- 不在 `.compass/context/` 填写项目描述或 design；除 `cli-worker.md` 与 `README.md` 外不在该目录新建项目文档。
+- 若 `.compass/context/` 里已有旧层文件：保留不删，报告 leftover，不要当成项目知识，也不要复制进 `doc/`。
 - CLI worker 是否可调用只在本次安装判定一次，并写入 `.compass/context/cli-worker.md`。不为这个再询问用户。
 - 只有 `status=enabled` 时才给已选 planner 平台安装 worker hook。Claude Code 永不安装该 hook。
 - Hook 从 canonical source 按平台迁移；不写入 user-global hook directory，不创建软链接。
@@ -70,13 +67,13 @@ projectA/
 
 1. 当前目标项目根目录。
 2. `.compass/.git/` 不存在。
-3. `.compass/INSTALL.md`、`AGENTS.md`、`context/` 和 `hooks/cli-worker/` 均存在。本版本 **没有** `.compass/skills/`。
+3. `.compass/AGENTS.md`、`context/`、`hooks/cli-worker/` 和 `platforms/` 均存在。
 4. 当前项目是否已有：
    - 根 `AGENTS.md` / `CLAUDE.md` / `opencode.json`
    - 根 `README.md`
-   - `doc/todo.md` 与 `doc/*_design.md`
+   - `doc/`
    - `.cursor/hooks.json` / `.codex/hooks.json`
-   - 旧 `.ai/` 或旧 L1–L5 `.compass/context/`
+   - `.compass/context/` 下除 `cli-worker.md` 与 `README.md` 以外的旧文件，或旧 `.ai/`
 5. 用户需要 Codex、Cursor、Claude Code、OpenCode 中的哪些平台。能从请求明确判断时直接采用；无法判断时询问一次。
 6. 可选 Subagent 只识别用户明确要求的 `codebase-explorer`；不要主动让用户选择。默认角色列表为空。
 7. 目标项目是否位于 Git worktree 中。如果是，使用 `git rev-parse --git-path info/exclude` 取得实际 local exclude path。
@@ -85,10 +82,10 @@ projectA/
 
 不要把项目描述写进 `.compass/context/`。
 
-- 根 `README.md`、`doc/<feature>_design.md`、`doc/todo.md` 是唯一项目知识。已有内容全部保留，安装器不覆盖、不改写。
+- 根 `README.md` 和 `doc/` 是项目知识。已有内容全部保留，安装器不覆盖、不改写。
 - 缺失时 **不要** 由安装器编造产品 README 或 feature design。在最终报告里列出缺失项，由后续普通工作按 `AGENTS.md` 补齐。
 - `cli-worker.md` 到 Step 5 再写。
-- 若存在旧 L1–L5 或 `.ai/`：保留不删，报告为 leftover；不要迁移进 `.compass/context/`，也不要复制成第二份 design。
+- 若存在旧 `.ai/` 或 `.compass/context/` 下除 `cli-worker.md` / `README.md` 以外的文件：保留不删，报告 leftover；不要迁移进 context，也不要复制成第二份 design。
 
 ## Step 3：准备 platform instructions
 
@@ -122,7 +119,7 @@ projectA/
 执行规则：
 
 1. 先完成本文件 Step 2–3，再运行平台安装器。
-2. 向每个平台安装器传入 Step 1 得到的可选角色；默认列表为空。不要安装 Compass Skill，不要默认生成 reviewer。
+2. 向每个平台安装器传入 Step 1 得到的可选角色；默认列表为空。不要默认生成 reviewer。
 3. 平台安装器独占该平台 instruction destination、Subagent 渲染和平台验证规则。
 4. 已选择多个平台时依次执行，分别保存结果。
 5. 平台入口无法安全合并时停止该平台并报告。仅可选 Subagent 冲突时不覆盖，记录 fallback 后继续。
@@ -201,7 +198,7 @@ Planner platforms：Codex、Cursor、OpenCode。
 | CLI worker hook script | 该文件已安装 | 例如 `/.cursor/hooks/cli-worker.py` |
 | CLI worker hook registration | Compass 已写入或更新该文件 | 例如 `/.cursor/hooks.json`、`/.codex/hooks.json`、`/.opencode/plugins/compass-cli-worker.js` |
 
-不要写入 `/README.md`、`/doc/` 或任何 Compass Skill path。
+不要写入 `/README.md` 或 `/doc/`。
 
 执行规则：
 
@@ -214,10 +211,8 @@ Planner platforms：Codex、Cursor、OpenCode。
 
 ## Step 7：公共验证
 
-- [ ] 每个已选平台的必读 instruction file 已创建或合并，Compass 标记区块只出现一次，且包含 Project Knowledge 约定。
-- [ ] 没有安装 Compass Skill，也没有为 Compass 新建平台 Skill directory。
-- [ ] 没有在 `.compass/context/` 填写项目描述、design 或 todo。
-- [ ] 没有创建 L1–L5 目录。
+- [ ] 每个已选平台的必读 instruction file 已创建或合并，Compass 标记区块只出现一次。
+- [ ] 没有在 `.compass/context/` 填写项目描述或 design。
 - [ ] `cli-worker.md` 的 `status` 是 `enabled`、`disabled` 或 `not-applicable`。
 - [ ] `status=enabled` 当且仅当已选至少一个 planner 且本机 `claude` 探测成功。
 - [ ] `status=enabled` 时每个已选 planner 已安装 worker hook，或逐项记录 fallback；否则没有 Compass worker hook。
@@ -225,7 +220,7 @@ Planner platforms：Codex、Cursor、OpenCode。
 - [ ] 未明确选择时没有生成 Subagent。
 - [ ] 根 `README.md` 和 `doc/` 没有被安装器覆盖。
 - [ ] Git worktree 的 local exclude 覆盖 `/.compass/` 以及本轮实际安装的 instruction、Subagent 和 hook；没有 exclude `README.md` 或 `doc/`。
-- [ ] 没有修改 `.gitignore`，没有 Skill 或 hook 软链接。
+- [ ] 没有修改 `.gitignore`，没有 hook 软链接。
 
 ## Step 8：清理 installation staging
 
@@ -248,15 +243,14 @@ Planner platforms：Codex、Cursor、OpenCode。
 - 平台结果：
   - cursor：
     - Instructions：created / updated / reused / conflict
-    - Skills：none（本版本不安装 Compass Skill）
     - Subagents：none / ...
     - Hooks：installed / skipped / fallback / conflict / none
   - ...
 - CLI worker：enabled / disabled / not-applicable
 - CLI worker reason：...
-- 项目知识：README.md ... / doc/todo.md ... / design files ...
+- 项目知识：README.md ... / doc/ ...
 - 缺失项目知识（安装器未编造）：...
-- 旧 L1–L5 或 .ai leftover：...
+- context leftover 或 .ai leftover：...
 - 冲突或待确认：...
 - 最终产物：platform instructions、optional Subagents、optional planner hooks、.compass/context/cli-worker.md
 - Local Git exclude：updated / reused / not applicable / conflict
@@ -272,8 +266,8 @@ Planner platforms：Codex、Cursor、OpenCode。
 
 只有用户明确要求卸载时才执行：
 
-1. 重新取得兼容的 Compass installation package，执行各平台“移除”章节。
+1. 重新取得兼容的 Compass 模板，按本文执行各平台“移除”章节。
 2. Instructions、Subagent 与 generated hook 只按 marker 或可识别 command path 删除。
 3. 不删除根 `README.md` 或 `doc/`。
-4. `.compass/context/` 默认保留（`cli-worker.md`）；用户明确要求时才删除整个 `.compass/`。`.compass/context/cli-worker.lock` 是 runtime 锁，卸载 hook 时可删。
+4. `.compass/context/` 默认保留（`cli-worker.md` 与 `README.md`）；用户明确要求时才删除整个 `.compass/`。`.compass/context/cli-worker.lock` 是 runtime 锁，卸载 hook 时可删。
 5. 更新 local exclude：只移除已删除的 artifact pattern。

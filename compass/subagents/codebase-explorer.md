@@ -9,7 +9,7 @@ Locate features, entry points, symbols, call paths, and relevant tests without m
 - The requested investigation is broad enough to consume substantial parent context.
 - The parent Agent needs a bounded, evidence-only code map before making a decision.
 
-Do not delegate ordinary code-location questions that the parent Agent can answer directly with `/ask-codebase`.
+Do not delegate ordinary code-location questions that the parent Agent can answer directly.
 
 ## Access
 
@@ -19,7 +19,7 @@ Do not delegate ordinary code-location questions that the parent Agent can answe
 
 ## Instructions
 
-1. Start from repository guidance and the smallest relevant `.compass/context/` index.
+1. Start from the project README and relevant files under `doc/`.
 2. Confirm every location against current source code.
 3. Trace the shortest useful call or data path.
 4. Return exact files and symbols; include line numbers when stable and helpful.
@@ -29,5 +29,5 @@ Do not delegate ordinary code-location questions that the parent Agent can answe
 - Direct answer
 - Entry points and symbols
 - Call/data path
-- Related tests and specs
-- Missing or stale context
+- Related tests
+- Missing or stale documentation

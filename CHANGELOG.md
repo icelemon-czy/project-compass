@@ -1,18 +1,18 @@
 # Changelog
 
-Compass 将 `compass/` 及其中的 `INSTALL.md`、`AGENTS.md`、`context/`、`subagents/`、`hooks/` 和 `platforms/` 视为当前的**公共接口**。本分支不包含 `skills/`。fork 使用者请按本文件判断是否需要 rebase。
+Compass 将 `compass/` 及其中的 `AGENTS.md`、`context/`、`subagents/`、`hooks/` 和 `platforms/` 视为模板公共接口；安装说明在 `doc/install_instruction.md`。fork 使用者请按本文件判断是否需要 rebase。
 
 版本号采用 [Semantic Versioning](https://semver.org/)：
 
-- **MAJOR** — skill 改名、状态机不兼容变更、模板字段重命名
-- **MINOR** — 新增 skill / 新增字段 / 可选能力
+- **MAJOR** — 安装契约、hook 契约或项目知识约定的不兼容变更
+- **MINOR** — 新增平台或可选能力
 - **PATCH** — 措辞修订、拼写、语义不变的澄清
 
 ## [Unreleased]
 
 ## [0.6.0] — 2026-08-16
 
-本版本是 **Compass simplify** 分支。完整 L1–L5 + Skill + SDD 仍在 `main`。
+项目知识在目标仓库自己的 README 和 `doc/`。安装器留下平台规则、可选 CLI worker hook，以及 `.compass/context/` 下的 `cli-worker.md` 与 README。
 
 ### Removed
 
@@ -22,9 +22,12 @@ Compass 将 `compass/` 及其中的 `INSTALL.md`、`AGENTS.md`、`context/`、`s
 
 ### Changed
 
-- 项目知识约定改为根 `README.md`、`doc/<feature>_design.md`（每模块一份）和 `doc/todo.md`。
-- `AGENTS.md` 写入该约定；`.compass/context/` 只保留 `cli-worker.md`。
+- 项目知识约定改为目标仓库的 README 和 `doc/`（`doc/<feature>_design.md` 每模块一份；`doc/todo.md` 可选）。安装器不覆盖、不编造。
+- `AGENTS.md` 写入该约定；`.compass/context/` 留下 `cli-worker.md` 与目录 README。
 - CLI worker 锁文件改为 `.compass/context/cli-worker.lock`。
+- 根 README 只说明 Compass 是什么，并 refer 到 `doc/` 下各模板部件的 design；安装说明在 `doc/install_instruction.md`。`compass/` 只承载模板副本。
+- 删除维护者目录 `docs/`。Compass 自己的 design 放在 `doc/`。
+- 新增根 `LICENSE`（MIT）。
 
 ## [0.5.0] — 2026-08-16
 

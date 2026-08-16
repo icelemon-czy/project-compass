@@ -1,11 +1,12 @@
 # Compass Context
 
-This directory becomes a project's `.compass/context/` when `compass/` is copied into that project.
+本目录在复制后成为目标项目的 `.compass/context/`。
 
-This edition does not store project knowledge here. The project README, `doc/<feature>_design.md`, and `doc/todo.md` are the source of truth.
+这里 **不是** 项目知识。项目知识在仓库自己的 README 和 `doc/`。
 
-| File | Requirement | Purpose |
-|:-----|:------------|:--------|
-| `cli-worker.md` | Filled by installer | Whether planner platforms may invoke Claude Code CLI |
+| 文件 | 谁写 | 用途 |
+|:-----|:-----|:-----|
+| `cli-worker.md` | 安装器 | planner 是否可以调用 Claude Code CLI |
+| `README.md` | 本文件 | 说明这个目录不是项目知识 |
 
-`cli-worker.md` is written by installation. Ordinary product work must not change its `status`.
+普通产品工作不得改 `cli-worker.md` 的 `status`。

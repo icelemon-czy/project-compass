@@ -1,16 +1,4 @@
 <!-- compass:start -->
-## Project Knowledge
-
-项目知识只存在仓库里的这一份，不要再写进 `.compass/context/`，也不要另建 Spec / L1–L5 / proposal。
-
-| 文件 | 职责 |
-|:-----|:-----|
-| 根 `README.md` | 项目是什么、怎么跑、模块怎么切 |
-| `doc/<feature>_design.md` | 每个大功能模块一份 design，只此一份 |
-| `doc/todo.md` | 当前要做的事、进行中、已完成 |
-
-开始工作前先读 README、相关 design 和 todo。改完代码后：行为变了只更新对应那份 design；任务状态变了只更新 `doc/todo.md`。没有相关 design 时先写 `doc/<feature>_design.md`，不要复制第二份。
-
 ## Language Style
 
 维护任何 agent-facing document 时，动词使用中文，核心名词使用 English。

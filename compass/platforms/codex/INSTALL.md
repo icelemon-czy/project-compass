@@ -1,6 +1,6 @@
 # Codex Platform Installer
 
-> 本文件由 `.compass/INSTALL.md` 调用，只负责 Codex 的项目入口、可选 Subagent 和可选 CLI worker hook。本版本不安装 Compass Skill。
+> 本文件由 Compass 源码仓 `doc/install_instruction.md` 调用，只负责 Codex 的项目入口、可选 Subagent 和可选 CLI worker hook。
 
 ## 输入
 
@@ -12,20 +12,16 @@
 ## 平台边界
 
 - Codex 直接读取项目根 `AGENTS.md`，基础安装不需要创建 `.codex/config.toml`。
-- 不安装 Compass Skill，不创建 `.agents/skills/` 来承载 Compass Skill。
+- 不修改用户自建 Skill，也不写入 `~/.codex` 的 Skill directory。
 - 不修改已有 `.codex/config.toml`。CLI worker hook 只写入 `.codex/hooks.json` 与 `.codex/hooks/`。
 
 ## Step 1：安装 Codex project instructions
 
 1. 检查项目是否已有根 `AGENTS.md`、`.codex/config.toml`、`.codex/agents/`。
-2. 按 `.compass/INSTALL.md` Step 3 的受管 merge 规则，将 `.compass/AGENTS.md` 区块安装到根 `AGENTS.md`。
+2. 按源码仓 `doc/install_instruction.md` Step 3 的受管 merge 规则，将 `.compass/AGENTS.md` 区块安装到根 `AGENTS.md`。
 3. 已有 Codex 配置和 marker 外的根 `AGENTS.md` 内容全部保留。
 
-## Step 2：跳过 Compass Skill
-
-报告 `Skills：none`。不要复制 Skill，不要新建 `.agents/skills/`。
-
-## Step 3：渲染可选 Subagent
+## Step 2：渲染可选 Subagent
 
 角色列表为空时跳过。对每个已选择角色：
 
@@ -37,15 +33,14 @@
 
 渲染要求：`name`、`description`、`developer_instructions`；保持 `sandbox_mode = "read-only"`，除非用户明确批准更大权限。
 
-## Step 4：验证
+## Step 3：验证
 
-- [ ] 根 `AGENTS.md` 包含且只包含一个最新 Compass 受管区块，且含 Project Knowledge 约定。
+- [ ] 根 `AGENTS.md` 包含且只包含一个最新 Compass 受管区块。
 - [ ] 没有创建或修改 `.codex/config.toml`。
-- [ ] 没有为 Compass 创建或写入 `.agents/skills/`。
 - [ ] 未明确选择时没有生成 Subagent。
 - [ ] 没有覆盖无 Compass 标记的已有 agent 文件。
 
-## Step 5：安装 CLI worker hook（仅 `enabled`）
+## Step 4：安装 CLI worker hook（仅 `enabled`）
 
 只有总 installer 传入 `cli-worker=enabled` 时才执行本步。否则报告 `Hooks：skipped` 并跳过。
 
@@ -89,7 +84,6 @@
 ```text
 codex
 - Instructions：根 AGENTS.md（created / updated / reused）
-- Skills：none
 - Subagents：none / ...
 - Hooks：installed / skipped / fallback / conflict
 - 创建：...

@@ -251,7 +251,7 @@ def build_prompt(name: str, inp: dict[str, Any]) -> str:
     return (
         "A planner agent was about to perform the following tool call. "
         "Do that same action in this project now.\n"
-        "Read README.md, doc/todo.md, and the relevant doc/<feature>_design.md when needed.\n"
+        "Read README.md and relevant files under doc/ when needed.\n"
         "Do not commit or push. Do not invoke claude again.\n\n"
         "Pending action:\n"
         f"{body}\n"
@@ -326,8 +326,8 @@ def hand_off_result(code: int, output: str) -> str:
         return (
             "CLI worker already performed this pending action (exit 0). "
             "Do not retry this tool call. Inspect the diff, then update "
-            "README.md, the relevant doc/<feature>_design.md, or doc/todo.md "
-            "only if this change requires it. Do not commit or push "
+            "README.md or files under doc/ only if this change requires it. "
+            "Do not commit or push "
             f"unless the user explicitly asked.{tail}"
         )
     return (

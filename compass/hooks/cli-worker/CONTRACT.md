@@ -40,7 +40,7 @@ Planner platform（Codex、Cursor、OpenCode）正要对仓库做 implementation
 2. `enabled` 且命中拦截时：用 flock 串行化，按 `invoke`（默认 `claude -p --permission-mode acceptEdits`）把 **这次 tool call** pass 给 Claude Code CLI；cwd 为项目根。锁文件是 `.compass/context/cli-worker.lock`，属于 runtime，不是项目知识。
 3. Prompt 只描述 pending action（tool 名 + input）。可让 CLI 读 README 与 `doc/`。不要把用户原始 chat 当成任务来源。
 4. 默认不加 `--dangerously-skip-permissions`；`invoke` 里出现该 flag 时丢掉。
-5. CLI 结束后拒绝 planner 自己再执行同一 tool call。exit 0：告诉 planner 去看 diff；需要时更新 README / 对应 design / `doc/todo.md`。非 0 或超时：blocker，不准改口本地写。
+5. CLI 结束后拒绝 planner 自己再执行同一 tool call。exit 0：告诉 planner 去看 diff；需要时更新 README 或 `doc/`。非 0 或超时：blocker，不准改口本地写。
 6. 不 commit、不 push。
 7. 判定「要不要交接」之前的脚本失败 fail open；已经决定交接之后 fail closed。
 
