@@ -6,14 +6,14 @@
 
 - 目标项目根目录。
 - 已准备好的 `.compass/AGENTS.md`、`.compass/context/` 和 `.compass/skills/`。
-- Subagent 角色列表；默认空。可追加用户明确要求的 `codebase-explorer`。
+- 总 installer 已验证的 Subagent 角色列表；默认空。
 
 ## 平台边界
 
 - Claude Code 原生读取根 `CLAUDE.md`；本 installer 将 canonical instructions 直接合并到该文件。
 - 不通过 `@AGENTS.md` 或其他 instruction file 间接加载规则。
 - `.compass/skills/` 是本次 Skill source；Claude Code 的 project Skill 安装到 `.claude/skills/<skill>/`。
-- 按源码仓 `doc/install_instruction.md` 的 Skill copy 规则安装 `brainstorm`、`ralph-loop`、`skill-creator`，不创建软链接，也不写入 `~/.claude/skills/`。
+- 按源码仓 `doc/install_instruction.md` 的 Skill inventory 和 copy 规则安装全部 Compass Skill，不创建软链接，也不写入 `~/.claude/skills/`。
 - 不修改用户自建其他 Skill。
 - 不安装 CLI worker hook。当前 session 已经是 Claude Code，不能再套一层 `claude` CLI。
 
@@ -26,7 +26,7 @@
 
 ## Step 2：安装 Claude Code project Skill
 
-按源码仓 `doc/install_instruction.md` 的 Skill copy 规则，将 `.compass/skills/` 下 `brainstorm`、`ralph-loop`、`skill-creator` 完整安装到：
+按源码仓 `doc/install_instruction.md` 的 Skill inventory 和 copy 规则，将每个 Compass Skill 完整安装到：
 
 ```text
 .claude/skills/<skill>/
@@ -62,7 +62,7 @@ Skill 在当前 Claude Code session 启动后才安装或更新时，最终报�
 ```text
 claude-code
 - Instructions：根 CLAUDE.md（created / updated / reused）
-- Skills：brainstorm, ralph-loop, skill-creator（installed / reused / conflict）
+- Skills：<skill>（installed / reused / conflict）
 - Subagents：none / ...
 - Hooks：skipped（Claude Code is the worker）
 - 创建：...
@@ -77,7 +77,7 @@ claude-code
 ## 移除
 
 1. 从根 `CLAUDE.md` 删除 Compass 标记区块，保留其他内容。
-2. Skill 不含 ownership marker；列出待移除的 `.claude/skills/brainstorm/`、`.claude/skills/ralph-loop/`、`.claude/skills/skill-creator/`，只有用户逐项明确确认后才删除。
+2. Skill 不含 ownership marker；按 Skill inventory 列出 `.claude/skills/<skill>/`，只有用户逐项明确确认后才删除。
 3. 只删除带 `compass:generated` 标记的 `.claude/agents/*.md`。
 4. 不删除根 `README.md` 或 `doc/`。
 

@@ -34,7 +34,7 @@ projectA/
 ├── AGENTS.md or CLAUDE.md
 ├── README.md
 ├── doc/
-├── 已选平台的 Compass Skill（brainstorm、ralph-loop、skill-creator）
+├── 已选平台的 Compass Skills
 ├── 可选 platform-native Subagent files
 ├── planner-native CLI worker hooks（仅判定 enabled 时）
 └── ...Project A files
@@ -42,7 +42,7 @@ projectA/
 
 如果目标项目是 Git worktree，还要在该 repository 的 local `info/exclude` 中维护 Compass 受管区块，使 `.compass/`、已选 platform instructions、Skills、Subagents 和已安装 hook 不进入共享 Git 变更。**不要**把根 `README.md` 或 `doc/` 写入 exclude。
 
-复制来的 `context/` 只承载 `cli-worker.md` 和本目录 README。不要在其中填写项目描述或 design。默认不生成 Subagent；`codebase-explorer` 只有用户明确要求时才安装。Planner platform 是 Codex、Cursor 和 OpenCode。Claude Code 是 worker platform：当前 session 已经在 Claude Code 里时不安装 CLI worker hook。
+复制来的 `context/` 只承载 `cli-worker.md` 和本目录 README。不要在其中填写项目描述或 design。默认不生成 Subagent，只有用户明确要求的 canonical role 才安装。Planner platform 是 Codex、Cursor 和 OpenCode。Claude Code 是 worker platform：当前 session 已经在 Claude Code 里时不安装 CLI worker hook。
 
 `.compass/AGENTS.md`、`.compass/skills/`、`.compass/subagents/`、`.compass/hooks/`、`.compass/platforms/` 和 `.compass/templates/` 都是 installation staging，不是安装后的项目接口。
 
@@ -54,7 +54,7 @@ projectA/
 - 安装前先读取目标项目现有规则、配置和 Git 状态。
 - 不覆盖已有根 `AGENTS.md`、`CLAUDE.md`、`opencode.json` 或 `doc/` 下的已有文件。根 `README.md` 按 `.compass/templates/README.md` 整理结构，保留原有事实，不编造产品内容。
 - 不删除旧 `.ai/`、用户自建 Skill 或其他历史文件；先报告，再由用户决定是否删除。Step 8 规定的 staging cleanup 不受此条限制。
-- `.compass/skills/` 是本次 Skill source，只含 `brainstorm`、`ralph-loop`、`skill-creator`。安装到已选平台的 project-level directory，不创建软链接，不修改 global Skill directory。同名用户 Skill 内容不同时不覆盖。
+- `.compass/skills/` 是本次 Skill source，只含 [skills_design.md](skills_design.md) 的 canonical inventory。安装到已选平台的 project-level directory，不创建软链接，不修改 global Skill directory。同名用户 Skill 内容不同时不覆盖。
 - 用户自建其他 Skill 全部保留。
 - 不在 `.compass/context/` 填写项目描述或 design；除 `cli-worker.md` 与 `README.md` 外不在该目录新建项目文档。
 - 若 `.compass/context/` 里已有旧层文件：保留不删，报告 leftover，不要当成项目知识，也不要复制进 `doc/`。
@@ -71,7 +71,7 @@ projectA/
 
 1. 当前目标项目根目录。
 2. `.compass/.git/` 不存在。
-3. `.compass/AGENTS.md`、`context/`、`skills/`、`hooks/cli-worker/`、`platforms/` 和 `templates/` 均存在；`.compass/skills/` 含 `brainstorm`、`ralph-loop`、`skill-creator` 三个 `SKILL.md`。
+3. `.compass/AGENTS.md`、`context/`、`skills/`、`hooks/cli-worker/`、`platforms/` 和 `templates/` 均存在；`.compass/skills/` 与下文 Skill inventory 一致，每项都含 `SKILL.md`。
 4. 当前项目是否已有：
    - 根 `AGENTS.md` / `CLAUDE.md` / `opencode.json`
    - 根 `README.md`
@@ -79,7 +79,7 @@ projectA/
    - `.cursor/hooks.json` / `.codex/hooks.json`
    - `.compass/context/` 下除 `cli-worker.md` 与 `README.md` 以外的旧文件，或旧 `.ai/`
 5. 用户需要 Codex、Cursor、Claude Code、OpenCode 中的哪些平台。能从请求明确判断时直接采用；无法判断时询问一次。
-6. 可选 Subagent 只识别用户明确要求的 `codebase-explorer`；不要主动让用户选择。默认角色列表为空。
+6. 可选 Subagent 只识别 [subagents_design.md](subagents_design.md) 的 canonical role；不要主动让用户选择。默认角色列表为空。
 7. 目标项目是否位于 Git worktree 中。如果是，使用 `git rev-parse --git-path info/exclude` 取得实际 local exclude path。
 
 ## Step 2：项目知识边界
@@ -89,6 +89,7 @@ projectA/
 - `doc/` 下已有文件全部保留，安装器不覆盖、不改写、不编造 feature design。
 - 根 `README.md` 不存在时，从 `.compass/templates/README.md` 复制到项目根。
 - 根 `README.md` 已存在时，按 `.compass/templates/README.md` 整理：开头写目的，用 Document map 标出 `doc/<feature>_design.md` 这一层。原有目的、已有 `doc/` 条目和 License 留下；模块设计不要写回 README，应落到对应 design 或只在 map 里 refer。
+- `doc/todo.md` 只在目标项目已经使用或用户明确要求时保留/创建；安装器不主动生成当前工作，也不把永久 design 放进 todo。
 - 整理后的 README 进 Git，不写进 local exclude。
 - `cli-worker.md` 到 Step 5 再写。
 - 若存在旧 `.ai/` 或 `.compass/context/` 下除 `cli-worker.md` / `README.md` 以外的文件：保留不删，报告 leftover；不要迁移进 context，也不要复制成第二份 design。
@@ -113,9 +114,9 @@ projectA/
 
 ## Skill copy 规则
 
-Source：`.compass/skills/`，只安装 `brainstorm`、`ralph-loop`、`skill-creator`。
+Source：`.compass/skills/`。Skill inventory 以 [skills_design.md](skills_design.md) 为准。
 
-1. 只把含合法 `SKILL.md` 的上述三个一级子目录识别为待安装 Skill。
+1. 只把含合法 `SKILL.md` 的 inventory 一级子目录识别为待安装 Skill。
 2. 递归复制整个 Skill directory；不只复制 `SKILL.md`。
 3. Destination 不存在时创建完整 copy；与 source 完全一致时复用；内容不同时不覆盖，记录 conflict。
 4. 不创建软链接，不写入 global Skill directory，不把 CLI worker 步骤写进 Skill。
@@ -234,8 +235,8 @@ Planner platforms：Codex、Cursor、OpenCode。
 - [ ] `status=enabled` 时每个已选 planner 已安装 worker hook，或逐项记录 fallback；否则没有 Compass worker hook。
 - [ ] Claude Code 没有 CLI worker hook。
 - [ ] 未明确选择时没有生成 Subagent。
-- [ ] `.compass/skills/` 含 `brainstorm`、`ralph-loop`、`skill-creator` 三个 `SKILL.md`。
-- [ ] 每个已选平台已安装这三个 Skill，或逐项记录了未覆盖的同名 conflict。
+- [ ] `.compass/skills/` 与 Skill inventory 一致，每项都含 `SKILL.md`。
+- [ ] 每个已选平台已安装全部 Skill inventory，或逐项记录了未覆盖的同名 conflict。
 - [ ] 没有 Skill 或 hook 软链接，也没有修改 global Skill directory。
 - [ ] 根 `README.md` 已按 `.compass/templates/README.md` 整理（或由该模版新建）；原有事实没有丢失。
 - [ ] `doc/` 下已有文件没有被覆盖，也没有编造 feature design。
@@ -263,7 +264,7 @@ Planner platforms：Codex、Cursor、OpenCode。
 - 平台结果：
   - cursor：
     - Instructions：created / updated / reused / conflict
-    - Skills：brainstorm, ralph-loop, skill-creator（installed / reused / conflict）
+    - Skills：<skill>（installed / reused / conflict）
     - Subagents：none / ...
     - Hooks：installed / skipped / fallback / conflict / none
   - ...

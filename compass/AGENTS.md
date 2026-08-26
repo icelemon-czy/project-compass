@@ -7,9 +7,13 @@
 
 维护任何 document 时逐层递进：先给 big picture（目标和主线 flow），再展开细节。
 
+- 项目自己的 `README.md` 只维护项目目的、Document map 和必要入口；feature design 放在 `doc/<feature>_design.md`；`doc/todo.md` 只在需要时维护当前工作，不保存永久 design。
+- Feature boundary 按独立目的、observable behavior 和 ownership 判断，不按源码目录机械拆分；同一 flow 的内部 layer 留在同一份 design。
 - overview 层（开头段落、table、diagram）凸显目的和数据流，不堆 optional 参数、路径或 field-level 细节；细节放到对应展开层或 referenced document。
 - 分层放置：entry document 放主体和导航，detail document 放展开。
 - 同一 fact 只维护一处，其余位置用引用指向，避免多处 copy 漂移。
+- 用户确认和已有产品文档决定 intended behavior；code、config、test 与 runtime evidence 证明 current implementation。发生冲突时标记 conflict，不把当前实现自动写成产品需求。
+- 新增、rename、split、merge 或删除 feature 时同步 README Document map；behavior、boundary、flow、dependency 或重要 decision 改变时同步对应 design；不改变 design fact 的内部修改不制造 document churn。
 
 ## Developing Principles
 

@@ -10,6 +10,17 @@ Compass 将 `compass/` 及其中的 `AGENTS.md`、`context/`、`skills/`、`suba
 
 ## [Unreleased]
 
+### Added
+
+- 新增 `/build-docs`，用于首次建立或整体重整目标项目的 README 与 `doc/<feature>_design.md`。
+- 新增 `/maintain-docs`，以同一 evidence pass 合并文档 review 与增量 update；review intent 保持只读，update intent 执行最小修复。
+- 新增可选只读 `docs-reviewer`，用于跨 feature、重大文档变化或用户明确要求的独立复核；默认不安装。
+
+### Changed
+
+- 补充 README、feature design 与可选 `doc/todo.md` 的职责、拆分和 source-of-truth 边界。
+- 四个平台安装的 Compass Skill inventory 从三个增加到五个。
+
 ## [0.6.0] — 2026-08-16
 
 项目知识在目标仓库自己的 README 和 `doc/`。安装器留下平台规则、三个 Skill（`brainstorm`、`ralph-loop`、`skill-creator`）、可选 CLI worker hook，以及 `.compass/context/` 下的 `cli-worker.md` 与 README。

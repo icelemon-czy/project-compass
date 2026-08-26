@@ -1,6 +1,6 @@
 # Platforms
 
-这是 `compass/platforms/` 的 design。四个适配器同一套迁移：instruction、三个 Skill、可选 subagent、planner 才装 hook。总安装不猜 native JSON，细节在各平台 `INSTALL.md`。
+这是 `compass/platforms/` 的 design。四个适配器同一套迁移：instruction、全部 Compass Skill、可选 subagent、planner 才装 hook。总安装不猜 native JSON，细节在各平台 `INSTALL.md`。
 
 | Platform | Kind | Instruction | Skills | Subagent | Hook |
 |:---------|:-----|:------------|:-------|:---------|:-----|

@@ -6,7 +6,7 @@
 
 - 目标项目根目录。
 - 已准备好的 `.compass/AGENTS.md`、`.compass/context/` 和 `.compass/skills/`。
-- Subagent 角色列表；默认空。可追加用户明确要求的 `codebase-explorer`。
+- 总 installer 已验证的 Subagent 角色列表；默认空。
 - 总 installer 在判定 CLI worker 之后，若 `status=enabled`，再调用本文件的 hook 步骤。
 
 ## 平台边界
@@ -14,7 +14,7 @@
 - OpenCode 原生读取项目根 `AGENTS.md`，基础安装不需要创建或修改 `opencode.json`。
 - 不通过 `opencode.json.instructions` 再加载一次根 `AGENTS.md`。
 - `.compass/skills/` 是本次 Skill source；OpenCode 的 project Skill 安装到 `.opencode/skills/<skill>/`。
-- 按源码仓 `doc/install_instruction.md` 的 Skill copy 规则安装 `brainstorm`、`ralph-loop`、`skill-creator`，不创建软链接，也不写入 `~/.config/opencode` 的 Skill directory。
+- 按源码仓 `doc/install_instruction.md` 的 Skill inventory 和 copy 规则安装全部 Compass Skill，不创建软链接，也不写入 `~/.config/opencode` 的 Skill directory。
 - 不修改用户自建其他 Skill。
 - CLI worker 以本地 plugin 形式安装到 `.opencode/plugins/`，不修改 `opencode.json` / `opencode.jsonc`。
 
@@ -26,7 +26,7 @@
 
 ## Step 2：安装 OpenCode project Skill
 
-按源码仓 `doc/install_instruction.md` 的 Skill copy 规则，将 `.compass/skills/` 下 `brainstorm`、`ralph-loop`、`skill-creator` 完整安装到：
+按源码仓 `doc/install_instruction.md` 的 Skill inventory 和 copy 规则，将每个 Compass Skill 完整安装到：
 
 ```text
 .opencode/skills/<skill>/
@@ -75,7 +75,7 @@
 ```text
 opencode
 - Instructions：根 AGENTS.md（created / updated / reused）
-- Skills：brainstorm, ralph-loop, skill-creator（installed / reused / conflict）
+- Skills：<skill>（installed / reused / conflict）
 - Subagents：none / ...
 - Hooks：installed / skipped / fallback / conflict
 - 创建：...
@@ -90,7 +90,7 @@ opencode
 ## 移除
 
 1. 如果没有仍在使用根 `AGENTS.md` 受管区块的其他已安装平台，从根 `AGENTS.md` 删除 Compass 区块并保留其他规则。
-2. Skill 不含 ownership marker；列出待移除的 `.opencode/skills/brainstorm/`、`.opencode/skills/ralph-loop/`、`.opencode/skills/skill-creator/`，只有用户逐项明确确认后才删除。
+2. Skill 不含 ownership marker；按 Skill inventory 列出 `.opencode/skills/<skill>/`，只有用户逐项明确确认后才删除。
 3. 只删除带 `compass:generated` 标记的 `.opencode/agents/*.md`。
 4. 删除 `.opencode/hooks/cli-worker.py`；只删除带 `compass:generated hook=cli-worker` 的 `.opencode/plugins/compass-cli-worker.js`。
 5. 不删除根 `README.md` 或 `doc/`。
