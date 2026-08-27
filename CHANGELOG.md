@@ -1,5 +1,7 @@
 # Changelog
 
+- 明确 local Git exclude 在 macOS、Linux 与 Windows 的执行 contract：通过 `git rev-parse --git-path info/exclude` 定位 metadata，统一使用 Git `/` pattern，保留原 newline / BOM，并把逐项验证设为 Git worktree installation 的完成条件。
+
 Compass 将 `compass/` 及其中的 `AGENTS.md`、`context/`、`skills/`、`subagents/`、`hooks/` 和 `platforms/` 视为模板公共接口；安装说明在 `doc/install_instruction.md`。fork 使用者请按本文件判断是否需要 rebase。
 
 版本号采用 [Semantic Versioning](https://semver.org/)：

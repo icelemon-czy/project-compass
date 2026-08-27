@@ -80,7 +80,7 @@ projectA/
    - `.compass/context/` 下除 `cli-worker.md` 与 `README.md` 以外的旧文件，或旧 `.ai/`
 5. 用户需要 Codex、Cursor、Claude Code、OpenCode 中的哪些平台。能从请求明确判断时直接采用；无法判断时询问一次。
 6. 可选 Subagent 只识别 [subagents_design.md](subagents_design.md) 的 canonical role；不要主动让用户选择。默认角色列表为空。
-7. 目标项目是否位于 Git worktree 中。如果是，使用 `git rev-parse --git-path info/exclude` 取得实际 local exclude path。
+7. 目标项目是否位于 Git worktree 中。如果是，从项目根执行 `git rev-parse --git-path info/exclude`，并把返回值相对项目根解析为实际 local exclude path。不要直接拼接 `.git/info/exclude`：Git worktree、`--separate-git-dir` 和 Windows 都可能使用不同的 Git metadata path。
 
 ## Step 2：项目知识边界
 
@@ -196,6 +196,13 @@ Planner platforms：Codex、Cursor、OpenCode。
 
 本步只修改 repository-local Git metadata，不修改会被共享的 `.gitignore`。
 
+macOS、Linux 与 Windows 使用同一套 Git 命令和 exclude syntax：
+
+- 从项目根执行 `git rev-parse --is-inside-work-tree`；结果不是 `true` 时记录 `not applicable`。
+- 执行 `git rev-parse --git-path info/exclude` 取得路径。返回 absolute path 时直接使用，返回 relative path 时相对项目根解析；不要假设 `.git` 是 directory，因为 linked worktree 中它通常是 file。
+- 用当前 runtime 的 filesystem API 读写该文件，不依赖 `sed -i`、`realpath`、PowerShell 或其他单平台命令。保留文件原有 UTF-8 BOM（如有）与 newline style；新文件在 Windows 使用 CRLF，其他平台使用 LF。
+- exclude pattern 是 Git syntax，不是 OS filesystem path；所有平台都使用 `/` separator，禁止在 Windows 写 `\\`。
+
 受管 marker 固定为：
 
 ```text
@@ -221,10 +228,11 @@ Planner platforms：Codex、Cursor、OpenCode。
 
 1. 如果目标不是 Git worktree，记录 `not applicable` 并继续。
 2. 只写入 repository-root anchored 的精确 pattern；不写宽泛 parent pattern。
-3. 受管区块不存在时追加；恰好存在一个完整区块时只替换 marker 之间的 inventory。
-4. marker 损坏或 exclude 是 symlink 时不改写，标记 incomplete。
-5. 用 `git check-ignore --no-index -v -- <path>` 验证命中本受管区块。
+3. 受管区块不存在时追加；恰好存在一个完整区块时只替换 marker 之间的 inventory。重复执行且 inventory 未变时不重写文件。
+4. marker 损坏、exclude 是 symlink，或无法安全保留原 encoding / newline 时不改写，标记 incomplete。
+5. 用 `git check-ignore --no-index -v -- <path>` 逐项验证命中本受管区块；该命令在 macOS 与 Windows 上都从项目根执行，并以 repository-relative path 作为参数。
 6. 不运行 `git update-index`。已 tracked 的 instruction 仍写入 pattern，并在报告列入 `tracked Compass paths still visible`。
+7. 本步为 Git worktree installation 的必做步骤；验证失败时不得报告 installation completed，而要报告 `Local Git exclude: conflict` 及未命中的 path。
 
 ## Step 7：公共验证
 
