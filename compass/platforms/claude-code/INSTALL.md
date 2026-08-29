@@ -57,6 +57,17 @@ Skill 在当前 Claude Code session 启动后才安装或更新时，最终报�
 - [ ] 没有覆盖无 Compass 标记的已有 agent 文件。
 - [ ] 没有写入 Claude Code settings 或 `.claude/` 下的 CLI worker hook。
 
+## Step 5：Worker permission boundary
+
+Claude Code 是 worker，不安装或 trust Compass CLI worker hook。Planner 调用它时默认使用 `claude -p --permission-mode acceptEdits`：
+
+- File edit 在 `acceptEdits` 下可以自动执行。
+- Shell、network、managed policy、additional directory 或 OS protected folder 仍按 Claude Code permission 处理。
+- Compass 不使用 `--dangerously-skip-permissions`，也不把非零退出伪装成成功。
+- 权限导致 Claude CLI 非零、超时或无法启动时，planner hook 返回 blocker，并报告 `Last execution: claude-failed`。
+
+本平台固定报告 `Hook files: skipped`、`Runtime activation: not-applicable`、`Worker probe: not-applicable`。不要要求 Claude Code 为 Compass worker hook 执行 `/hooks` 或 probe。
+
 ## 返回总安装器
 
 ```text
@@ -64,13 +75,16 @@ claude-code
 - Instructions：根 CLAUDE.md（created / updated / reused）
 - Skills：<skill>（installed / reused / conflict）
 - Subagents：none / ...
-- Hooks：skipped（Claude Code is the worker）
+- Hook files：skipped（Claude Code is the worker）
+- Runtime activation：not-applicable
+- Worker probe：not-applicable
+- Last execution：none
 - 创建：...
 - 更新：...
 - 跳过：...
 - 冲突：...
 - fallback：...
-- 需要重启会话：是/否
+- 需要用户操作：none / new-session-for-skill-discovery
 - 验证：...
 ```
 
@@ -86,3 +100,4 @@ claude-code
 - [Claude Code memory](https://code.claude.com/docs/en/memory)
 - [Claude Code Skills](https://code.claude.com/docs/en/slash-commands)
 - [Claude Code custom subagents](https://code.claude.com/docs/en/sub-agents)
+- [Claude Code permissions](https://code.claude.com/docs/en/permissions)

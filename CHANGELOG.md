@@ -22,6 +22,7 @@ Compass 将 `compass/` 及其中的 `AGENTS.md`、`context/`、`skills/`、`suba
 
 - 补充 README、feature design 与可选 `doc/todo.md` 的职责、拆分和 source-of-truth 边界。
 - 四个平台安装的 Compass Skill inventory 从三个增加到五个。
+- CLI worker 安装改为分别报告 Hook files、Runtime activation、Worker probe 与 Last execution；明确 Codex hook 只以项目根启动的 CLI session 为受支持 runtime target，Desktop task 不进入该 pipeline，并补充 Codex CLI startup / hook trust、Cursor workspace trust、OpenCode restart、Claude Code worker permission、用户可见结果、runtime audit 与手工写入 probe。
 
 ## [0.6.0] — 2026-08-16
 

@@ -23,7 +23,7 @@ projectA/
 └── ...Project A files
 ```
 
-`.compass/` 在安装期间承载模板副本。先把 instructions 和可选 Subagent materialize 到每个已选平台的 native destination，判定 CLI worker，必要时再安装 planner hook，完成验证，最后删除 `.compass/` 中除 `context/` 之外的全部 staging。
+`.compass/` 在安装期间承载模板副本。先把 instructions 和可选 Subagent materialize 到每个已选平台的 native destination，判定 CLI worker，必要时再安装 planner hook，完成 filesystem validation，最后删除 `.compass/` 中除 `context/` 之外的全部 staging。Hook files 落盘后还要按平台分别完成 runtime activation 与手工 probe；两者未完成时不能把 hook 报告为 active。
 
 安装完成后的稳定产物只有：
 
@@ -60,6 +60,7 @@ projectA/
 - 若 `.compass/context/` 里已有旧层文件：保留不删，报告 leftover，不要当成项目知识，也不要复制进 `doc/`。
 - CLI worker 是否可调用只在本次安装判定一次，并写入 `.compass/context/cli-worker.md`。不为这个再询问用户。
 - 只有 `status=enabled` 时才给已选 planner 平台安装 worker hook。Claude Code 永不安装该 hook。
+- `status=enabled` 只证明 Claude Code CLI 可调用，不证明任何 planner hook 已 trust、loaded、active 或通过 probe。
 - Hook 从 canonical source 按平台迁移；不写入 user-global hook directory，不创建软链接。
 - 将 `.compass/` 和每个已选 platform 实际安装的 instruction、Skill、Subagent 与 hook 精确 path 写入 local Git exclude；不得忽略整个 platform parent directory；不得 exclude `README.md` 或 `doc/`。
 - 不修改项目 `.gitignore`，不使用 `skip-worktree` 或 `assume-unchanged` 隐藏 tracked file。
@@ -77,6 +78,8 @@ projectA/
    - 根 `README.md`
    - `doc/`
    - `.cursor/hooks.json` / `.codex/hooks.json`
+   - `.cursor/hooks/cli-worker.py` / `.codex/hooks/cli-worker.py` / `.opencode/hooks/cli-worker.py`
+   - `.opencode/plugins/compass-cli-worker.js`
    - `.compass/context/` 下除 `cli-worker.md` 与 `README.md` 以外的旧文件，或旧 `.ai/`
 5. 用户需要 Codex、Cursor、Claude Code、OpenCode 中的哪些平台。能从请求明确判断时直接采用；无法判断时询问一次。
 6. 可选 Subagent 只识别 [subagents_design.md](subagents_design.md) 的 canonical role；不要主动让用户选择。默认角色列表为空。
@@ -192,6 +195,19 @@ Planner platforms：Codex、Cursor、OpenCode。
 
 用户以后才配置 `claude` 时，必须重新执行本次安装判定才能把 status 改为 `enabled` 并补迁 hook。普通开发不得改这份文件。
 
+### 5c. 初始化 lifecycle report
+
+每个已选平台先建立四个彼此独立的结果字段：
+
+```text
+Hook files: installed / skipped / conflict
+Runtime activation: active / awaiting-cli-session / awaiting-trust / awaiting-workspace-trust / restart-required / not-applicable
+Worker probe: passed / pending / failed / not-applicable
+Last execution: claude-succeeded / claude-failed / none
+```
+
+本步骤只能根据 filesystem operation 填写 `Hook files`。`status=enabled` 时，Codex 只支持从项目根启动的 CLI hook runtime：installer 不在该 CLI runtime 中或无法 authoritative 地确认时初始化为 `awaiting-cli-session`；已在目标 CLI session 但当前 definition 未 trust 时为 `awaiting-trust`。Cursor 初始化为 `awaiting-workspace-trust`，本轮 created / updated plugin 的 OpenCode 初始化为 `restart-required`，对应 probe 初始化为 `pending`。`status=disabled` 的 planner 与 Claude Code 都是 `Hook files: skipped`、`Runtime activation: not-applicable`、`Worker probe: not-applicable`、`Last execution: none`。
+
 ## Step 6：维护 local Git exclude
 
 本步只修改 repository-local Git metadata，不修改会被共享的 `.gitignore`。
@@ -241,6 +257,7 @@ macOS、Linux 与 Windows 使用同一套 Git 命令和 exclude syntax：
 - [ ] `cli-worker.md` 的 `status` 是 `enabled`、`disabled` 或 `not-applicable`。
 - [ ] `status=enabled` 当且仅当已选至少一个 planner 且本机 `claude` 探测成功。
 - [ ] `status=enabled` 时每个已选 planner 已安装 worker hook，或逐项记录 fallback；否则没有 Compass worker hook。
+- [ ] `status=enabled` 没有被当作 `Runtime activation: active` 的 evidence。
 - [ ] Claude Code 没有 CLI worker hook。
 - [ ] 未明确选择时没有生成 Subagent。
 - [ ] `.compass/skills/` 与 Skill inventory 一致，每项都含 `SKILL.md`。
@@ -253,7 +270,7 @@ macOS、Linux 与 Windows 使用同一套 Git 命令和 exclude syntax：
 
 ## Step 8：清理 installation staging
 
-1. 保留 `.compass/context/`（`cli-worker.md` 与 `README.md`）。
+1. 保留 `.compass/context/`（`cli-worker.md`、`README.md`，以及 runtime 已生成的 `cli-worker.lock` / `cli-worker-audit.jsonl`）。
 2. 删除 `.compass/` 下除 `context/` 之外的所有一级 entry。
 3. 确认 `.compass/` 的直接子项只有 `context/`。
 4. 再次确认平台 instructions、native Skill 和已安装 hook 仍存在。
@@ -263,7 +280,41 @@ macOS、Linux 与 Windows 使用同一套 Git 命令和 exclude syntax：
 └── context/
 ```
 
-## Step 9：最终报告
+## Step 9：Runtime activation 与 worker probe
+
+本步骤验证 native runtime，不用文件存在代替。只对 `Hook files: installed` 且 `cli-worker status: enabled` 的 planner 执行；其他平台保持 `not-applicable` 或已记录的 conflict。
+
+### 9a. Platform activation
+
+| Platform | Activation requirement | 未完成时的结果 |
+|:---------|:-----------------------|:---------------|
+| Codex | 从项目根启动 Codex CLI，在同一 CLI session 用 `/hooks` review 并 trust 当前 hook definition；definition hash 变化后重新 trust。Codex Desktop task 不属于本 hook runtime | CLI 未启动或当前 runtime 不是 CLI：`awaiting-cli-session`；CLI 未 trust：`awaiting-trust` |
+| Cursor | 当前 project 是 trusted workspace；hook config 自动 reload | `awaiting-workspace-trust` |
+| OpenCode | 安装或更新 `.opencode/plugins/` 后，从 project root 新建 session / restart | `restart-required` |
+| Claude Code | 不安装 worker hook | `not-applicable` |
+
+只有当前 platform runtime 的 authoritative evidence 满足对应 requirement，才把 `Runtime activation` 改为 `active`。Codex Desktop 的 task、tool output 或新建 task 都不是 Codex CLI activation evidence；Desktop 中完成 filesystem installation 后，必须引导用户从项目根启动 `codex`，在该 CLI session 中运行 `/hooks` 并继续 probe。需要用户在当前安装 turn 之外完成 CLI startup、trust、workspace trust 或 restart 时，不阻塞其他 filesystem 安装；最终报告必须写 `Overall status: action required` 和准确 next action。
+
+### 9b. 手工写入 probe
+
+Activation 成为 `active` 后，在真实 platform session 中请求；Codex 必须继续使用刚才完成 `/hooks` trust 的同一个 CLI session，不能改在 Desktop task 中执行：
+
+```text
+请创建项目根目录的 .compass-worker-probe.tmp，内容为 compass worker probe。
+```
+
+Probe 通过必须同时取得四类 evidence：
+
+1. `.compass-worker-probe.tmp` 内容恰好是 `compass worker probe`。
+2. 平台 UI 明确显示 intercepted tool、Claude CLI succeeded、planner original action blocked。
+3. `.compass/context/cli-worker-audit.jsonl` 在本次操作之后依次出现 `handoff_started`、`worker_succeeded`、`planner_blocked`；audit 不含 tool input、prompt 或 CLI output。
+4. 当前 transcript 没有成功执行 planner 原始 write tool；后续只读核对不算原始 write。
+
+四项都成立 → `Worker probe: passed`、`Last execution: claude-succeeded`。任一缺失 → `failed`；尚未运行 → `pending`。文件存在本身不能证明 worker 身份。
+
+通过或失败后都要清理 probe；删除也应走同一 worker hook。确认文件不存在、audit 有对应 cleanup event、Git status 没有 probe 遗留。这个 probe 是安装后的手工 runtime validation，不新增 automated test。
+
+## Step 10：最终报告
 
 ```text
 安装结果
@@ -274,7 +325,11 @@ macOS、Linux 与 Windows 使用同一套 Git 命令和 exclude syntax：
     - Instructions：created / updated / reused / conflict
     - Skills：<skill>（installed / reused / conflict）
     - Subagents：none / ...
-    - Hooks：installed / skipped / fallback / conflict / none
+    - Hook files：installed / skipped / conflict
+    - Runtime activation：active / awaiting-cli-session / awaiting-trust / awaiting-workspace-trust / restart-required / not-applicable
+    - Worker probe：passed / pending / failed / not-applicable
+    - Last execution：claude-succeeded / claude-failed / none
+    - 需要用户操作：none / start-codex-cli-from-project-root / review-and-trust-current-hook / trust-workspace / restart-opencode / run-probe-in-active-runtime
   - ...
 - CLI worker：enabled / disabled / not-applicable
 - CLI worker reason：...
@@ -286,10 +341,13 @@ macOS、Linux 与 Windows 使用同一套 Git 命令和 exclude syntax：
 - Excluded Compass paths：...
 - Tracked Compass paths still visible：...
 - Installation staging cleanup：completed（.compass/ 仅保留 context/）
+- Overall status：completed / action required / conflict
 - 验证结果：...
 ```
 
-不得只回复“安装完成”。Codex hook 若需要 `/hooks` trust，在验证结果中写明。
+不得只回复“安装完成”。`Hook files: installed` 不等于 runtime active。Codex 尚未从项目根启动 CLI 或未在该 CLI session trust 当前 definition、Cursor workspace 未 trust、OpenCode 未 restart 或 planner probe 未运行时，分别写明 waiting status、next action 与 `Overall status: action required`。不要建议通过新建 Codex Desktop task 激活 CLI hook。
+
+只有所有已选 planner 都是 `Runtime activation: active` 且 `Worker probe: passed`，或其 hook 明确为 skipped / not-applicable，并且没有 filesystem conflict，才能报告 `Overall status: completed`。
 
 ## 移除
 

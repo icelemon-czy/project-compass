@@ -27,7 +27,11 @@ export const CompassCliWorker = async ({ directory }) => {
         return
       }
       if (parsed.action === "deny") {
-        throw new Error(parsed.reason || "CLI worker redirected this implementation to Claude Code CLI.")
+        const userMessage =
+          parsed.user_message ||
+          "Compass intercepted this implementation and redirected it to Claude Code CLI."
+        const detail = parsed.reason ? `\n\n${parsed.reason}` : ""
+        throw new Error(`${userMessage}${detail}`)
       }
     },
   }

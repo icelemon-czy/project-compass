@@ -11,4 +11,6 @@
 
 Cursor / Codex / OpenCode 共用同一份根 `AGENTS.md` 受管区块。Claude Code 写入 `CLAUDE.md`，不套一层 `claude`。
 
-编排见 [install_instruction.md](install_instruction.md) Step 4–5。Skill 见 [skills_design.md](skills_design.md)。hook 见 [hooks_design.md](hooks_design.md)。subagent 见 [subagents_design.md](subagents_design.md)。
+Hook files 与 runtime activation 分开：Codex hook 的受支持 runtime target 是从项目根启动的 Codex CLI session；Codex Desktop task 不进入这条 project hook pipeline，不能通过新建 Desktop task 激活。CLI 必须用 `/hooks` trust 当前 hook definition；Cursor 必须位于 trusted workspace，OpenCode 安装或更新 project-local plugin 后必须 restart / 新建 session。三个 planner 都用各自受支持 runtime 中的真实写入 probe 与 runtime audit 证明 Claude CLI 接管；Claude Code 的 activation 与 probe 是 `not-applicable`。
+
+编排见 [install_instruction.md](install_instruction.md) Step 4–5 与 Step 9。Skill 见 [skills_design.md](skills_design.md)。hook 见 [hooks_design.md](hooks_design.md)。subagent 见 [subagents_design.md](subagents_design.md)。

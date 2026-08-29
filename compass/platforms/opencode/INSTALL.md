@@ -57,18 +57,31 @@
 
 ## Step 5：安装 CLI worker hook（仅 `enabled`）
 
-只有总 installer 传入 `cli-worker=enabled` 时才执行本步。否则报告 `Hooks：skipped` 并跳过。OpenCode 没有通用 `hooks.json`；本地 plugin 就是它的 hook dest。
+只有总 installer 传入 `cli-worker=enabled` 时才执行本步。否则报告 `Hook files：skipped` 并跳过。OpenCode 没有通用 `hooks.json`；本地 plugin 就是它的 hook dest。
 
 1. 读取 `.compass/hooks/cli-worker/CONTRACT.md` 与 `run.py`。
 2. 将 `run.py` 完整复制到 `.opencode/hooks/cli-worker.py`；设置可执行；不创建软链接。
 3. 将 `.compass/platforms/opencode/compass-cli-worker.js` 安装到 `.opencode/plugins/compass-cli-worker.js`。目标不存在时创建；已有文件含 `compass:generated hook=cli-worker` 时更新；无 marker 且内容不同时不覆盖，记录 fallback。
 4. 不修改 `opencode.json` / `opencode.jsonc`，不写入 `~/.config/opencode/plugins/`。
+5. OpenCode 的 project-local plugin 在 startup 从 `.opencode/plugins/` 加载。Plugin 本轮 created / updated 时报告 `Runtime activation: restart-required`；不能把文件存在报告为 active。
+
+### Runtime activation 与 probe
+
+1. 关闭当前 OpenCode session，并从 project root 新建 session / restart OpenCode。
+2. 新 runtime 加载 plugin 后报告 `Runtime activation: active`；没有 startup 之后的 runtime evidence 时保持 `restart-required`。
+3. 让新 session 创建 repository root 的 `.compass-worker-probe.tmp`，内容为 `compass worker probe`。
+4. 按 `.compass/hooks/cli-worker/CONTRACT.md` 同时检查 thrown hook message、audit event chain、文件内容和原始 write tool 未执行。
+5. 四项都成立才报告 `Worker probe: passed`；任一缺失报告 `failed`。未执行时保持 `pending`。
+6. Probe 通过后用同一 hook 删除文件并确认无遗留。
 
 ### Hook 验证
 
 - [ ] `.opencode/hooks/cli-worker.py` 存在且含 `compass:generated hook=cli-worker`。
 - [ ] `.opencode/plugins/compass-cli-worker.js` 存在且含 generated 标记，或已记录 fallback。
 - [ ] 没有修改 `opencode.json` / `opencode.jsonc`。
+- [ ] Hook files、Runtime activation、Worker probe 与 Last execution 分开报告。
+- [ ] Plugin created / updated 后在 restart 前保持 `restart-required`。
+- [ ] `Worker probe: passed` 有 thrown message、audit、文件和 session evidence。
 
 ## 返回总安装器
 
@@ -77,13 +90,16 @@ opencode
 - Instructions：根 AGENTS.md（created / updated / reused）
 - Skills：<skill>（installed / reused / conflict）
 - Subagents：none / ...
-- Hooks：installed / skipped / fallback / conflict
+- Hook files：installed / skipped / conflict
+- Runtime activation：active / restart-required / not-applicable
+- Worker probe：passed / pending / failed / not-applicable
+- Last execution：claude-succeeded / claude-failed / none
 - 创建：...
 - 更新：...
 - 跳过：...
 - 冲突：...
 - fallback：...
-- 需要新 session：是/否
+- 需要用户操作：none / restart-opencode / run-probe
 - 验证：...
 ```
 

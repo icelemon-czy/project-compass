@@ -11,11 +11,13 @@ import re
 import shlex
 import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 COMPASS_CONTEXT_REL = Path(".compass") / "context" / "cli-worker.md"
 LOCK_REL = Path(".compass") / "context" / "cli-worker.lock"
+AUDIT_REL = Path(".compass") / "context" / "cli-worker-audit.jsonl"
 DEFAULT_TIMEOUT = 600
 MAX_PROMPT_CHARS = 200_000
 DANGEROUS_FLAGS = {
@@ -79,18 +81,19 @@ def allow(fmt: str, extra: str | None = None) -> int:
     return emit(body)
 
 
-def deny(fmt: str, reason: str) -> int:
+def deny(fmt: str, reason: str, user_message: str) -> int:
     if fmt == "cursor":
         return emit(
             {
                 "permission": "deny",
                 "agent_message": reason,
-                "user_message": reason,
+                "user_message": user_message,
             }
         )
     if fmt == "codex":
         return emit(
             {
+                "systemMessage": user_message,
                 "hookSpecificOutput": {
                     "hookEventName": "PreToolUse",
                     "permissionDecision": "deny",
@@ -98,7 +101,57 @@ def deny(fmt: str, reason: str) -> int:
                 }
             }
         )
-    return emit({"action": "deny", "reason": reason})
+    return emit({"action": "deny", "reason": reason, "user_message": user_message})
+
+
+def platform_name(fmt: str) -> str:
+    return "opencode" if fmt == "internal" else fmt
+
+
+def first_string(data: dict[str, Any], *keys: str) -> str | None:
+    for key in keys:
+        value = data.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return None
+
+
+def append_audit(
+    project_root: Path,
+    fmt: str,
+    data: dict[str, Any],
+    name: str,
+    event: str,
+    *,
+    exit_code: int | None = None,
+    failure: str | None = None,
+) -> bool:
+    record: dict[str, Any] = {
+        "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "event": event,
+        "platform": platform_name(fmt),
+        "tool": name or "unknown",
+    }
+    optional = {
+        "session_id": first_string(data, "session_id", "sessionId", "conversation_id"),
+        "turn_id": first_string(data, "turn_id", "turnId"),
+        "tool_use_id": first_string(data, "tool_use_id", "toolUseId", "call_id"),
+    }
+    record.update({key: value for key, value in optional.items() if value is not None})
+    if exit_code is not None:
+        record["exit_code"] = exit_code
+    if failure:
+        record["failure"] = failure
+
+    try:
+        path = project_root / AUDIT_REL
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("a", encoding="utf-8", newline="\n") as handle:
+            handle.write(json.dumps(record, ensure_ascii=False, separators=(",", ":")))
+            handle.write("\n")
+        return True
+    except OSError:
+        return False
 
 
 def find_project_root(start: Path) -> Path | None:
@@ -171,7 +224,7 @@ def collect_paths(inp: dict[str, Any]) -> list[str]:
         if isinstance(value, str) and value.strip():
             paths.append(value.strip())
     command = inp.get("command")
-    if isinstance(command, str) and "apply_patch" in command:
+    if isinstance(command, str):
         for match in re.finditer(r"(?m)^\+\+\+ [ab]/(.+)$", command):
             paths.append(match.group(1).strip())
         for match in re.finditer(r"(?m)^\*\*\* (?:Update|Add|Delete) File: (.+)$", command):
@@ -320,20 +373,37 @@ class ExclusiveLock:
         self.handle = None
 
 
-def hand_off_result(code: int, output: str) -> str:
+def hand_off_result(code: int, output: str, name: str) -> tuple[str, str]:
     tail = f"\n\nCLI output:\n{output}" if output else ""
     if code == 0:
-        return (
+        reason = (
             "CLI worker already performed this pending action (exit 0). "
             "Do not retry this tool call. Inspect the diff, then update "
             "README.md or files under doc/ only if this change requires it. "
             "Do not commit or push "
             f"unless the user explicitly asked.{tail}"
         )
-    return (
+        user_message = (
+            f"🧭 Compass：已拦截 {name or 'write'}；Claude CLI 执行成功；"
+            "planner 原始动作已阻止。"
+        )
+        return reason, user_message
+    reason = (
         f"CLI worker failed (exit {code}) while performing the pending action. "
         "This is a blocker. Do not silently implement it locally. "
         f"Do not commit or push.{tail}"
+    )
+    user_message = (
+        f"🧭 Compass：已拦截 {name or 'write'}；Claude CLI 执行失败（exit {code}）；"
+        "planner 原始动作已阻止。"
+    )
+    return reason, user_message
+
+
+def blocker_message(name: str, detail: str) -> str:
+    return (
+        f"🧭 Compass：已拦截 {name or 'write'}；Claude CLI {detail}；"
+        "planner 原始动作已阻止。"
     )
 
 
@@ -363,19 +433,36 @@ def main() -> int:
     try:
         prompt = build_prompt(name, inp)
         with ExclusiveLock(project_root / LOCK_REL):
+            append_audit(project_root, fmt, data, name, "handoff_started")
             code, output = invoke_cli(project_root, worker, prompt)
-        return deny(fmt, hand_off_result(code, output))
+            append_audit(
+                project_root,
+                fmt,
+                data,
+                name,
+                "worker_succeeded" if code == 0 else "worker_failed",
+                exit_code=code,
+            )
+            append_audit(project_root, fmt, data, name, "planner_blocked")
+        reason, user_message = hand_off_result(code, output, name)
+        return deny(fmt, reason, user_message)
     except subprocess.TimeoutExpired:
+        append_audit(project_root, fmt, data, name, "worker_failed", failure="timeout")
+        append_audit(project_root, fmt, data, name, "planner_blocked")
         return deny(
             fmt,
             "CLI worker timed out while performing the pending action. "
             "This is a blocker. Do not silently implement it locally.",
+            blocker_message(name, "执行超时"),
         )
     except Exception as exc:
+        append_audit(project_root, fmt, data, name, "worker_failed", failure="start-failed")
+        append_audit(project_root, fmt, data, name, "planner_blocked")
         return deny(
             fmt,
             f"CLI worker failed to start: {exc}. "
             "This is a blocker. Do not silently implement it locally.",
+            blocker_message(name, "启动失败"),
         )
 
 

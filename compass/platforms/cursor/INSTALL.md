@@ -56,7 +56,7 @@
 
 ## Step 5：安装 CLI worker hook（仅 `enabled`）
 
-只有总 installer 传入 `cli-worker=enabled` 时才执行本步。否则报告 `Hooks：skipped` 并跳过。
+只有总 installer 传入 `cli-worker=enabled` 时才执行本步。否则报告 `Hook files：skipped` 并跳过。
 
 1. 读取 `.compass/hooks/cli-worker/CONTRACT.md` 与 `run.py`。
 2. 将 `run.py` 完整复制到 `.cursor/hooks/cli-worker.py`；设置可执行；不创建软链接。
@@ -80,12 +80,25 @@
 
 4. Destination 不存在时创建上述最小文件。已存在时只更新或追加 Compass 那一条。
 5. 不写入 `~/.cursor/hooks.json`。
+6. Cursor project hook 只在 trusted workspace 中运行。无法从当前 runtime authoritative 地确认 workspace trust 时，报告 `Runtime activation: awaiting-workspace-trust`，不能从 hook 文件存在推断 active。
+7. Cursor 自动 reload hook config；hook 创建或更新本身不要求新 session。Skill discovery 的新 session 提示不能当作 hook activation 要求。
+
+### Runtime activation 与 probe
+
+1. 确认当前 project 是 trusted workspace；成立后报告 `Runtime activation: active`。
+2. 让当前 Cursor session 创建 repository root 的 `.compass-worker-probe.tmp`，内容为 `compass worker probe`。
+3. 按 `.compass/hooks/cli-worker/CONTRACT.md` 同时检查 user message、audit event chain、文件内容和原始 Write / Edit 未执行。
+4. 四项都成立才报告 `Worker probe: passed`；任一缺失报告 `failed`。未执行时保持 `pending`。
+5. Probe 通过后用同一 hook 删除文件并确认无遗留。
 
 ### Hook 验证
 
 - [ ] `.cursor/hooks/cli-worker.py` 存在且含 `compass:generated hook=cli-worker`。
 - [ ] `.cursor/hooks.json` 含且只含一条 Compass cli-worker `preToolUse` 条目。
 - [ ] 用户原有 hook 没有丢失。
+- [ ] Hook files、Runtime activation、Worker probe 与 Last execution 分开报告。
+- [ ] `Runtime activation: active` 有 trusted workspace evidence；否则是 `awaiting-workspace-trust`。
+- [ ] `Worker probe: passed` 有 user message、audit、文件和 transcript 四类 evidence。
 
 ## 返回总安装器
 
@@ -94,13 +107,16 @@ cursor
 - Instructions：根 AGENTS.md（created / updated / reused）
 - Skills：<skill>（installed / reused / conflict）
 - Subagents：none / ...
-- Hooks：installed / skipped / fallback / conflict
+- Hook files：installed / skipped / conflict
+- Runtime activation：active / awaiting-workspace-trust / not-applicable
+- Worker probe：passed / pending / failed / not-applicable
+- Last execution：claude-succeeded / claude-failed / none
 - 创建：...
 - 更新：...
 - 跳过：...
 - 冲突：...
 - fallback：...
-- 需要新 session：是/否
+- 需要用户操作：none / trust-workspace / run-probe
 - 验证：...
 ```
 

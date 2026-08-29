@@ -9,4 +9,6 @@
 | `cli-worker.md` | 安装器 | planner 是否可以调用 Claude Code CLI |
 | `README.md` | 本文件 | 说明这个目录不是项目知识 |
 
+Runtime 可以生成 `cli-worker.lock` 与 `cli-worker-audit.jsonl`。Audit 只保存 worker event、platform、tool、可用 ID、timestamp、exit code 与非敏感 failure category，不保存 tool input、prompt、CLI output 或 secret。
+
 普通产品工作不得改 `cli-worker.md` 的 `status`。
