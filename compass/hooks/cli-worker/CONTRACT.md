@@ -4,7 +4,7 @@
 
 ## Purpose
 
-Planner platform（Codex、Cursor、OpenCode）正要对仓库做 implementation 时，若安装时已判定 Claude Code CLI 可调用，hook 拦住这次 pending tool call，并在项目根直接调用 `claude` 做 **同一件动作**。X 是平台正要执行的 tool call，不是用户原始 chat。Claude Code 自己就是 worker，不安装本 hook。
+Planner platform（Codex、Cursor、OpenCode）把一个完整且 bounded 的 implementation task 交给 Claude Code CLI。Native hook 只阻止 planner 直接写仓库并引导 task-level delegation；它**不再为每个 pending tool call 启动 Claude**。Claude Code 自己就是 worker，不安装本 hook。
 
 ## 何时安装
 
@@ -20,7 +20,9 @@ Planner platform（Codex、Cursor、OpenCode）正要对仓库做 implementation
 | `run.py` | 唯一判定与调用脚本；复制到平台 dest，不创建软链接 |
 | `CONTRACT.md` | 本契约；不复制到目标项目 |
 
-## 拦截范围
+## 两条入口
+
+### Native hook：policy boundary
 
 拦截会改变 implementation 的 tool call：
 
@@ -31,21 +33,36 @@ Planner platform（Codex、Cursor、OpenCode）正要对仓库做 implementation
 
 - 只读查找与阅读
 - `.compass/context/` 下的 installer / runtime artifact 写入
-- 以 `claude` 开头的 CLI 调用
 - 测试、lint、类型检查、只读 git 查询
+
+Raw `claude` CLI invocation 也拦截，避免 planner 绕过 fresh-session、dedup 与 bounded-task policy；只放行 `command -v claude` 和 `claude --version` 探测。唯一 implementation 入口是受控 wrapper 的 `--delegate` mode。
+
+命中后 hook 立即 deny，并返回本平台的 `--delegate` command；不调用 Claude。这样一次 Agent implementation 不会被放大成 N 次 Claude session。
+
+### `--delegate`：task execution
+
+Planner 先覆盖 `.compass/context/cli-worker-task.md`，内容必须是一个 self-contained task，包含 goal、confirmed scope、acceptance criteria 和 out-of-scope；再执行一次：
+
+```text
+python3 <platform hook path>/cli-worker.py --format <platform> --delegate
+```
+
+Codex、Cursor、OpenCode 的具体 path 由各 platform installer 写入 instruction。Task spec 最多 40,000 characters；超出说明 scope 仍不 bounded，应先收窄。
 
 ## 运行时规则
 
-1. 读取项目根的 `.compass/context/cli-worker.md`。找不到项目根或 `status` 不是 `enabled` 时放行。
+1. 读取项目根的 `.compass/context/cli-worker.md`。Native hook 找不到项目根或 `status` 不是 `enabled` 时放行；显式 `--delegate` 则返回 non-zero。
 2. `enabled` 只表示允许安装和调用 worker，不表示 native hook 已经 trust、loaded 或 active。Activation 由各 platform installer 和 runtime probe 单独验证。
-3. `enabled` 且命中拦截时：用 flock 串行化，按 `invoke`（默认 `claude -p --permission-mode acceptEdits`）把 **这次 tool call** pass 给 Claude Code CLI；cwd 为项目根。锁文件是 `.compass/context/cli-worker.lock`，属于 runtime，不是项目知识。
-4. 调用前后向 `.compass/context/cli-worker-audit.jsonl` 追加 JSON Lines。固定 event 是 `handoff_started`、`worker_succeeded` / `worker_failed`、`planner_blocked`；记录 UTC timestamp、platform、tool、可用的 session / turn / tool-use ID 和 worker exit code。不得记录 tool input、prompt、CLI stdout / stderr 或 secret。Audit 写入失败不改变 hook decision，但 runtime probe 必须判为 failed。
-5. Prompt 只描述 pending action（tool 名 + input）。可让 CLI 读 README 与 `doc/`。不要把用户原始 chat 当成任务来源。
-6. 默认不加 `--dangerously-skip-permissions`；`invoke` 里出现该 flag 时丢掉。`acceptEdits` 不 bypass Claude Code 的 Shell、network、managed policy 或 directory permission。
-7. CLI 结束后拒绝 planner 自己再执行同一 tool call。exit 0：告诉 planner 去看 diff；需要时更新 README 或 `doc/`。非 0 或超时：blocker，不准改口本地写。
-8. 拒绝时给用户显示统一结果：intercepted tool、Claude CLI success / failure、planner 原动作已阻止。Codex 用 `systemMessage`，Cursor 用 `user_message`，OpenCode adapter 显示 thrown hook error；详细 instruction 仍留给 planner。
-9. 不 commit、不 push。
-10. 判定「要不要交接」之前的脚本失败 fail open；已经决定交接之后 fail closed。
+3. Native hook 命中时追加 `planner_blocked` audit，明确显示“未按 tool call 启动 Claude，需 task-level delegation”。Codex 用 `systemMessage`，Cursor 用 `user_message`，OpenCode adapter 显示 thrown hook error。
+4. `--delegate` 用 flock 串行化，读取 task spec，并按 `invoke`（默认 `claude -p --permission-mode acceptEdits`）在项目根启动一次 Claude。
+5. 每次 invocation 都强制 fresh、non-persistent session：丢弃 `--resume` / `-r`、`--continue` / `-c`、`--session-id`、`--from-pr`、`--teleport` 和 `--fork-session`，并加入 `--no-session-persistence`。`invoke` 不能把 session continuity 重新打开。
+6. 默认加入 `--max-turns 30`；`cli-worker.md` 的 `max-turns` 可在 1–100 之间调整。已在 `invoke` 明确设置时保留它。
+7. Task prompt 明确 bounded scope、minimum complete change、focused verification 和遇到 blocker 即停止；不得把 task 自动扩大为 repository refactor、migration、audit 或 cleanup。
+8. `.compass/context/cli-worker-state.json` 只保存最近最多 100 个成功 task content hash、当前 status、timestamp 与 exit code。相同 task content 已成功时，即使 planner 重写同样内容或在其他 task 后重新切回来，后续 `--delegate` 也只记录 `delegation_reused` 并直接返回，不再调用 Claude；只有 scope 或 acceptance criteria 确实改变时才形成新 revision。
+9. 调用前后向 `.compass/context/cli-worker-audit.jsonl` 追加 JSON Lines。固定 execution event 是 `delegation_started`、`worker_succeeded` / `worker_failed`、可选 `delegation_reused`；记录 UTC timestamp、platform、tool、可用 ID、exit code 与非敏感 failure category。不得记录 task 内容、tool input、prompt、CLI stdout / stderr 或 secret。
+10. 默认不加 `--dangerously-skip-permissions`；`invoke` 里出现 dangerous flag 时丢掉。`acceptEdits` 不 bypass Claude Code 的 Shell、network、managed policy 或 directory permission。
+11. exit 0 后 planner 检查 diff 并做独立 verification。非 0 或超时是 blocker，不准改口本地写或连续创建 task revision 绕过。
+12. 不 commit、不 push。Native hook 判定拦截前失败 fail open；已进入 `--delegate` 后失败返回 non-zero。
 
 ## Lifecycle 与 runtime probe
 
@@ -58,7 +75,7 @@ Worker probe: passed / pending / failed / not-applicable
 Last execution: claude-succeeded / claude-failed / none
 ```
 
-Probe 在 platform activation 完成后由真实 platform session 创建 `.compass-worker-probe.tmp`，内容为 `compass worker probe`。只有文件内容、用户可见结果、audit event chain 和 planner 原 write 被阻止四项都成立才是 `passed`；验证后通过同一 hook 删除 probe。文件存在本身不构成 evidence。
+Probe 在 platform activation 完成后验证两条入口：先让 planner 直接创建 `.compass-worker-probe.tmp`，确认 hook 阻止且没有启动 Claude；再把创建动作写成 bounded task spec 并执行一次 `--delegate`。只有文件内容、用户可见的 policy message、`planner_blocked` + `delegation_started` + `worker_succeeded` audit chain、planner 原 write 被阻止四项都成立才是 `passed`。验证后用新的 cleanup task revision 删除 probe。文件存在本身不构成 evidence。
 
 Codex 的 `真实 platform session` 仅指从 repository root 启动、已用 `/hooks` trust 当前 definition 的 Codex CLI session。Codex Desktop task 使用的 agent / orchestrator tools 不属于本契约的 hook pipeline；Desktop 中新建 task、执行 tool 或看到文件存在都不能作为 activation evidence。CLI 尚未启动时报告 `awaiting-cli-session`，已启动但未 trust 时报告 `awaiting-trust`。
 

@@ -80,16 +80,18 @@
 
 4. Destination 不存在时创建上述最小文件。已存在时只更新或追加 Compass 那一条。
 5. 不写入 `~/.cursor/hooks.json`。
-6. Cursor project hook 只在 trusted workspace 中运行。无法从当前 runtime authoritative 地确认 workspace trust 时，报告 `Runtime activation: awaiting-workspace-trust`，不能从 hook 文件存在推断 active。
-7. Cursor 自动 reload hook config；hook 创建或更新本身不要求新 session。Skill discovery 的新 session 提示不能当作 hook activation 要求。
+6. Planner 做 implementation 时先覆盖 `.compass/context/cli-worker-task.md`，再执行一次 `python3 .cursor/hooks/cli-worker.py --format cursor --delegate`。Native hook 命中普通 Write / Edit / Shell 时只 deny 和返回这条 instruction，不直接调用 Claude。
+7. Cursor project hook 只在 trusted workspace 中运行。无法从当前 runtime authoritative 地确认 workspace trust 时，报告 `Runtime activation: awaiting-workspace-trust`，不能从 hook 文件存在推断 active。
+8. Cursor 自动 reload hook config；hook 创建或更新本身不要求新 session。Skill discovery 的新 session 提示不能当作 hook activation 要求。
 
 ### Runtime activation 与 probe
 
 1. 确认当前 project 是 trusted workspace；成立后报告 `Runtime activation: active`。
-2. 让当前 Cursor session 创建 repository root 的 `.compass-worker-probe.tmp`，内容为 `compass worker probe`。
-3. 按 `.compass/hooks/cli-worker/CONTRACT.md` 同时检查 user message、audit event chain、文件内容和原始 Write / Edit 未执行。
-4. 四项都成立才报告 `Worker probe: passed`；任一缺失报告 `failed`。未执行时保持 `pending`。
-5. Probe 通过后用同一 hook 删除文件并确认无遗留。
+2. 先让当前 Cursor session 直接创建 `.compass-worker-probe.tmp`，确认 hook deny、没有启动 Claude，且 user message 要求 task-level delegation。
+3. 把创建 probe 的 bounded task 写入 `.compass/context/cli-worker-task.md`，执行一次 `python3 .cursor/hooks/cli-worker.py --format cursor --delegate`。
+4. 按 `.compass/hooks/cli-worker/CONTRACT.md` 同时检查 user message、`planner_blocked` + `delegation_started` + `worker_succeeded` audit chain、文件内容和原始 Write / Edit 未执行。
+5. 四项都成立才报告 `Worker probe: passed`；任一缺失报告 `failed`。未执行时保持 `pending`。
+6. Probe 通过后覆盖 task spec 为 cleanup task，再执行一次 `--delegate` 删除文件并确认无遗留。
 
 ### Hook 验证
 

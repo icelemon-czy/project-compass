@@ -29,6 +29,15 @@
 - 保持现有 code structure、design style 和 layer boundary；优先沿用已有 module、helper、pattern，不为了局部便利新增 layer。
 - 抽离 code 中的 config：将可变环境、路径、selector、timeout、feature flag、prompt 参数等放到已有 config boundary。
 
+### CLI Worker Delegation
+
+项目启用 Compass CLI worker 时，planner 不按 Write / Edit / Bash 的 tool-call 粒度调用 Claude：
+
+1. implementation 开始前，将一个完整且 bounded 的 task 写入 `.compass/context/cli-worker-task.md`，包含原始 goal、已确认 scope、acceptance criteria 和明确的 out-of-scope。
+2. 按 hook 返回的 platform command 只执行一次 `--delegate`。不要直接执行 raw `claude` command，不要使用 `--resume`、`--continue`、`--session-id`，也不要把同一 task 拆成逐文件 delegation。
+3. worker 返回后检查 diff 并做独立 verification。相同 task revision 不重复执行；只有 scope 或 acceptance criteria 确实改变时才重写 task spec。
+4. worker 报 blocker 时停止，不通过扩大 scope 或连续生成新 task revision 绕过 blocker。
+
 ### Testing
 
 生成或修订 test 时：

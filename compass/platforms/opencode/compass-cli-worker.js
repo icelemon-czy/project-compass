@@ -29,7 +29,7 @@ export const CompassCliWorker = async ({ directory }) => {
       if (parsed.action === "deny") {
         const userMessage =
           parsed.user_message ||
-          "Compass intercepted this implementation and redirected it to Claude Code CLI."
+          "Compass blocked direct implementation; use one task-level delegation."
         const detail = parsed.reason ? `\n\n${parsed.reason}` : ""
         throw new Error(`${userMessage}${detail}`)
       }

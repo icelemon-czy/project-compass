@@ -1,8 +1,8 @@
 # Hooks
 
-Cursor / Codex / OpenCode 负责 plan 和 review；implementation 交给本机 Claude Code。`compass/hooks/` 是为这件事才有的，不是独立功能。
+Cursor / Codex / OpenCode 负责 plan 和 review；implementation 以一个 bounded task 为单位交给本机 Claude Code。`compass/hooks/` 同时提供 policy hook 与 task executor，不是独立功能。
 
-装进去之后：planner 正要改仓库时，hook 拦住这次 pending tool call，在项目根调用 `claude` CLI 做同一件事。X 是平台正要执行的动作，不是用户原始 chat。Claude Code 自己就是 worker，不装这只 hook。
+核心边界是：native hook 只阻止 planner 直接写仓库，不为 pending Write / Edit / Bash 启动 Claude。Planner 把原始 goal、confirmed scope、acceptance criteria 与 out-of-scope 写入 `.compass/context/cli-worker-task.md`，再显式执行一次 `--delegate`。这样一次 implementation 对应一次 fresh Claude session，而不是一次 tool call 对应一次 session。
 
 探测和填写见 [install_instruction.md](install_instruction.md) Step 5。拦截范围、fail-open / fail-closed、平台 dest 见 [CONTRACT.md](../compass/hooks/cli-worker/CONTRACT.md)。
 
@@ -14,7 +14,7 @@ Cursor / Codex / OpenCode 负责 plan 和 review；implementation 交给本机 C
 - 已选至少一个 planner，且 `command -v claude` 与 `claude --version` 都成功 → `enabled`
 - 任一项失败 → `disabled`，planner 自己写代码
 
-`enabled` 时的默认 invoke：`claude -p --permission-mode acceptEdits`。不要写 `--dangerously-skip-permissions`。以后才装 `claude` 时，必须重新跑安装判定才能补 hook。
+`enabled` 时的默认 invoke：`claude -p --permission-mode acceptEdits`。Executor 强制加入 `--no-session-persistence` 与默认 `--max-turns 30`，并删除所有 resume / continue / session-id flag。不要写 `--dangerously-skip-permissions`。以后才装 `claude` 时，必须重新跑安装判定才能补 hook。
 
 `status: enabled` 只证明本机 Claude Code CLI 可调用，并且允许 installer 安装 hook；它不证明平台 runtime 已加载、信任或执行过 hook。
 
@@ -40,27 +40,26 @@ Cursor / Codex / OpenCode 负责 plan 和 review；implementation 交给本机 C
 
 ## 拦什么
 
-拦会改变 implementation 的写入；不拦只读、`.compass/context/` 下的 installer / runtime artifact、测试 / lint、只读 git、以及以 `claude` 开头的命令。具体 matcher 以 CONTRACT 为准。
+拦会改变 implementation 的写入和 raw `claude` invocation；不拦只读、`.compass/context/` 下的 installer / runtime artifact、测试 / lint、只读 git，以及 `command -v claude` / `claude --version` 探测。Raw Claude command 必须改走受控 wrapper 的 `--delegate` mode。具体 matcher 以 CONTRACT 为准。
 
-## 交接之后
+## 交接 flow
 
-- 用 flock 串行化；锁文件 `.compass/context/cli-worker.lock` 是 runtime
-- 在 `.compass/context/cli-worker-audit.jsonl` 追加不含 tool input、prompt 或 CLI output 的 runtime audit
-- Prompt 只描述 pending action；CLI 可读目标项目的 README 与 `doc/`
-- CLI 结束后拒绝 planner 再执行同一 tool call
-- 对用户显示 intercepted tool、Claude CLI 结果和 planner 原动作已阻止；不能只把原因放进 model context
-- exit 0：planner 看 diff；需要时更新 README 或 `doc/`
-- 非 0 或超时：blocker，不准改口本地写
-- 判定「要不要交接」之前失败则放行；已经决定交接之后失败则挡住
-- 不 commit、不 push
+1. Planner 直接 write 被 native hook 阻止；hook 显示 task-level delegation instruction，但不启动 Claude。
+2. Planner 覆盖 `cli-worker-task.md`，让 task 成为 self-contained scope boundary。
+3. Planner 执行 platform 安装的 wrapper `--delegate` 一次。
+4. Executor 用 flock 串行化，强制 fresh non-persistent session，调用 Claude 并记录不含 task / prompt / CLI output 的 audit。
+5. 最近最多 100 个成功 task content hash 写入 `cli-worker-state.json`；相同 task spec 即使被重写或在其他 task 后重新切回，再次调用也只返回 `delegation_reused`，不再次启动 Claude。
+6. exit 0 后 planner 看 diff并独立 verification；非 0 或超时是 blocker，不准改口本地写或用连续新 revision 绕过。
+
+Planner 可以为真正不同的 implementation scope 覆盖 task spec，但不能把一个 task 按文件或 tool call 拆开。Claude 不 commit、不 push，也不再次调用 Claude。
 
 ## Runtime probe
 
-Planner 完成 activation 后，用真实 platform session 创建 repository root 的 `.compass-worker-probe.tmp`，内容固定为 `compass worker probe`。通过条件必须同时满足：
+Planner 完成 activation 后，在真实 platform session 验证 policy 与 executor：先直接创建 repository root 的 `.compass-worker-probe.tmp`，再通过 task spec + `--delegate` 完成同一动作。通过条件必须同时满足：
 
 1. 文件内容正确。
-2. UI 明确显示 Claude CLI 已执行、planner 原动作已阻止。
-3. `cli-worker-audit.jsonl` 在本次 probe 之后出现 `handoff_started`、`worker_succeeded` 和 `planner_blocked`。
+2. UI 明确显示 planner 原动作已阻止、没有按单个 tool call 启动 Claude，并要求 task-level delegation。
+3. `cli-worker-audit.jsonl` 在本次 probe 之后出现 `planner_blocked`、`delegation_started` 和 `worker_succeeded`。
 4. Planner transcript 没有成功执行原始 write tool。
 
-文件存在本身不能证明通过。验证后删除 probe 文件并确认 repository 没有遗留；删除也应走同一 worker hook。Probe 是安装后的手工 runtime validation，不是自动化 test。
+文件存在本身不能证明通过。验证后覆盖 task spec 为 cleanup task，再执行一次 `--delegate` 删除 probe 并确认没有遗留。Probe 是安装后的手工 runtime validation，不是 automated test。

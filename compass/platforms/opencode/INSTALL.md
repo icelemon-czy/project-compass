@@ -63,16 +63,18 @@
 2. 将 `run.py` 完整复制到 `.opencode/hooks/cli-worker.py`；设置可执行；不创建软链接。
 3. 将 `.compass/platforms/opencode/compass-cli-worker.js` 安装到 `.opencode/plugins/compass-cli-worker.js`。目标不存在时创建；已有文件含 `compass:generated hook=cli-worker` 时更新；无 marker 且内容不同时不覆盖，记录 fallback。
 4. 不修改 `opencode.json` / `opencode.jsonc`，不写入 `~/.config/opencode/plugins/`。
-5. OpenCode 的 project-local plugin 在 startup 从 `.opencode/plugins/` 加载。Plugin 本轮 created / updated 时报告 `Runtime activation: restart-required`；不能把文件存在报告为 active。
+5. Planner 做 implementation 时先覆盖 `.compass/context/cli-worker-task.md`，再执行一次 `python3 .opencode/hooks/cli-worker.py --format internal --delegate`。Plugin 命中普通 write / shell 时只抛出 task-level instruction，不直接调用 Claude。
+6. OpenCode 的 project-local plugin 在 startup 从 `.opencode/plugins/` 加载。Plugin 本轮 created / updated 时报告 `Runtime activation: restart-required`；不能把文件存在报告为 active。
 
 ### Runtime activation 与 probe
 
 1. 关闭当前 OpenCode session，并从 project root 新建 session / restart OpenCode。
 2. 新 runtime 加载 plugin 后报告 `Runtime activation: active`；没有 startup 之后的 runtime evidence 时保持 `restart-required`。
-3. 让新 session 创建 repository root 的 `.compass-worker-probe.tmp`，内容为 `compass worker probe`。
-4. 按 `.compass/hooks/cli-worker/CONTRACT.md` 同时检查 thrown hook message、audit event chain、文件内容和原始 write tool 未执行。
-5. 四项都成立才报告 `Worker probe: passed`；任一缺失报告 `failed`。未执行时保持 `pending`。
-6. Probe 通过后用同一 hook 删除文件并确认无遗留。
+3. 先让新 session 直接创建 `.compass-worker-probe.tmp`，确认 plugin deny、没有启动 Claude，且 thrown message 要求 task-level delegation。
+4. 把创建 probe 的 bounded task 写入 `.compass/context/cli-worker-task.md`，执行一次 `python3 .opencode/hooks/cli-worker.py --format internal --delegate`。
+5. 按 `.compass/hooks/cli-worker/CONTRACT.md` 同时检查 thrown message、`planner_blocked` + `delegation_started` + `worker_succeeded` audit chain、文件内容和原始 write tool 未执行。
+6. 四项都成立才报告 `Worker probe: passed`；任一缺失报告 `failed`。未执行时保持 `pending`。
+7. Probe 通过后覆盖 task spec 为 cleanup task，再执行一次 `--delegate` 删除文件并确认无遗留。
 
 ### Hook 验证
 

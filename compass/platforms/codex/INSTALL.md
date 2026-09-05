@@ -75,7 +75,7 @@
           {
             "type": "command",
             "command": "python3 .codex/hooks/cli-worker.py --format codex",
-            "statusMessage": "Compass: handing implementation to Claude CLI",
+            "statusMessage": "Compass: enforcing task-level delegation",
             "timeout": 660
           }
         ]
@@ -87,18 +87,20 @@
 
 4. Destination 不存在时创建上述最小文件。已存在时只更新或追加 Compass 那一条。
 5. 不写入 `~/.codex/hooks.json`。
-6. 本 installer 安装的 `.codex/hooks.json` CLI worker hook 只以**从项目根目录启动的 Codex CLI session**作为受支持 runtime target。Codex Desktop task 使用 Desktop agent / orchestrator tools，不得假设它会进入这条 project hook pipeline；在 Desktop 中新建 task 不能作为 activation 操作或 evidence。
-7. Codex CLI 对 non-managed project hook 要求 review 并 trust **当前 hook definition**。从项目根启动 `codex`，在该 CLI session 中使用 `/hooks` 完成 review 与 trust；definition 变化导致 hash 变化后必须重新 trust。
-8. Installer 当前不在项目根的 Codex CLI runtime 中，或无法 authoritative 地确认该 runtime 时，即使文件完整也报告 `Runtime activation: awaiting-cli-session`。已确认位于目标 CLI session、但当前 definition 尚未 trust 时报告 `awaiting-trust`；只有同一 CLI session 提供当前 definition 的 authoritative trust evidence 时才能报告 `active`。不得从 Desktop task、旧 session、其他项目或文件存在推断 active。
+6. Planner 做 implementation 时先覆盖 `.compass/context/cli-worker-task.md`，再执行一次 `python3 .codex/hooks/cli-worker.py --format codex --delegate`。Native hook 命中普通 Write / Edit / Bash 时只 deny 和返回这条 instruction，不直接调用 Claude。
+7. 本 installer 安装的 `.codex/hooks.json` CLI worker hook 只以**从项目根目录启动的 Codex CLI session**作为受支持 runtime target。Codex Desktop task 使用 Desktop agent / orchestrator tools，不得假设它会进入这条 project hook pipeline；在 Desktop 中新建 task 不能作为 activation 操作或 evidence。
+8. Codex CLI 对 non-managed project hook 要求 review 并 trust **当前 hook definition**。从项目根启动 `codex`，在该 CLI session 中使用 `/hooks` 完成 review 与 trust；definition 变化导致 hash 变化后必须重新 trust。
+9. Installer 当前不在项目根的 Codex CLI runtime 中，或无法 authoritative 地确认该 runtime 时，即使文件完整也报告 `Runtime activation: awaiting-cli-session`。已确认位于目标 CLI session、但当前 definition 尚未 trust 时报告 `awaiting-trust`；只有同一 CLI session 提供当前 definition 的 authoritative trust evidence 时才能报告 `active`。不得从 Desktop task、旧 session、其他项目或文件存在推断 active。
 
 ### Runtime activation 与 probe
 
 1. 从 repository root 启动新的 Codex CLI session；不要在 Codex Desktop 中新建 task 代替这一步。CLI 未启动时保持 `awaiting-cli-session`。
 2. 在该 CLI session 中运行 `/hooks`，review 并 trust 当前 definition。完成前保持 `awaiting-trust`；有同一 CLI session 对当前 definition 的 authoritative trust evidence 时报告 `Runtime activation: active`。
-3. 仍在同一 Codex CLI session 中，让 Codex 创建 repository root 的 `.compass-worker-probe.tmp`，内容为 `compass worker probe`。
-4. 按 `.compass/hooks/cli-worker/CONTRACT.md` 同时检查 CLI UI message、audit event chain、文件内容和原始 write tool 未执行。
-5. 四项都成立才报告 `Worker probe: passed`；任一缺失报告 `Worker probe: failed`。未执行时保持 `pending`。
-6. Probe 通过后用同一 hook 删除文件并确认无遗留。
+3. 仍在同一 Codex CLI session 中，先让 Codex 直接创建 `.compass-worker-probe.tmp`，确认 hook deny、没有启动 Claude，且 UI 要求 task-level delegation。
+4. 让 Codex 把创建 probe 的 bounded task 写入 `.compass/context/cli-worker-task.md`，执行一次 `python3 .codex/hooks/cli-worker.py --format codex --delegate`。
+5. 按 `.compass/hooks/cli-worker/CONTRACT.md` 同时检查 CLI UI message、`planner_blocked` + `delegation_started` + `worker_succeeded` audit chain、文件内容和原始 write tool 未执行。
+6. 四项都成立才报告 `Worker probe: passed`；任一缺失报告 `Worker probe: failed`。未执行时保持 `pending`。
+7. Probe 通过后覆盖 task spec 为 cleanup task，再执行一次 `--delegate` 删除文件并确认无遗留。
 
 ### Hook 验证
 

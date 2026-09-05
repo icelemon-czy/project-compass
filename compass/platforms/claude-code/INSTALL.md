@@ -59,9 +59,10 @@ Skill 在当前 Claude Code session 启动后才安装或更新时，最终报�
 
 ## Step 5：Worker permission boundary
 
-Claude Code 是 worker，不安装或 trust Compass CLI worker hook。Planner 调用它时默认使用 `claude -p --permission-mode acceptEdits`：
+Claude Code 是 worker，不安装或 trust Compass CLI worker hook。Planner 通过各自安装的 wrapper 做 task-level delegation；wrapper 默认使用 `claude -p --permission-mode acceptEdits --no-session-persistence --max-turns 30`，不会按 planner tool call 逐次调用：
 
 - File edit 在 `acceptEdits` 下可以自动执行。
+- 每个 bounded task 使用 fresh session；即使 `invoke` 配置含 `--resume`、`--continue` 或 session ID，wrapper 也会删除。
 - Shell、network、managed policy、additional directory 或 OS protected folder 仍按 Claude Code permission 处理。
 - Compass 不使用 `--dangerously-skip-permissions`，也不把非零退出伪装成成功。
 - 权限导致 Claude CLI 非零、超时或无法启动时，planner hook 返回 blocker，并报告 `Last execution: claude-failed`。

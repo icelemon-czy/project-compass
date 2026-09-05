@@ -160,6 +160,7 @@ Planner platforms：Codex、Cursor、OpenCode。
    cli: claude
    invoke: none
    timeout-seconds: 600
+   max-turns: 30
    checked-at: <ISO-8601>
    ```
 
@@ -179,10 +180,11 @@ Planner platforms：Codex、Cursor、OpenCode。
    cli: claude
    invoke: claude -p --permission-mode acceptEdits
    timeout-seconds: 600
+   max-turns: 30
    checked-at: <ISO-8601>
    ```
 
-   不要把 `--dangerously-skip-permissions` 写进 `invoke`。用 `--permission-mode acceptEdits`。
+   不要把 `--dangerously-skip-permissions`、`--resume`、`--continue` 或 session ID 写进 `invoke`。Executor 即使遇到旧配置也会移除 session continuity flag，并强制 `--no-session-persistence`。
 
 4. 覆盖 `cli-worker.md` 里 installer 管理的字段，保留文件标题和说明段落。空白 `unknown` 不得留到安装完成。
 
@@ -270,7 +272,7 @@ macOS、Linux 与 Windows 使用同一套 Git 命令和 exclude syntax：
 
 ## Step 8：清理 installation staging
 
-1. 保留 `.compass/context/`（`cli-worker.md`、`README.md`，以及 runtime 已生成的 `cli-worker.lock` / `cli-worker-audit.jsonl`）。
+1. 保留 `.compass/context/`（`cli-worker.md`、`README.md`，以及 runtime 已生成的 `cli-worker-task.md` / `cli-worker-state.json` / `cli-worker.lock` / `cli-worker-audit.jsonl`）。
 2. 删除 `.compass/` 下除 `context/` 之外的所有一级 entry。
 3. 确认 `.compass/` 的直接子项只有 `context/`。
 4. 再次确认平台 instructions、native Skill 和已安装 hook 仍存在。
@@ -295,24 +297,24 @@ macOS、Linux 与 Windows 使用同一套 Git 命令和 exclude syntax：
 
 只有当前 platform runtime 的 authoritative evidence 满足对应 requirement，才把 `Runtime activation` 改为 `active`。Codex Desktop 的 task、tool output 或新建 task 都不是 Codex CLI activation evidence；Desktop 中完成 filesystem installation 后，必须引导用户从项目根启动 `codex`，在该 CLI session 中运行 `/hooks` 并继续 probe。需要用户在当前安装 turn 之外完成 CLI startup、trust、workspace trust 或 restart 时，不阻塞其他 filesystem 安装；最终报告必须写 `Overall status: action required` 和准确 next action。
 
-### 9b. 手工写入 probe
+### 9b. 手工 task-level probe
 
 Activation 成为 `active` 后，在真实 platform session 中请求；Codex 必须继续使用刚才完成 `/hooks` trust 的同一个 CLI session，不能改在 Desktop task 中执行：
 
-```text
-请创建项目根目录的 .compass-worker-probe.tmp，内容为 compass worker probe。
-```
+1. 先请求 planner 直接创建项目根的 `.compass-worker-probe.tmp`，内容固定为 `compass worker probe`。Native hook 必须阻止原始 write，显示没有按单个 tool call 启动 Claude，并返回 platform `--delegate` instruction。
+2. Planner 将同一创建动作连同 scope 与 acceptance criteria 写入 `.compass/context/cli-worker-task.md`。
+3. Planner 执行 platform installer 指定的 `--delegate` command 一次。Executor 必须使用 fresh、non-persistent Claude session。
 
 Probe 通过必须同时取得四类 evidence：
 
 1. `.compass-worker-probe.tmp` 内容恰好是 `compass worker probe`。
-2. 平台 UI 明确显示 intercepted tool、Claude CLI succeeded、planner original action blocked。
-3. `.compass/context/cli-worker-audit.jsonl` 在本次操作之后依次出现 `handoff_started`、`worker_succeeded`、`planner_blocked`；audit 不含 tool input、prompt 或 CLI output。
+2. 平台 UI 明确显示 planner original action blocked、没有 tool-call-level Claude invocation，并要求 task-level delegation。
+3. `.compass/context/cli-worker-audit.jsonl` 在本次操作之后出现 `planner_blocked`、`delegation_started` 和 `worker_succeeded`；audit 不含 task、tool input、prompt 或 CLI output。
 4. 当前 transcript 没有成功执行 planner 原始 write tool；后续只读核对不算原始 write。
 
 四项都成立 → `Worker probe: passed`、`Last execution: claude-succeeded`。任一缺失 → `failed`；尚未运行 → `pending`。文件存在本身不能证明 worker 身份。
 
-通过或失败后都要清理 probe；删除也应走同一 worker hook。确认文件不存在、audit 有对应 cleanup event、Git status 没有 probe 遗留。这个 probe 是安装后的手工 runtime validation，不新增 automated test。
+通过或失败后都要清理 probe：覆盖 task spec 为 bounded cleanup task，再执行一次 `--delegate`。确认文件不存在、audit 有对应 cleanup execution、Git status 没有 probe 遗留。这个 probe 是安装后的手工 runtime validation，不新增 automated test。
 
 ## Step 10：最终报告
 

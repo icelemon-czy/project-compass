@@ -7,4 +7,5 @@ reason: 尚未安装判定
 cli: claude
 invoke: none
 timeout-seconds: 600
+max-turns: 30
 checked-at: none
