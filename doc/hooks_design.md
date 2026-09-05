@@ -2,7 +2,7 @@
 
 Cursor / Codex / OpenCode 负责 plan 和 review；implementation 以一个 bounded task 为单位交给本机 Claude Code。`compass/hooks/` 同时提供 policy hook 与 task executor，不是独立功能。
 
-核心边界是：native hook 只阻止 planner 直接写仓库，不为 pending Write / Edit / Bash 启动 Claude。Planner 把原始 goal、confirmed scope、acceptance criteria 与 out-of-scope 写入 `.compass/context/cli-worker-task.md`，再显式执行一次 `--delegate`。这样一次 implementation 对应一次 fresh Claude session，而不是一次 tool call 对应一次 session。
+核心边界是：native hook 只阻止 planner 直接写仓库，不为 pending Write / Edit / Bash 启动 Claude。Planner 把原始 goal、confirmed scope、acceptance criteria、out-of-scope 与 `model: sonnet|opus` 写入 `.compass/context/cli-worker-task.md`，再显式执行一次 `--delegate`。这样一次 implementation 对应一次 fresh Claude session，而不是一次 tool call 对应一次 session。常规 confirmed-scope 工作用 `sonnet`；需要更深 reasoning 的 architecture、大范围改动、根因不明的硬 bug 或安全敏感改动用 `opus`。省略时默认 `sonnet`。
 
 探测和填写见 [install_instruction.md](install_instruction.md) Step 5。拦截范围、fail-open / fail-closed、平台 dest 见 [CONTRACT.md](../compass/hooks/cli-worker/CONTRACT.md)。
 
@@ -14,7 +14,7 @@ Cursor / Codex / OpenCode 负责 plan 和 review；implementation 以一个 boun
 - 已选至少一个 planner，且 `command -v claude` 与 `claude --version` 都成功 → `enabled`
 - 任一项失败 → `disabled`，planner 自己写代码
 
-`enabled` 时的默认 invoke：`claude -p --permission-mode acceptEdits`。Executor 强制加入 `--no-session-persistence` 与默认 `--max-turns 30`，并删除所有 resume / continue / session-id flag。不要写 `--dangerously-skip-permissions`。以后才装 `claude` 时，必须重新跑安装判定才能补 hook。
+`enabled` 时的默认 invoke：`claude -p --permission-mode acceptEdits`，以及 `default-model: sonnet`。Executor 强制加入 `--no-session-persistence`、默认 `--max-turns 30` 和恰好一个 `--model`，并删除所有 resume / continue / session-id flag。不要写 `--dangerously-skip-permissions`。以后才装 `claude` 时，必须重新跑安装判定才能补 hook。
 
 `status: enabled` 只证明本机 Claude Code CLI 可调用，并且允许 installer 安装 hook；它不证明平台 runtime 已加载、信任或执行过 hook。
 
@@ -45,7 +45,7 @@ Cursor / Codex / OpenCode 负责 plan 和 review；implementation 以一个 boun
 ## 交接 flow
 
 1. Planner 直接 write 被 native hook 阻止；hook 显示 task-level delegation instruction，但不启动 Claude。
-2. Planner 覆盖 `cli-worker-task.md`，让 task 成为 self-contained scope boundary。
+2. Planner 覆盖 `cli-worker-task.md`，让 task 成为 self-contained scope boundary，并按任务类型写 `model: sonnet` 或 `model: opus`。
 3. Planner 执行 platform 安装的 wrapper `--delegate` 一次。
 4. Executor 用 flock 串行化，强制 fresh non-persistent session，调用 Claude 并记录不含 task / prompt / CLI output 的 audit。
 5. 最近最多 100 个成功 task content hash 写入 `cli-worker-state.json`；相同 task spec 即使被重写或在其他 task 后重新切回，再次调用也只返回 `delegation_reused`，不再次启动 Claude。

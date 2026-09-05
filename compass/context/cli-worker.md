@@ -6,6 +6,7 @@ status: unknown
 reason: 尚未安装判定
 cli: claude
 invoke: none
+default-model: sonnet
 timeout-seconds: 600
 max-turns: 30
 checked-at: none

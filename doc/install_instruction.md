@@ -159,6 +159,7 @@ Planner platforms：Codex、Cursor、OpenCode。
    reason: 当前安装没有 planner platform；Claude Code 自己就是 worker
    cli: claude
    invoke: none
+   default-model: sonnet
    timeout-seconds: 600
    max-turns: 30
    checked-at: <ISO-8601>
@@ -179,6 +180,7 @@ Planner platforms：Codex、Cursor、OpenCode。
    reason: 本机 claude CLI 可调用
    cli: claude
    invoke: claude -p --permission-mode acceptEdits
+   default-model: sonnet
    timeout-seconds: 600
    max-turns: 30
    checked-at: <ISO-8601>

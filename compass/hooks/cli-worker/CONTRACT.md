@@ -41,7 +41,7 @@ Raw `claude` CLI invocation 也拦截，避免 planner 绕过 fresh-session、de
 
 ### `--delegate`：task execution
 
-Planner 先覆盖 `.compass/context/cli-worker-task.md`，内容必须是一个 self-contained task，包含 goal、confirmed scope、acceptance criteria 和 out-of-scope；再执行一次：
+Planner 先覆盖 `.compass/context/cli-worker-task.md`，内容必须是一个 self-contained task，包含 goal、confirmed scope、acceptance criteria、out-of-scope，以及一行 `model: sonnet` 或 `model: opus`（也可 `haiku` / `fable`）；再执行一次：
 
 ```text
 python3 <platform hook path>/cli-worker.py --format <platform> --delegate
@@ -54,7 +54,7 @@ Codex、Cursor、OpenCode 的具体 path 由各 platform installer 写入 instru
 1. 读取项目根的 `.compass/context/cli-worker.md`。Native hook 找不到项目根或 `status` 不是 `enabled` 时放行；显式 `--delegate` 则返回 non-zero。
 2. `enabled` 只表示允许安装和调用 worker，不表示 native hook 已经 trust、loaded 或 active。Activation 由各 platform installer 和 runtime probe 单独验证。
 3. Native hook 命中时追加 `planner_blocked` audit，明确显示“未按 tool call 启动 Claude，需 task-level delegation”。Codex 用 `systemMessage`，Cursor 用 `user_message`，OpenCode adapter 显示 thrown hook error。
-4. `--delegate` 用 flock 串行化，读取 task spec，并按 `invoke`（默认 `claude -p --permission-mode acceptEdits`）在项目根启动一次 Claude。
+4. `--delegate` 用 flock 串行化，读取 task spec，并按 `invoke`（默认 `claude -p --permission-mode acceptEdits`）在项目根启动一次 Claude。task spec 里整行 `model: sonnet|opus|haiku|fable` 决定 `--model` alias；出现多次时以最后一次合法值为准。缺省用 `cli-worker.md` 的 `default-model`（默认 `sonnet`）。句子中间或非法值不会写入 `--model`。invoke 里已有的 `--model` 会被覆盖。audit 可记录 alias，不记录 task 正文。
 5. 每次 invocation 都强制 fresh、non-persistent session：丢弃 `--resume` / `-r`、`--continue` / `-c`、`--session-id`、`--from-pr`、`--teleport` 和 `--fork-session`，并加入 `--no-session-persistence`。`invoke` 不能把 session continuity 重新打开。
 6. 默认加入 `--max-turns 30`；`cli-worker.md` 的 `max-turns` 可在 1–100 之间调整。已在 `invoke` 明确设置时保留它。
 7. Task prompt 明确 bounded scope、minimum complete change、focused verification 和遇到 blocker 即停止；不得把 task 自动扩大为 repository refactor、migration、audit 或 cleanup。

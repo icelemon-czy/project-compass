@@ -68,6 +68,76 @@ class CliArgvTests(unittest.TestCase):
         self.assertIn("sonnet", argv)
 
 
+class TaskModelTests(unittest.TestCase):
+    def argv_for(self, task: str, worker_config: dict[str, str] | None = None) -> list[str]:
+        config = {
+            "invoke": "claude -p --permission-mode acceptEdits --model haiku",
+            "default-model": "sonnet",
+        }
+        if worker_config:
+            config.update(worker_config)
+        model = worker.parse_task_model(task, config)
+        return worker.cli_argv(config, "prompt", model)
+
+    def chosen_model(self, argv: list[str]) -> str:
+        self.assertEqual(argv.count("--model"), 1)
+        return argv[argv.index("--model") + 1]
+
+    def test_task_spec_model_overrides_invoke_model(self) -> None:
+        argv = self.argv_for("model: opus\n# Goal\nDo it\n")
+        self.assertEqual(self.chosen_model(argv), "opus")
+        self.assertNotIn("haiku", argv)
+
+    def test_missing_model_line_uses_worker_default(self) -> None:
+        argv = self.argv_for("# Goal\nDo it\n")
+        self.assertEqual(self.chosen_model(argv), "sonnet")
+        argv = self.argv_for("# Goal\nDo it\n", {"default-model": "opus"})
+        self.assertEqual(self.chosen_model(argv), "opus")
+
+    def test_invalid_or_inline_model_does_not_reach_cli(self) -> None:
+        argv = self.argv_for(
+            "please use model: opus in prose.\n"
+            "model: not-a-model\n"
+            "model: opus; rm -rf /\n"
+            "# Goal\nDo it\n"
+        )
+        self.assertEqual(self.chosen_model(argv), "sonnet")
+        self.assertNotIn("not-a-model", argv)
+        self.assertNotIn("rm", argv)
+
+    def test_bogus_default_model_falls_back_to_sonnet(self) -> None:
+        argv = self.argv_for("# Goal\nDo it\n", {"default-model": "bogus"})
+        self.assertEqual(self.chosen_model(argv), "sonnet")
+
+    def test_last_model_line_wins(self) -> None:
+        argv = self.argv_for("model: OPUS\nmodel: sonnet\n")
+        self.assertEqual(self.chosen_model(argv), "sonnet")
+
+    def test_audit_records_model_on_delegate(self) -> None:
+        with tempfile.TemporaryDirectory() as raw_root:
+            root = Path(raw_root)
+            context = root / ".compass" / "context"
+            context.mkdir(parents=True)
+            (context / "cli-worker.md").write_text(
+                "status: enabled\ninvoke: claude -p\ndefault-model: sonnet\n",
+                encoding="utf-8",
+            )
+            (context / "cli-worker-task.md").write_text(
+                "model: opus\nGoal: one change.\nAcceptance: test passes.\n",
+                encoding="utf-8",
+            )
+            config = worker.parse_worker_file(root / worker.COMPASS_CONTEXT_REL)
+            with mock.patch.dict(os.environ, {"COMPASS_CLI_WORKER_STUB": "1"}):
+                self.assertEqual(worker.run_delegation(root, config, "cursor"), 0)
+            audit = [
+                json.loads(line)
+                for line in (root / worker.AUDIT_REL).read_text(encoding="utf-8").splitlines()
+            ]
+            self.assertEqual(audit[0]["event"], "delegation_started")
+            self.assertEqual(audit[0]["model"], "opus")
+            self.assertEqual(audit[1]["model"], "opus")
+
+
 class DelegationTests(unittest.TestCase):
     def make_project(self, root: Path) -> None:
         context = root / ".compass" / "context"

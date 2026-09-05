@@ -17,6 +17,7 @@ Compass 将 `compass/` 及其中的 `AGENTS.md`、`context/`、`skills/`、`suba
 - 新增 `/build-docs`，用于首次建立或整体重整目标项目的 README 与 `doc/<feature>_design.md`。
 - 新增 `/maintain-docs`，以同一 evidence pass 合并文档 review 与增量 update；review intent 保持只读，update intent 执行最小修复。
 - 新增可选只读 `docs-reviewer`，用于跨 feature、重大文档变化或用户明确要求的独立复核；默认不安装。
+- CLI worker 支持 planner 按任务类型在 `cli-worker-task.md` 写 `model: sonnet` 或 `model: opus`；executor 向 `claude` 传入恰好一个 `--model`，缺省 `sonnet`。
 
 ### Changed
 

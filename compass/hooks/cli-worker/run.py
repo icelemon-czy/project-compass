@@ -25,6 +25,9 @@ DEFAULT_TIMEOUT = 600
 DEFAULT_MAX_TURNS = 30
 MAX_TASK_CHARS = 40_000
 MAX_SUCCESS_HISTORY = 100
+ALLOWED_MODELS = frozenset({"sonnet", "opus", "haiku", "fable"})
+DEFAULT_MODEL = "sonnet"
+MODEL_LINE_RE = re.compile(r"(?im)^model:\s*(sonnet|opus|haiku|fable)\s*$")
 DANGEROUS_FLAGS = {
     "--dangerously-skip-permissions",
     "--dangerously-bypass-hook-trust",
@@ -145,6 +148,7 @@ def append_audit(
     *,
     exit_code: int | None = None,
     failure: str | None = None,
+    model: str | None = None,
 ) -> bool:
     record: dict[str, Any] = {
         "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
@@ -162,6 +166,8 @@ def append_audit(
         record["exit_code"] = exit_code
     if failure:
         record["failure"] = failure
+    if model:
+        record["model"] = model
 
     try:
         path = project_root / AUDIT_REL
@@ -198,9 +204,20 @@ def parse_worker_file(path: Path) -> dict[str, str]:
             "checked-at",
             "timeout-seconds",
             "max-turns",
+            "default-model",
         }:
             values[key] = value.strip()
     return values
+
+
+def parse_task_model(task: str, worker: dict[str, str]) -> str:
+    matches = MODEL_LINE_RE.findall(task)
+    if matches:
+        return matches[-1].lower()
+    default = (worker.get("default-model") or "").strip().lower()
+    if default in ALLOWED_MODELS:
+        return default
+    return DEFAULT_MODEL
 
 
 def load_payload() -> dict[str, Any]:
@@ -372,12 +389,36 @@ def fresh_session_parts(parts: list[str]) -> list[str]:
     return clean
 
 
-def cli_argv(worker: dict[str, str], prompt: str) -> list[str]:
+def strip_flag(parts: list[str], flag: str) -> list[str]:
+    clean: list[str] = []
+    index = 0
+    while index < len(parts):
+        part = parts[index]
+        if part == flag:
+            index += 1
+            if index < len(parts) and not parts[index].startswith("-"):
+                index += 1
+            continue
+        if part.startswith(f"{flag}="):
+            index += 1
+            continue
+        clean.append(part)
+        index += 1
+    return clean
+
+
+def cli_argv(
+    worker: dict[str, str], prompt: str, model: str | None = None
+) -> list[str]:
+    chosen = (model or DEFAULT_MODEL).strip().lower()
+    if chosen not in ALLOWED_MODELS:
+        chosen = DEFAULT_MODEL
     raw = worker.get("invoke") or "claude -p --permission-mode acceptEdits"
     if raw in {"", "none"}:
         raw = "claude -p --permission-mode acceptEdits"
     parts = [part for part in shlex.split(raw) if part not in DANGEROUS_FLAGS]
     parts = fresh_session_parts(parts)
+    parts = strip_flag(parts, "--model")
     if not parts:
         parts = ["claude", "-p"]
     if "--no-session-persistence" not in parts:
@@ -386,6 +427,7 @@ def cli_argv(worker: dict[str, str], prompt: str) -> list[str]:
         part.startswith("--max-turns=") for part in parts
     ):
         parts.extend(["--max-turns", str(configured_max_turns(worker))])
+    parts.extend(["--model", chosen])
     if "-p" not in parts and "--print" not in parts:
         parts.extend(["-p", prompt])
     else:
@@ -393,10 +435,15 @@ def cli_argv(worker: dict[str, str], prompt: str) -> list[str]:
     return parts
 
 
-def invoke_cli(project_root: Path, worker: dict[str, str], prompt: str) -> tuple[int, str]:
+def invoke_cli(
+    project_root: Path,
+    worker: dict[str, str],
+    prompt: str,
+    model: str | None = None,
+) -> tuple[int, str]:
     if os.environ.get("COMPASS_CLI_WORKER_STUB") == "1":
         return 0, "stubbed CLI worker"
-    argv = cli_argv(worker, prompt)
+    argv = cli_argv(worker, prompt, model)
     timeout = worker_timeout(worker)
     result = subprocess.run(
         argv,
@@ -546,11 +593,20 @@ def run_delegation(project_root: Path, worker: dict[str, str], fmt: str) -> int:
         return 2
 
     revision = task_revision(task)
+    model = parse_task_model(task, worker)
     with ExclusiveLock(project_root / LOCK_REL):
         state = load_state(state_path)
         successful = successful_revisions(state)
         if revision in successful:
-            append_audit(project_root, fmt, {}, "task", "delegation_reused", exit_code=0)
+            append_audit(
+                project_root,
+                fmt,
+                {},
+                "task",
+                "delegation_reused",
+                exit_code=0,
+                model=model,
+            )
             sys.stdout.write(
                 "Compass: this exact task revision already succeeded; inspect the diff "
                 "instead of invoking Claude again.\n"
@@ -558,9 +614,9 @@ def run_delegation(project_root: Path, worker: dict[str, str], fmt: str) -> int:
             return 0
 
         write_state(state_path, state_record(revision, "running", successful))
-        append_audit(project_root, fmt, {}, "task", "delegation_started")
+        append_audit(project_root, fmt, {}, "task", "delegation_started", model=model)
         try:
-            code, output = invoke_cli(project_root, worker, build_prompt(task))
+            code, output = invoke_cli(project_root, worker, build_prompt(task), model)
         except subprocess.TimeoutExpired:
             write_state(state_path, state_record(revision, "failed", successful))
             append_audit(
@@ -570,6 +626,7 @@ def run_delegation(project_root: Path, worker: dict[str, str], fmt: str) -> int:
                 "task",
                 "worker_failed",
                 failure="timeout",
+                model=model,
             )
             sys.stderr.write(blocker_message("执行超时") + "\n")
             return 124
@@ -582,6 +639,7 @@ def run_delegation(project_root: Path, worker: dict[str, str], fmt: str) -> int:
                 "task",
                 "worker_failed",
                 failure="start-failed",
+                model=model,
             )
             sys.stderr.write(blocker_message(f"启动失败：{exc}") + "\n")
             return 1
@@ -600,6 +658,7 @@ def run_delegation(project_root: Path, worker: dict[str, str], fmt: str) -> int:
             "task",
             "worker_succeeded" if code == 0 else "worker_failed",
             exit_code=code,
+            model=model,
         )
         if output:
             stream = sys.stdout if code == 0 else sys.stderr
