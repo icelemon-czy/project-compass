@@ -48,9 +48,6 @@ CLAUDE_READONLY_RE = re.compile(
     r"^\s*(?:command\s+-v\s+claude|(?:\S*/)?claude\s+--version)\s*$"
 )
 CLAUDE_CLI_RE = re.compile(r"^\s*(?:(?:env|command)\s+)?(?:\S*/)?claude(?:\s|$)")
-READONLY_GIT_RE = re.compile(
-    r"^\s*git\s+(status|diff|log|show|rev-parse|ls-files|blame|grep|describe|symbolic-ref)\b"
-)
 TEST_HINT_RE = re.compile(
     r"\b(pytest|npm\s+test|pnpm\s+test|yarn\s+test|cargo\s+test|go\s+test|"
     r"python\s+-m\s+pytest|vitest|jest|make\s+test|ctest)\b",
@@ -62,6 +59,8 @@ MUTATING_SHELL_RE = re.compile(
     r"python3?\s+-c\s+|node\s+-e\s+)",
     re.I,
 )
+ENV_ASSIGNMENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
+SKIP_PREFIX_WORDS = frozenset({"sudo", "command", "env", "then", "do"})
 WRITE_TOOLS = {
     "write",
     "edit",
@@ -312,6 +311,66 @@ def shell_command(inp: dict[str, Any]) -> str:
     return ""
 
 
+def iter_shell_statements(command: str) -> list[str]:
+    """Split on top-level &&, ||, ;, |, and newlines, keeping quoted strings intact."""
+    statements: list[str] = []
+    buf: list[str] = []
+    quote: str | None = None
+    index = 0
+    length = len(command)
+
+    def flush() -> None:
+        text = "".join(buf).strip()
+        buf.clear()
+        if text:
+            statements.append(text)
+
+    while index < length:
+        char = command[index]
+        if quote:
+            buf.append(char)
+            if char == "\\" and quote == '"' and index + 1 < length:
+                buf.append(command[index + 1])
+                index += 2
+                continue
+            if char == quote:
+                quote = None
+            index += 1
+            continue
+        if char in {"'", '"'}:
+            quote = char
+            buf.append(char)
+            index += 1
+            continue
+        if command.startswith("&&", index) or command.startswith("||", index):
+            flush()
+            index += 2
+            continue
+        if char in {";", "|", "\n"}:
+            flush()
+            index += 1
+            continue
+        buf.append(char)
+        index += 1
+    flush()
+    return statements
+
+
+def statement_program(statement: str) -> str:
+    tokens = statement.split()
+    index = 0
+    while index < len(tokens):
+        token = tokens[index]
+        if token in SKIP_PREFIX_WORDS or ENV_ASSIGNMENT_RE.match(token):
+            index += 1
+            continue
+        if token.startswith("-") and index > 0 and tokens[index - 1] == "env":
+            index += 1
+            continue
+        return token.rsplit("/", 1)[-1]
+    return ""
+
+
 def should_block_shell(command: str) -> bool:
     if not command.strip():
         return False
@@ -319,11 +378,16 @@ def should_block_shell(command: str) -> bool:
         return False
     if CLAUDE_CLI_RE.search(command):
         return True
-    if READONLY_GIT_RE.search(command):
-        return False
     if TEST_HINT_RE.search(command):
         return False
-    return bool(MUTATING_SHELL_RE.search(command))
+    remainder = [
+        statement
+        for statement in iter_shell_statements(command)
+        if statement_program(statement) not in {"", "git"}
+    ]
+    if not remainder:
+        return False
+    return bool(MUTATING_SHELL_RE.search(" ; ".join(remainder)))
 
 
 def should_hand_off(project_root: Path, name: str, inp: dict[str, Any]) -> bool:

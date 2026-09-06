@@ -4,7 +4,7 @@
 
 ## Purpose
 
-Planner platform（Codex、Cursor、OpenCode）把一个完整且 bounded 的 implementation task 交给 Claude Code CLI。Native hook 只阻止 planner 直接写仓库并引导 task-level delegation；它**不再为每个 pending tool call 启动 Claude**。Claude Code 自己就是 worker，不安装本 hook。
+Planner platform（Codex、Cursor、OpenCode）把一个完整且 bounded 的 implementation task 交给 Claude Code CLI。Native hook 只阻止 planner 直接做 implementation 写入并引导 task-level delegation；它**不再为每个 pending tool call 启动 Claude**。Claude Code 自己就是 worker，不安装本 hook。
 
 ## 何时安装
 
@@ -33,7 +33,8 @@ Planner platform（Codex、Cursor、OpenCode）把一个完整且 bounded 的 im
 
 - 只读查找与阅读
 - `.compass/context/` 下的 installer / runtime artifact 写入
-- 测试、lint、类型检查、只读 git 查询
+- 测试、lint、类型检查
+- git（含 status / diff / add / commit / push / checkout / mv；VCS 不是 implementation。commit / push 仍由 planner 在用户明确要求时执行，不委托给 worker）
 
 Raw `claude` CLI invocation 也拦截，避免 planner 绕过 fresh-session、dedup 与 bounded-task policy；只放行 `command -v claude` 和 `claude --version` 探测。唯一 implementation 入口是受控 wrapper 的 `--delegate` mode。
 

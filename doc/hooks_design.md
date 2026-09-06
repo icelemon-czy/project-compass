@@ -2,7 +2,7 @@
 
 Cursor / Codex / OpenCode 负责 plan 和 review；implementation 以一个 bounded task 为单位交给本机 Claude Code。`compass/hooks/` 同时提供 policy hook 与 task executor，不是独立功能。
 
-核心边界是：native hook 只阻止 planner 直接写仓库，不为 pending Write / Edit / Bash 启动 Claude。Planner 把原始 goal、confirmed scope、acceptance criteria、out-of-scope 与 `model: sonnet|opus` 写入 `.compass/context/cli-worker-task.md`，再显式执行一次 `--delegate`。这样一次 implementation 对应一次 fresh Claude session，而不是一次 tool call 对应一次 session。常规 confirmed-scope 工作用 `sonnet`；需要更深 reasoning 的 architecture、大范围改动、根因不明的硬 bug 或安全敏感改动用 `opus`。省略时默认 `sonnet`。
+核心边界是：native hook 只阻止 planner 直接做 implementation 写入，不为 pending Write / Edit / Bash 启动 Claude。Planner 把原始 goal、confirmed scope、acceptance criteria、out-of-scope 与 `model: sonnet|opus` 写入 `.compass/context/cli-worker-task.md`，再显式执行一次 `--delegate`。这样一次 implementation 对应一次 fresh Claude session，而不是一次 tool call 对应一次 session。常规 confirmed-scope 工作用 `sonnet`；需要更深 reasoning 的 architecture、大范围改动、根因不明的硬 bug 或安全敏感改动用 `opus`。省略时默认 `sonnet`。
 
 探测和填写见 [install_instruction.md](install_instruction.md) Step 5。拦截范围、fail-open / fail-closed、平台 dest 见 [CONTRACT.md](../compass/hooks/cli-worker/CONTRACT.md)。
 
@@ -40,7 +40,7 @@ Cursor / Codex / OpenCode 负责 plan 和 review；implementation 以一个 boun
 
 ## 拦什么
 
-拦会改变 implementation 的写入和 raw `claude` invocation；不拦只读、`.compass/context/` 下的 installer / runtime artifact、测试 / lint、只读 git，以及 `command -v claude` / `claude --version` 探测。Raw Claude command 必须改走受控 wrapper 的 `--delegate` mode。具体 matcher 以 CONTRACT 为准。
+拦会改变 implementation 的写入和 raw `claude` invocation；不拦只读、`.compass/context/` 下的 installer / runtime artifact、测试 / lint、git，以及 `command -v claude` / `claude --version` 探测。Git 是 VCS，不是 implementation；commit / push 仍由 planner 在用户明确要求时执行，不交给 worker。Raw Claude command 必须改走受控 wrapper 的 `--delegate` mode。具体 matcher 以 CONTRACT 为准。
 
 ## 交接 flow
 

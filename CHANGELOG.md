@@ -12,6 +12,10 @@ Compass 将 `compass/` 及其中的 `AGENTS.md`、`context/`、`skills/`、`suba
 
 ## [Unreleased]
 
+### Fixed
+
+- CLI worker native hook 不再拦截 git：VCS 不是 implementation。此前 `git mv` / `git rm`、commit message 或 `2>&1` 里的 `>` 会被当成 mutating shell，planner 无法 commit / push，委托给 worker 又违反 worker 不 commit 的契约。
+
 ### Added
 
 - 新增 `/build-docs`，用于首次建立或整体重整目标项目的 README 与 `doc/<feature>_design.md`。

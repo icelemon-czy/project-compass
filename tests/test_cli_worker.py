@@ -17,7 +17,7 @@ worker = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(worker)
 
 
-class CliArgvTests(unittest.TestCase):
+class ShellPolicyTests(unittest.TestCase):
     def test_raw_claude_invocation_is_blocked_but_detection_is_allowed(self) -> None:
         self.assertTrue(
             worker.should_block_shell("claude -p --resume old-session 'continue'")
@@ -26,6 +26,79 @@ class CliArgvTests(unittest.TestCase):
         self.assertFalse(worker.should_block_shell("command -v claude"))
         self.assertFalse(worker.should_block_shell("claude --version"))
 
+    def test_git_is_not_implementation(self) -> None:
+        allowed = [
+            "git status --short",
+            "git diff HEAD",
+            "git add AGENTS.md",
+            "git add . 2>&1",
+            "git mv collect src/ai_intel_station/collect",
+            "git rm --cached old.py",
+            "git checkout -b wip/source-tree-migration",
+            "git push -u origin HEAD",
+            "git commit -m 'hello'",
+            (
+                "git checkout -b wip/foo && git add AGENTS.md && "
+                "git commit -m \"$(cat <<'EOF'\ncheckpoint\nEOF\n)\""
+            ),
+            (
+                "git commit -m \"$(cat <<'EOF'\n"
+                "refactor: keep runtime in src > frontend\n"
+                "EOF\n)\""
+            ),
+            "GIT_EDITOR=true git commit --amend --no-edit",
+            "/usr/bin/git --no-pager log -1",
+        ]
+        for command in allowed:
+            with self.subTest(command=command):
+                self.assertFalse(worker.should_block_shell(command))
+
+    def test_non_git_mutation_is_still_blocked(self) -> None:
+        blocked = [
+            "mkdir -p src/ai_intel_station && git mv collect src/ai_intel_station/collect",
+            "git status --short && rm -rf src",
+            "echo hello > README.md",
+            "mv collect src/collect",
+        ]
+        for command in blocked:
+            with self.subTest(command=command):
+                self.assertTrue(worker.should_block_shell(command))
+
+    def test_native_hook_allows_git_commit_without_starting_worker(self) -> None:
+        with tempfile.TemporaryDirectory() as raw_root:
+            root = Path(raw_root)
+            context = root / ".compass" / "context"
+            context.mkdir(parents=True)
+            (context / "cli-worker.md").write_text(
+                "status: enabled\ninvoke: claude -p\n",
+                encoding="utf-8",
+            )
+            payload = json.dumps(
+                {
+                    "tool_name": "Shell",
+                    "tool_input": {
+                        "command": (
+                            "git commit -m \"$(cat <<'EOF'\n"
+                            "refactor: gather Python under src\n"
+                            "EOF\n)\""
+                        )
+                    },
+                }
+            )
+            result = subprocess.run(
+                ["python3", str(SCRIPT), "--format", "cursor"],
+                cwd=root,
+                input=payload,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(json.loads(result.stdout)["permission"], "allow")
+            self.assertFalse((root / worker.AUDIT_REL).exists())
+
+
+class CliArgvTests(unittest.TestCase):
     def test_forces_fresh_bounded_session(self) -> None:
         argv = worker.cli_argv(
             {
